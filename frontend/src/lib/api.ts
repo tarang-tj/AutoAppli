@@ -9,16 +9,14 @@ import {
 } from "@/lib/demo-data";
 import type { Job, Resume, OutreachMessage, GeneratedDocument } from "@/types";
 
-/** FastAPI mounts routers under `/api/v1`. Accept env with or without that suffix. */
+const MISSING_API_URL =
+  "Set NEXT_PUBLIC_API_URL to your deployed API (e.g. https://your-api.onrender.com). No default URL is used.";
+
+/** FastAPI mounts under `/api/v1`. Env may be origin only or full `.../api/v1`. */
 function resolveApiBaseUrl(): string {
-  const raw = (
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
-  )
-    .trim()
-    .replace(/\/+$/, "");
-  if (/\/api\/v1$/i.test(raw)) {
-    return raw;
-  }
+  const raw = (process.env.NEXT_PUBLIC_API_URL || "").trim().replace(/\/+$/, "");
+  if (!raw) return "";
+  if (/\/api\/v1$/i.test(raw)) return raw;
   return `${raw}/api/v1`;
 }
 
@@ -71,6 +69,9 @@ async function handleResponse(res: Response) {
 }
 
 async function fetchBackend<T>(path: string, init?: RequestInit): Promise<T> {
+  if (!API_URL) {
+    throw new Error(MISSING_API_URL);
+  }
   const headers = await getAuthHeaders();
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
@@ -193,6 +194,12 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {
   if (useBackendForResumePath(path)) {
+    if (!API_URL) {
+      if (!isSupabaseConfigured() && path === "/resumes") {
+        return getDemoResumes() as T;
+      }
+      throw new Error(MISSING_API_URL);
+    }
     try {
       return await fetchBackend<T>(path);
     } catch {
@@ -201,8 +208,8 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
       }
       throw new Error(
         path === "/resumes"
-          ? "Could not load resumes. Start the API (backend) or configure Supabase."
-          : "Resume API unreachable. Is the backend running? " + API_URL
+          ? "Could not load resumes. Check NEXT_PUBLIC_API_URL and that your API is reachable."
+          : "Resume API unreachable. Verify NEXT_PUBLIC_API_URL and API health."
       );
     }
   }
@@ -272,6 +279,9 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
 export async function apiDelete(path: string): Promise<void> {
   if (!isSupabaseConfigured()) {
     return;
+  }
+  if (!API_URL) {
+    throw new Error(MISSING_API_URL);
   }
 
   const res = await fetch(`${API_URL}${path}`, {

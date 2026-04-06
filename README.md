@@ -44,7 +44,7 @@ Search for job listings across the web and save them directly to your tracker wi
 
 ```
 AutoAppli/
-├── frontend/                     # Next.js app (port 3000)
+├── frontend/                     # Next.js app
 │   ├── src/app/                  # App Router pages
 │   │   ├── (auth)/               # Login & signup
 │   │   ├── dashboard/            # Kanban job tracker
@@ -56,7 +56,7 @@ AutoAppli/
 │   ├── src/lib/                  # Supabase clients, API utils
 │   └── src/types/                # TypeScript types
 │
-├── backend/                      # FastAPI app (port 8000)
+├── backend/                      # FastAPI app
 │   ├── app/main.py               # App entry point, CORS config
 │   ├── app/routers/              # API route handlers
 │   │   ├── auth.py               # JWT authentication
@@ -105,14 +105,14 @@ Create `frontend/.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=https://your-deployed-api.example.com
 ```
 
 ```bash
 npm run dev
 ```
 
-Frontend runs at **http://localhost:3000**
+Use your deployed API URL for `NEXT_PUBLIC_API_URL` (no localhost default in the app).
 
 ### 3. Backend Setup
 
@@ -133,10 +133,10 @@ JWT_SECRET=your_jwt_secret
 ```
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Backend runs at **http://localhost:8000**
+Point `CORS_ORIGINS` in `backend/.env` at your real web origin(s); default in code is the production Vercel app.
 
 ### 4. Database Setup
 

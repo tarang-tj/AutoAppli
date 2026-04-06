@@ -17,4 +17,4 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: CORS_ORIGINS
-        value: "https://auto-appli.vercel.app,http://localhost:3000,http://localhost:5173"
+        value: "https://auto-appli.vercel.app"
