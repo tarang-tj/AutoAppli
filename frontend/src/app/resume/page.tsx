@@ -12,7 +12,7 @@ import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
 import type { Resume, GeneratedDocument, ResumeReview } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { FileStack, Sparkles, X } from "lucide-react";
+import { FileStack, Info, Sparkles, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -126,17 +126,32 @@ export default function ResumePage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Resume Builder</h1>
-        <p className="text-zinc-400 text-sm mt-1">
+        <p className="text-zinc-300 text-sm mt-1">
           Upload your resume and paste a job description to get an AI-tailored version
         </p>
         {!liveApi && !demoHintDismissed ? (
-          <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 pr-2">
-            <p className="text-amber-100/95 text-sm flex-1 min-w-0 leading-snug">
-              <span className="font-medium text-amber-50">Demo mode.</span> Set{" "}
-              <code className="text-xs bg-amber-950/50 px-1 rounded">NEXT_PUBLIC_API_URL</code>{" "}
-              in <code className="text-xs bg-amber-950/50 px-1 rounded">frontend/.env.local</code>{" "}
-              for real PDF parsing and Claude.
-            </p>
+          <div
+            className="mt-4 flex items-start gap-3 rounded-xl border-2 border-amber-500/80 bg-zinc-950 px-4 py-3 shadow-md ring-1 ring-amber-400/25"
+            role="status"
+          >
+            <Info className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" aria-hidden />
+            <div className="flex-1 min-w-0 space-y-2">
+              <p className="text-base font-semibold text-amber-200 tracking-tight">Demo mode</p>
+              <p className="text-sm text-zinc-100 leading-relaxed">
+                Add{" "}
+                <code className="rounded-md border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-[13px] font-mono text-amber-200">
+                  NEXT_PUBLIC_API_URL
+                </code>{" "}
+                pointing at your FastAPI base URL (optional <code className="rounded border border-zinc-600 bg-zinc-900 px-1 py-0.5 text-[12px] font-mono text-amber-200">/api/v1</code>
+                ) so PDF upload, tailoring, and Claude run against your backend.
+              </p>
+              <p className="text-xs leading-snug text-zinc-300">
+                <span className="font-medium text-zinc-200">Local dev:</span>{" "}
+                <code className="rounded bg-zinc-900 px-1 py-0.5 font-mono text-zinc-100">frontend/.env.local</code>
+                <span className="mx-1.5 text-zinc-500">·</span>
+                <span className="font-medium text-zinc-200">Vercel:</span> Project → Settings → Environment Variables → redeploy
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -147,7 +162,7 @@ export default function ResumePage() {
                 }
                 setDemoHintDismissed(true);
               }}
-              className="shrink-0 rounded p-1 text-amber-200/80 hover:bg-amber-500/20 hover:text-amber-50"
+              className="shrink-0 rounded-md p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white"
               aria-label="Dismiss demo hint"
             >
               <X className="h-4 w-4" />
