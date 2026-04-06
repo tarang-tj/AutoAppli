@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiPost } from "@/lib/api";
+import { normalizeJobUrl } from "@/lib/job-url";
 import { useJobs } from "@/hooks/use-jobs";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -20,11 +21,12 @@ export default function DashboardPage() {
     e.preventDefault();
     setCreating(true);
     const form = new FormData(e.currentTarget);
+    const rawUrl = String(form.get("url") ?? "").trim();
     try {
       await apiPost("/jobs", {
         company: form.get("company"),
         title: form.get("title"),
-        url: form.get("url") || undefined,
+        url: normalizeJobUrl(rawUrl),
         description: form.get("description") || undefined,
       });
       toast.success("Job added to tracker");
@@ -64,8 +66,18 @@ export default function DashboardPage() {
                 <Input name="title" required className="bg-zinc-800 border-zinc-700 text-white" />
               </div>
               <div className="space-y-2">
-                <Label className="text-zinc-300">URL</Label>
-                <Input name="url" type="url" className="bg-zinc-800 border-zinc-700 text-white" />
+                <Label className="text-zinc-300">Job posting URL</Label>
+                <Input
+                  name="url"
+                  type="text"
+                  inputMode="url"
+                  autoComplete="url"
+                  placeholder="e.g. careers.acme.com/roles/123 or https://…"
+                  className="bg-zinc-800 border-zinc-700 text-white"
+                />
+                <p className="text-xs text-zinc-500">
+                  https:// is added automatically when omitted.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label className="text-zinc-300">Job Description</Label>

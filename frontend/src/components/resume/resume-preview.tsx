@@ -24,6 +24,25 @@ export function ResumePreview({ document }: { document: GeneratedDocument | null
     document.download_url !== "" &&
     !document.download_url.startsWith("/api/download");
 
+  const hasPdfBase64 = Boolean(document.pdf_base64?.trim());
+
+  const downloadPdfFromBase64 = () => {
+    const b64 = document.pdf_base64;
+    if (!b64?.trim()) return;
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tailored-resume-${document.id}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Card className="bg-zinc-900 border-zinc-800">
       <CardHeader className="flex flex-row items-center justify-between gap-2">
@@ -34,6 +53,16 @@ export function ResumePreview({ document }: { document: GeneratedDocument | null
             size="sm"
             className="border-zinc-700 text-zinc-300 shrink-0"
             onClick={() => window.open(document.download_url, "_blank")}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
+        ) : hasPdfBase64 ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-zinc-700 text-zinc-300 shrink-0"
+            onClick={downloadPdfFromBase64}
           >
             <Download className="h-4 w-4 mr-2" />
             Download PDF

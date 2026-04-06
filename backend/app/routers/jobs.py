@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from app.utils.job_url import normalize_job_url
+
 router = APIRouter(tags=["jobs"])
 
 _jobs: dict[str, dict] = {}
@@ -30,7 +32,7 @@ async def create_job(body: JobCreate):
         "id": job_id,
         "company": body.company,
         "title": body.title,
-        "url": body.url,
+        "url": normalize_job_url(body.url),
         "description": body.description,
         "status": "bookmarked",
         "source": "manual",

@@ -9,6 +9,8 @@ import {
   SAMPLE_JOB_DESCRIPTION_FOR_BUILDER,
 } from "@/lib/demo-data";
 import type { Resume, GeneratedDocument } from "@/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { FileStack, Sparkles, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -23,6 +25,7 @@ export default function ResumePage() {
 
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const [jobDescription, setJobDescription] = useState("");
+  const [tailoringInstructions, setTailoringInstructions] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState<GeneratedDocument | null>(null);
 
@@ -76,6 +79,8 @@ export default function ResumePage() {
         resume_id: selectedResumeId,
         job_description: jobDescription,
         resume_text: selected?.parsed_text ?? "",
+        instructions: tailoringInstructions.trim(),
+        include_pdf: liveApi,
       });
       setGenerated(result);
       toast.success(
@@ -142,6 +147,20 @@ export default function ResumePage() {
             onUploadComplete={mutate}
           />
           <JdInput value={jobDescription} onChange={setJobDescription} />
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white text-lg">Tailoring notes (optional)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={tailoringInstructions}
+                onChange={(e) => setTailoringInstructions(e.target.value)}
+                placeholder="e.g. Emphasize cloud experience; keep the resume to one page tone; target a senior IC role…"
+                rows={3}
+                className="bg-zinc-800 border-zinc-700 text-white resize-none"
+              />
+            </CardContent>
+          </Card>
           <Button
             onClick={handleGenerate}
             disabled={generating || !selectedResumeId || !jobDescription.trim()}

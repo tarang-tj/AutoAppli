@@ -7,6 +7,7 @@ import {
   getDemoOutreachMessages,
   getDemoJobSearchResults,
 } from "@/lib/demo-data";
+import { normalizeJobUrl } from "@/lib/job-url";
 import type { Job, Resume, OutreachMessage, GeneratedDocument } from "@/types";
 
 const MISSING_API_URL =
@@ -132,7 +133,7 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       id: `job-${Date.now()}`,
       company: b.company ?? "",
       title: b.title ?? "",
-      url: b.url,
+      url: normalizeJobUrl(b.url),
       description: b.description,
       status: "bookmarked",
       source: "manual",
@@ -177,6 +178,7 @@ function handleDemoPost(path: string, body?: unknown): unknown {
         (source.length > 2500 ? "\n…" : ""),
       storage_path: "",
       download_url: "",
+      pdf_base64: null,
     };
     return doc;
   }

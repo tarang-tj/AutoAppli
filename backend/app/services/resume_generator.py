@@ -1,11 +1,60 @@
+import base64
 import io
+import logging
 import re
+from xml.sax.saxutils import escape
+
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 from reportlab.lib.colors import HexColor
+
+logger = logging.getLogger(__name__)
+
+# Phrases the model may use instead of strict ALL CAPS (normalized lowercase).
+_SECTION_HEADING_PHRASES = frozenset(
+    {
+        "experience",
+        "work experience",
+        "professional experience",
+        "employment history",
+        "education",
+        "skills",
+        "technical skills",
+        "core competencies",
+        "projects",
+        "summary",
+        "professional summary",
+        "profile",
+        "objective",
+        "certifications",
+        "awards",
+        "honors",
+        "publications",
+        "volunteer",
+        "volunteer experience",
+        "references",
+        "interests",
+        "languages",
+        "leadership",
+    }
+)
+
+
+def _para_xml(text: str) -> str:
+    """Escape text for ReportLab Paragraph (subset of HTML)."""
+    return escape(text, entities={"'": "&apos;", '"': "&quot;"})
+
+
+def _is_section_heading_line(line: str, all_caps_pattern: re.Pattern[str]) -> bool:
+    s = line.strip()
+    if not s or len(s) > 72:
+        return False
+    if all_caps_pattern.match(s):
+        return True
+    return s.lower() in _SECTION_HEADING_PHRASES
 
 
 def generate_resume_pdf(tailored_text: str, candidate_name: str = "Candidate") -> bytes:
@@ -81,20 +130,24 @@ def generate_resume_pdf(tailored_text: str, candidate_name: str = "Candidate") -
     elements: list = []
     lines = tailored_text.strip().split("\n")
 
-    # Heuristic: detect section headings (ALL CAPS or lines followed by dashes)
-    heading_pattern = re.compile(r"^[A-Z][A-Z &/]+$")
+    # Heuristic: detect section headings (ALL CAPS or known phrases)
+    heading_pattern = re.compile(r"^[A-Z][A-Z &/'\-]+$")
 
     i = 0
-    # First line is often the name
+    # First line is often the name (override when caller passes a real name)
     if lines:
-        elements.append(Paragraph(lines[0].strip(), name_style))
+        first = lines[0].strip()
+        if candidate_name and candidate_name != "Candidate":
+            elements.append(Paragraph(_para_xml(candidate_name), name_style))
+        else:
+            elements.append(Paragraph(_para_xml(first), name_style))
         i = 1
 
     # Second line might be contact info
     if i < len(lines) and (
         "@" in lines[i] or "|" in lines[i] or "linkedin" in lines[i].lower()
     ):
-        elements.append(Paragraph(lines[i].strip(), contact_style))
+        elements.append(Paragraph(_para_xml(lines[i].strip()), contact_style))
         i += 1
 
     elements.append(
@@ -109,7 +162,7 @@ def generate_resume_pdf(tailored_text: str, candidate_name: str = "Candidate") -
             continue
 
         # Check for section heading
-        if heading_pattern.match(line) or (
+        if _is_section_heading_line(line, heading_pattern) or (
             i < len(lines) and lines[i].strip().startswith("---")
         ):
             # Skip separator line if present
@@ -124,19 +177,20 @@ def generate_resume_pdf(tailored_text: str, candidate_name: str = "Candidate") -
                     spaceAfter=2,
                 )
             )
-            elements.append(Paragraph(line.title(), heading_style))
+            display = line.title() if line.isupper() else line
+            elements.append(Paragraph(_para_xml(display), heading_style))
             continue
 
         # Bullet points
         if line.startswith(("- ", "* ", "\u2022 ")):
             bullet_text = line.lstrip("-*\u2022 ").strip()
             elements.append(
-                Paragraph(f"\u2022  {bullet_text}", bullet_style)
+                Paragraph(f"\u2022  {_para_xml(bullet_text)}", bullet_style)
             )
             continue
 
         # Regular paragraph
-        elements.append(Paragraph(line, body_style))
+        elements.append(Paragraph(_para_xml(line), body_style))
 
     doc.build(elements)
     pdf_bytes = buffer.getvalue()
@@ -171,14 +225,21 @@ def generate_resume_pdf_from_sections(sections: dict, metadata: dict | None = No
     return generate_resume_pdf(combined, candidate_name=name)
 
 
-async def generate_tailored_resume(resume_text: str, job_description: str) -> dict:
+async def generate_tailored_resume(
+    resume_text: str,
+    job_description: str,
+    *,
+    instructions: str | None = None,
+    include_pdf: bool = False,
+) -> dict:
     """Use Claude to tailor resume text, returning a dict for ResumeGenerateResponse."""
     import uuid
 
     from app.prompts.resume_prompt import build_resume_prompt
     from app.services.claude_service import generate_text
 
-    user_message = build_resume_prompt(resume_text, job_description)
+    extra = (instructions or "").strip() or None
+    user_message = build_resume_prompt(resume_text, job_description, instructions=extra)
     content = await generate_text(
         system=(
             "You are an expert resume writer and career coach. "
@@ -189,10 +250,19 @@ async def generate_tailored_resume(resume_text: str, job_description: str) -> di
         temperature=0.4,
     )
     doc_id = f"doc-{uuid.uuid4().hex[:12]}"
-    return {
+    out: dict = {
         "id": doc_id,
         "doc_type": "tailored_resume",
         "content": content,
         "storage_path": "",
         "download_url": "",
+        "pdf_base64": None,
     }
+    if include_pdf:
+        try:
+            pdf_bytes = generate_resume_pdf(content)
+            out["pdf_base64"] = base64.standard_b64encode(pdf_bytes).decode("ascii")
+        except Exception:
+            logger.exception("Tailored resume PDF generation failed")
+            out["pdf_base64"] = None
+    return out

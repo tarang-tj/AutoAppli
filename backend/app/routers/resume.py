@@ -53,7 +53,12 @@ async def generate_resume(req: ResumeGenerateRequest):
         )
 
     try:
-        result = await generate_tailored_resume(resume_text, req.job_description)
+        result = await generate_tailored_resume(
+            resume_text,
+            req.job_description,
+            instructions=req.instructions.strip() or None,
+            include_pdf=req.include_pdf,
+        )
         return ResumeGenerateResponse(**result)
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc))

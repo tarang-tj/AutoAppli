@@ -7,6 +7,8 @@ class ResumeGenerateRequest(BaseModel):
     resume_id: str
     job_description: str
     resume_text: str = ""
+    instructions: str = ""
+    include_pdf: bool = False
 
 
 class ResumeGenerateResponse(BaseModel):
@@ -15,6 +17,7 @@ class ResumeGenerateResponse(BaseModel):
     content: str
     storage_path: str = ""
     download_url: str = ""
+    pdf_base64: str | None = None
 
 
 class OutreachGenerateRequest(BaseModel):

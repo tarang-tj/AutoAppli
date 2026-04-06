@@ -29,6 +29,8 @@ export interface GeneratedDocument {
   content?: string;
   storage_path: string;
   download_url: string;
+  /** Base64-encoded PDF when the API generated one (`include_pdf: true`). */
+  pdf_base64?: string | null;
 }
 
 export interface OutreachMessage {
