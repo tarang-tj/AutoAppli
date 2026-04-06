@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     CORS_ORIGINS: str = (
-        "http://localhost:3000,http://localhost:5173,http://localhost:8080"
+        "http://localhost:3000,http://localhost:5173,http://localhost:8080,"
+        "https://auto-appli.vercel.app"
     )
     CLAUDE_MODEL: str = "claude-sonnet-4-20250514"
     MAX_UPLOAD_SIZE_MB: int = 10

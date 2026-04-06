@@ -26,6 +26,7 @@ export interface Resume {
 export interface GeneratedDocument {
   id: string;
   doc_type: "tailored_resume" | "cover_letter";
+  content?: string;
   storage_path: string;
   download_url: string;
 }

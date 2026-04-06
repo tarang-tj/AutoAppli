@@ -1,0 +1,20 @@
+# Host the FastAPI API on Render: https://render.com → New Blueprint, connect repo.
+# Set ANTHROPIC_API_KEY in the Render dashboard.
+# Then on Vercel (auto-appli): Environment Variables →
+#   NEXT_PUBLIC_API_URL=https://YOUR-SERVICE.onrender.com
+# (with or without /api/v1 — the frontend normalizes it.)
+
+services:
+  - type: web
+    name: autoappli-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: "https://auto-appli.vercel.app,http://localhost:3000,http://localhost:5173"

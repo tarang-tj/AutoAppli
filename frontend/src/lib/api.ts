@@ -9,7 +9,25 @@ import {
 } from "@/lib/demo-data";
 import type { Job, Resume, OutreachMessage, GeneratedDocument } from "@/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+/** FastAPI mounts routers under `/api/v1`. Accept env with or without that suffix. */
+function resolveApiBaseUrl(): string {
+  const raw = (
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
+  )
+    .trim()
+    .replace(/\/+$/, "");
+  if (/\/api\/v1$/i.test(raw)) {
+    return raw;
+  }
+  return `${raw}/api/v1`;
+}
+
+const API_URL = resolveApiBaseUrl();
+
+/** Resume routes use the FastAPI backend so AI upload/generate work without Supabase. */
+function useBackendForResumePath(path: string): boolean {
+  return path === "/resumes" || path.startsWith("/resumes/");
+}
 
 async function getAuthHeaders(): Promise<HeadersInit> {
   if (!isSupabaseConfigured()) {
@@ -25,12 +43,40 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   };
 }
 
+function formatApiDetail(detail: unknown): string {
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) =>
+        typeof item === "object" && item !== null && "msg" in item
+          ? String((item as { msg: string }).msg)
+          : JSON.stringify(item)
+      )
+      .join("; ");
+  }
+  if (detail && typeof detail === "object" && "message" in detail) {
+    return String((detail as { message: string }).message);
+  }
+  return "API error";
+}
+
 async function handleResponse(res: Response) {
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(error.detail || "API error");
+    throw new Error(
+      formatApiDetail((error as { detail?: unknown }).detail) || res.statusText
+    );
   }
   return res.json();
+}
+
+async function fetchBackend<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_URL}${path}`, {
+    ...init,
+    headers: { ...headers, ...init?.headers },
+  });
+  return handleResponse(res) as Promise<T>;
 }
 
 function handleDemoGet(path: string): unknown {
@@ -146,42 +192,69 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
 }
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {
+  if (useBackendForResumePath(path)) {
+    try {
+      return await fetchBackend<T>(path);
+    } catch {
+      if (!isSupabaseConfigured() && path === "/resumes") {
+        return getDemoResumes() as T;
+      }
+      throw new Error(
+        path === "/resumes"
+          ? "Could not load resumes. Start the API (backend) or configure Supabase."
+          : "Resume API unreachable. Is the backend running? " + API_URL
+      );
+    }
+  }
+
   if (!isSupabaseConfigured()) {
     return handleDemoGet(path) as T;
   }
 
-  const headers = await getAuthHeaders();
-  const res = await fetch(`${API_URL}${path}`, { headers });
-  return handleResponse(res);
+  return fetchBackend<T>(path);
 }
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
+  if (useBackendForResumePath(path)) {
+    return fetchBackend<T>(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
   if (!isSupabaseConfigured()) {
     return handleDemoPost(path, body) as T;
   }
 
-  const headers = await getAuthHeaders();
-  const res = await fetch(`${API_URL}${path}`, {
+  return fetchBackend<T>(path, {
     method: "POST",
-    headers: { ...headers, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
-  return handleResponse(res);
 }
 
 export async function apiPostFormData<T = unknown>(path: string, formData: FormData): Promise<T> {
+  if (useBackendForResumePath(path)) {
+    const headers = await getAuthHeaders();
+    return fetchBackend<T>(path, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+  }
+
   if (!isSupabaseConfigured()) {
     void formData;
     return handleDemoPost(path) as T;
   }
 
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_URL}${path}`, {
+  return fetchBackend<T>(path, {
     method: "POST",
     headers,
     body: formData,
   });
-  return handleResponse(res);
 }
 
 export async function apiPatch<T = unknown>(path: string, body: unknown): Promise<T> {
@@ -189,13 +262,11 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
     return handleDemoPatch(path, body) as T;
   }
 
-  const headers = await getAuthHeaders();
-  const res = await fetch(`${API_URL}${path}`, {
+  return fetchBackend<T>(path, {
     method: "PATCH",
-    headers: { ...headers, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  return handleResponse(res);
 }
 
 export async function apiDelete(path: string): Promise<void> {
@@ -203,10 +274,12 @@ export async function apiDelete(path: string): Promise<void> {
     return;
   }
 
-  const headers = await getAuthHeaders();
-  const res = await fetch(`${API_URL}${path}`, { method: "DELETE", headers });
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "DELETE",
+    headers: await getAuthHeaders(),
+  });
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(error.detail || "API error");
+    throw new Error(formatApiDetail((error as { detail?: unknown }).detail) || res.statusText);
   }
 }

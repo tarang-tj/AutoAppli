@@ -4,8 +4,6 @@ import { JdInput } from "@/components/resume/jd-input";
 import { ResumePreview } from "@/components/resume/resume-preview";
 import { Button } from "@/components/ui/button";
 import { apiGet, apiPost } from "@/lib/api";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
-import { getDemoResumes } from "@/lib/demo-data";
 import type { Resume, GeneratedDocument } from "@/types";
 import { Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -13,15 +11,9 @@ import { toast } from "sonner";
 import useSWR from "swr";
 
 export default function ResumePage() {
-  const [demoMode] = useState(!isSupabaseConfigured());
   const { data: resumes, mutate } = useSWR<Resume[]>(
     "/resumes",
-    () => {
-      if (demoMode) {
-        return getDemoResumes();
-      }
-      return apiGet<Resume[]>("/resumes");
-    },
+    () => apiGet<Resume[]>("/resumes"),
     { revalidateOnFocus: false }
   );
 
@@ -31,10 +23,10 @@ export default function ResumePage() {
   const [generated, setGenerated] = useState<GeneratedDocument | null>(null);
 
   useEffect(() => {
-    if (demoMode && resumes && resumes.length > 0 && !selectedResumeId) {
+    if (resumes && resumes.length > 0 && !selectedResumeId) {
       setSelectedResumeId(resumes[0].id);
     }
-  }, [resumes, demoMode, selectedResumeId]);
+  }, [resumes, selectedResumeId]);
 
   const handleGenerate = async () => {
     if (!selectedResumeId) {
@@ -47,9 +39,11 @@ export default function ResumePage() {
     }
     setGenerating(true);
     try {
+      const selected = resumes?.find((r) => r.id === selectedResumeId);
       const result = await apiPost<GeneratedDocument>("/resumes/generate", {
         resume_id: selectedResumeId,
         job_description: jobDescription,
+        resume_text: selected?.parsed_text ?? "",
       });
       setGenerated(result);
       toast.success("Tailored resume generated!");
