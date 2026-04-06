@@ -9,7 +9,7 @@ import {
   SAMPLE_JOB_DESCRIPTION_FOR_BUILDER,
 } from "@/lib/demo-data";
 import type { Resume, GeneratedDocument } from "@/types";
-import { FileStack, Sparkles } from "lucide-react";
+import { FileStack, Sparkles, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -27,6 +27,17 @@ export default function ResumePage() {
   const [generated, setGenerated] = useState<GeneratedDocument | null>(null);
 
   const liveApi = isResumeApiConfigured();
+  const [demoHintDismissed, setDemoHintDismissed] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("autoappli-resume-demo-hint-dismissed") === "1") {
+        setDemoHintDismissed(true);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     if (resumes && resumes.length > 0 && !selectedResumeId) {
@@ -84,13 +95,30 @@ export default function ResumePage() {
         <p className="text-zinc-400 text-sm mt-1">
           Upload your resume and paste a job description to get an AI-tailored version
         </p>
-        {!liveApi ? (
-          <p className="text-amber-200/90 text-sm mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
-            <strong className="font-medium">Demo mode:</strong>{" "}
-            <code className="text-amber-100/90">NEXT_PUBLIC_API_URL</code> is not set. Upload
-            uses a placeholder; generate shows stub text. Set the env var to your deployed API
-            for real PDF parsing and Claude output.
-          </p>
+        {!liveApi && !demoHintDismissed ? (
+          <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 pr-2">
+            <p className="text-amber-100/95 text-sm flex-1 min-w-0 leading-snug">
+              <span className="font-medium text-amber-50">Demo mode.</span> Set{" "}
+              <code className="text-xs bg-amber-950/50 px-1 rounded">NEXT_PUBLIC_API_URL</code>{" "}
+              in <code className="text-xs bg-amber-950/50 px-1 rounded">frontend/.env.local</code>{" "}
+              for real PDF parsing and Claude.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  sessionStorage.setItem("autoappli-resume-demo-hint-dismissed", "1");
+                } catch {
+                  /* ignore */
+                }
+                setDemoHintDismissed(true);
+              }}
+              className="shrink-0 rounded p-1 text-amber-200/80 hover:bg-amber-500/20 hover:text-amber-50"
+              aria-label="Dismiss demo hint"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         ) : null}
         <div className="flex flex-wrap gap-2 mt-4">
           <Button
