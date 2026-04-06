@@ -131,7 +131,8 @@ let demoJobs: Job[] = [
   },
 ];
 
-let demoResumes: Resume[] = [
+/** Seeded resumes for the Resume Builder (reset via loadSampleResumesForBuilder). */
+const RESUME_BUILDER_SAMPLES: Resume[] = [
   {
     id: "resume-1",
     file_name: "resume_2024.pdf",
@@ -217,6 +218,27 @@ CERTIFICATIONS
     created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
+
+let demoResumes: Resume[] = structuredClone(RESUME_BUILDER_SAMPLES);
+
+/** Replace session resumes with rich samples (for testing without an API). */
+export function loadSampleResumesForBuilder(): Resume[] {
+  demoResumes = structuredClone(RESUME_BUILDER_SAMPLES);
+  return demoResumes;
+}
+
+/** Sample JD for quick testing of tailor flow. */
+export const SAMPLE_JOB_DESCRIPTION_FOR_BUILDER = `Senior Data Analyst — Growth & Product
+
+We are looking for a data analyst to partner with product and marketing on experimentation, funnel analysis, and reporting. You will own core dashboards, define metrics, and influence roadmap decisions with data.
+
+Requirements:
+- 4+ years in analytics or data science in a product-led company
+- Strong SQL and Python; experience with dbt or similar
+- Comfort with A/B testing, causal thinking, and stakeholder communication
+- Nice to have: experience in B2C subscription or marketplace businesses
+
+Location: Remote (US) | Full-time`;
 
 const demoOutreachMessages: OutreachMessage[] = [
   {

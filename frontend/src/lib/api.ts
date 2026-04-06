@@ -22,9 +22,32 @@ function resolveApiBaseUrl(): string {
 
 const API_URL = resolveApiBaseUrl();
 
-/** Resume routes use the FastAPI backend so AI upload/generate work without Supabase. */
+/** True when resume upload/generate/list should call FastAPI. */
+export function isResumeApiConfigured(): boolean {
+  return Boolean(API_URL);
+}
+
+/** Resume routes can use FastAPI (when configured) or in-browser demo session. */
 function useBackendForResumePath(path: string): boolean {
   return path === "/resumes" || path.startsWith("/resumes/");
+}
+
+function handleDemoResumeUpload(formData: FormData): Resume {
+  const file = formData.get("file");
+  const fileName =
+    file instanceof File ? file.name : "uploaded_resume.pdf";
+  const resume: Resume = {
+    id: `resume-${Date.now()}`,
+    file_name: fileName,
+    storage_path: `resumes/${fileName}`,
+    parsed_text:
+      "[Demo upload — no API] PDF text was not extracted. Use “Load sample resumes” for full sample text, or set NEXT_PUBLIC_API_URL for real parsing.\n\n" +
+      `Uploaded file: ${fileName}`,
+    is_primary: false,
+    created_at: new Date().toISOString(),
+  };
+  setDemoResumes([...getDemoResumes(), resume]);
+  return resume;
 }
 
 async function getAuthHeaders(): Promise<HeadersInit> {
@@ -134,11 +157,26 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     return resume;
   }
   if (path === "/resumes/generate") {
+    const b = body as {
+      job_description?: string;
+      resume_text?: string;
+    };
+    const jd = (b.job_description ?? "").trim() || "(no job description)";
+    const source = (b.resume_text ?? "").trim();
     const doc: GeneratedDocument = {
       id: `doc-${Date.now()}`,
       doc_type: "tailored_resume",
-      storage_path: `generated/tailored_resume_${Date.now()}.pdf`,
-      download_url: `/api/download/generated/tailored_resume_${Date.now()}.pdf`,
+      content:
+        "DEMO OUTPUT (NEXT_PUBLIC_API_URL not set)\n\n" +
+        "This is stub text so you can test the UI. Deploy the FastAPI app and set NEXT_PUBLIC_API_URL for real Claude tailoring.\n\n" +
+        "---\nTARGET ROLE SUMMARY\n" +
+        jd.slice(0, 500) +
+        (jd.length > 500 ? "…" : "") +
+        "\n\n---\nSOURCE RESUME (excerpt)\n" +
+        source.slice(0, 2500) +
+        (source.length > 2500 ? "\n…" : ""),
+      storage_path: "",
+      download_url: "",
     };
     return doc;
   }
@@ -195,7 +233,7 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
 export async function apiGet<T = unknown>(path: string): Promise<T> {
   if (useBackendForResumePath(path)) {
     if (!API_URL) {
-      if (!isSupabaseConfigured() && path === "/resumes") {
+      if (path === "/resumes") {
         return getDemoResumes() as T;
       }
       throw new Error(MISSING_API_URL);
@@ -203,7 +241,7 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     try {
       return await fetchBackend<T>(path);
     } catch {
-      if (!isSupabaseConfigured() && path === "/resumes") {
+      if (path === "/resumes") {
         return getDemoResumes() as T;
       }
       throw new Error(
@@ -223,6 +261,9 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
   if (useBackendForResumePath(path)) {
+    if (!API_URL) {
+      return handleDemoPost(path, body) as T;
+    }
     return fetchBackend<T>(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -243,6 +284,13 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
 
 export async function apiPostFormData<T = unknown>(path: string, formData: FormData): Promise<T> {
   if (useBackendForResumePath(path)) {
+    if (!API_URL) {
+      if (path === "/resumes/upload") {
+        return handleDemoResumeUpload(formData) as T;
+      }
+      void formData;
+      return handleDemoPost(path) as T;
+    }
     const headers = await getAuthHeaders();
     return fetchBackend<T>(path, {
       method: "POST",
