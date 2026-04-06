@@ -8,7 +8,8 @@ import {
   loadSampleResumesForBuilder,
   SAMPLE_JOB_DESCRIPTION_FOR_BUILDER,
 } from "@/lib/demo-data";
-import type { Resume, GeneratedDocument } from "@/types";
+import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
+import type { Resume, GeneratedDocument, ResumeReview } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { FileStack, Sparkles, X } from "lucide-react";
@@ -28,6 +29,8 @@ export default function ResumePage() {
   const [tailoringInstructions, setTailoringInstructions] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState<GeneratedDocument | null>(null);
+  const [review, setReview] = useState<ResumeReview | null>(null);
+  const [reviewing, setReviewing] = useState(false);
 
   const liveApi = isResumeApiConfigured();
   const [demoHintDismissed, setDemoHintDismissed] = useState(false);
@@ -90,6 +93,32 @@ export default function ResumePage() {
       toast.error(err instanceof Error ? err.message : "Failed to generate resume");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleReview = async () => {
+    if (!selectedResumeId) {
+      toast.error("Please select a resume first");
+      return;
+    }
+    const selected = resumes?.find((r) => r.id === selectedResumeId);
+    const text = (selected?.parsed_text ?? "").trim();
+    if (!text) {
+      toast.error("No resume text to review for this item");
+      return;
+    }
+    setReviewing(true);
+    try {
+      const result = await apiPost<ResumeReview>("/resumes/review", {
+        resume_id: selectedResumeId,
+        resume_text: text,
+      });
+      setReview(result);
+      toast.success(liveApi ? "Review ready" : "Demo review loaded — connect API for full analysis");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to get review");
+    } finally {
+      setReviewing(false);
     }
   };
 
@@ -175,6 +204,12 @@ export default function ResumePage() {
               </>
             )}
           </Button>
+          <ResumeReviewPanel
+            review={review}
+            loading={reviewing}
+            disabled={!selectedResumeId || !(resumes?.find((r) => r.id === selectedResumeId)?.parsed_text ?? "").trim()}
+            onRequestReview={handleReview}
+          />
         </div>
         <div>
           <ResumePreview document={generated} />

@@ -33,6 +33,17 @@ export interface GeneratedDocument {
   pdf_base64?: string | null;
 }
 
+export interface ResumeReview {
+  id: string;
+  overall_score: number;
+  ats_score: number;
+  strengths: string[];
+  improvements: string[];
+  ats_issues: string[];
+  missing_sections: string[];
+  keyword_suggestions: string[];
+}
+
 export interface OutreachMessage {
   id: string;
   message_type: "email" | "linkedin";

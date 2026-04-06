@@ -5,8 +5,13 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
 
-from app.models.schemas import ResumeGenerateRequest, ResumeGenerateResponse
-from app.services.resume_generator import generate_tailored_resume
+from app.models.schemas import (
+    ResumeGenerateRequest,
+    ResumeGenerateResponse,
+    ResumeReviewRequest,
+    ResumeReviewResponse,
+)
+from app.services.resume_generator import generate_resume_review, generate_tailored_resume
 from app.services.resume_parser import extract_text_from_pdf
 
 router = APIRouter(tags=["resume"])
@@ -62,3 +67,21 @@ async def generate_resume(req: ResumeGenerateRequest):
         return ResumeGenerateResponse(**result)
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/resumes/review", response_model=ResumeReviewResponse)
+async def review_resume(req: ResumeReviewRequest):
+    resume_text = req.resume_text.strip()
+    if not resume_text and req.resume_id in _resumes:
+        resume_text = (_resumes[req.resume_id].get("parsed_text") or "").strip()
+
+    if not resume_text:
+        raise HTTPException(
+            status_code=400,
+            detail="No resume text available. Upload a resume first or pass resume_text.",
+        )
+
+    try:
+        return await generate_resume_review(resume_text)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))

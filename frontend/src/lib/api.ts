@@ -8,7 +8,7 @@ import {
   getDemoJobSearchResults,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
-import type { Job, Resume, OutreachMessage, GeneratedDocument } from "@/types";
+import type { Job, Resume, OutreachMessage, GeneratedDocument, ResumeReview } from "@/types";
 
 const MISSING_API_URL =
   "Set NEXT_PUBLIC_API_URL to your deployed API (e.g. https://your-api.onrender.com). No default URL is used.";
@@ -181,6 +181,29 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       pdf_base64: null,
     };
     return doc;
+  }
+  if (path === "/resumes/review") {
+    const b = body as { resume_text?: string };
+    const excerpt = (b.resume_text ?? "").trim().slice(0, 400);
+    const review: ResumeReview = {
+      id: `rev-${Date.now()}`,
+      overall_score: 7,
+      ats_score: 6,
+      strengths: [
+        "Demo feedback only — set NEXT_PUBLIC_API_URL for a full Claude review.",
+        excerpt ? `Your resume excerpt mentions: "${excerpt.slice(0, 120)}${excerpt.length > 120 ? "…" : ""}"` : "Upload or select a resume with parsed text for context.",
+      ],
+      improvements: [
+        "Tie bullets to outcomes (%, $, time saved).",
+        "Mirror 5–8 keywords from a target job description.",
+      ],
+      ats_issues: [
+        "Demo mode cannot analyze formatting or file structure.",
+      ],
+      missing_sections: [],
+      keyword_suggestions: ["cross-functional collaboration", "measurable impact"],
+    };
+    return review;
   }
   if (path === "/outreach/generate") {
     const b = body as {

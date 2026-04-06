@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 import logging
 import re
 from xml.sax.saxutils import escape
@@ -10,6 +11,9 @@ from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 from reportlab.lib.colors import HexColor
+
+from app.models.schemas import ResumeReviewResponse
+from app.services.resume_text import parse_resume_review_json, sanitize_tailored_resume_text
 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +244,7 @@ async def generate_tailored_resume(
 
     extra = (instructions or "").strip() or None
     user_message = build_resume_prompt(resume_text, job_description, instructions=extra)
-    content = await generate_text(
+    raw_content = await generate_text(
         system=(
             "You are an expert resume writer and career coach. "
             "Produce polished, ATS-friendly resume content."
@@ -249,6 +253,7 @@ async def generate_tailored_resume(
         max_tokens=4096,
         temperature=0.4,
     )
+    content = sanitize_tailored_resume_text(raw_content)
     doc_id = f"doc-{uuid.uuid4().hex[:12]}"
     out: dict = {
         "id": doc_id,
@@ -266,3 +271,35 @@ async def generate_tailored_resume(
             logger.exception("Tailored resume PDF generation failed")
             out["pdf_base64"] = None
     return out
+
+
+async def generate_resume_review(resume_text: str) -> ResumeReviewResponse:
+    """Structured ATS-oriented feedback for the given resume plain text."""
+    import uuid
+
+    from app.prompts.resume_prompt import build_resume_review_prompt
+    from app.services.claude_service import generate_text
+
+    user_message = build_resume_review_prompt(resume_text)
+    raw = await generate_text(
+        system=(
+            "You are an expert resume reviewer. Reply with only valid JSON as specified, "
+            "no markdown fences, no commentary."
+        ),
+        user_message=user_message,
+        max_tokens=2048,
+        temperature=0.25,
+    )
+    try:
+        parsed = parse_resume_review_json(raw)
+    except (json.JSONDecodeError, ValueError) as exc:
+        logger.warning("Resume review JSON parse failed: %s", exc)
+        raise RuntimeError("Could not parse resume review from the model") from exc
+
+    review_id = f"rev-{uuid.uuid4().hex[:12]}"
+    parsed.pop("id", None)
+    try:
+        return ResumeReviewResponse.model_validate({"id": review_id, **parsed})
+    except Exception as exc:
+        logger.warning("Resume review validation failed: %s", exc)
+        raise RuntimeError("Resume review response was incomplete or invalid") from exc
