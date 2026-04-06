@@ -1,0 +1,61 @@
+export type JobStatus = "bookmarked" | "applied" | "interviewing" | "offer" | "rejected" | "ghosted";
+
+export interface Job {
+  id: string;
+  company: string;
+  title: string;
+  url?: string;
+  description?: string;
+  status: JobStatus;
+  source: string;
+  notes?: string;
+  applied_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Resume {
+  id: string;
+  file_name: string;
+  storage_path: string;
+  parsed_text: string;
+  is_primary: boolean;
+  created_at: string;
+}
+
+export interface GeneratedDocument {
+  id: string;
+  doc_type: "tailored_resume" | "cover_letter";
+  storage_path: string;
+  download_url: string;
+}
+
+export interface OutreachMessage {
+  id: string;
+  message_type: "email" | "linkedin";
+  recipient_name: string;
+  recipient_role?: string;
+  subject?: string;
+  body: string;
+  created_at: string;
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  role?: string;
+  email?: string;
+  linkedin_url?: string;
+  notes?: string;
+  created_at: string;
+}
+
+export interface JobSearchResult {
+  title: string;
+  company: string;
+  location: string;
+  url: string;
+  snippet: string;
+  posted_date?: string;
+  source: string;
+}
