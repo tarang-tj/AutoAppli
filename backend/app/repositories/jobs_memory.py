@@ -40,6 +40,15 @@ def sorted_jobs(jobs: list[dict]) -> list[dict]:
     )
 
 
+def find_job_by_url(url: str | None) -> dict | None:
+    if not url:
+        return None
+    for j in _jobs.values():
+        if j.get("url") == url:
+            return j
+    return None
+
+
 def create_job(company: str, title: str, url: str | None, description: str | None, source: str) -> dict:
     job_id = f"job-{uuid.uuid4().hex[:12]}"
     now = datetime.now(timezone.utc).isoformat()

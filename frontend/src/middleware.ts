@@ -1,9 +1,22 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const PUBLIC_PATH_PREFIXES = [
+  "/login",
+  "/signup",
+  "/privacy",
+  "/terms",
+] as const;
+
+function isPublicPath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  if (pathname === "/robots.txt" || pathname === "/sitemap.xml") return true;
+  return PUBLIC_PATH_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith("/login") || pathname.startsWith("/signup")) {
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
@@ -36,5 +49,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|login|signup|api).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg|login|signup|privacy|terms|robots.txt|sitemap.xml|api).*)",
+  ],
 };

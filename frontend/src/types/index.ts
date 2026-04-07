@@ -14,6 +14,8 @@ export interface Job {
   applied_at?: string;
   created_at: string;
   updated_at: string;
+  /** Present on POST /jobs when this URL was already on the user’s board. */
+  duplicate?: boolean;
 }
 
 export interface Resume {

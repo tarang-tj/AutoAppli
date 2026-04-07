@@ -138,8 +138,27 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       title?: string;
       url?: string;
       description?: string;
+      source?: string;
+      fetch_full_description?: boolean;
     };
     const jobs = getDemoJobs();
+    const normUrl = normalizeJobUrl(b.url);
+    if (normUrl) {
+      const dup = jobs.find((j) => j.url === normUrl);
+      if (dup) {
+        return { ...dup, duplicate: true };
+      }
+    }
+    let description = b.description;
+    if (b.fetch_full_description && normUrl) {
+      description = [
+        description,
+        "[Demo] Full posting text would be scraped from this URL for resume tailoring.",
+        "Responsibilities, requirements, and benefits would appear here.",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+    }
     const bookmarked = jobs.filter((j) => j.status === "bookmarked");
     const maxOrd = bookmarked.length
       ? Math.max(...bookmarked.map((j) => j.sort_order ?? 0))
@@ -148,11 +167,11 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       id: `job-${Date.now()}`,
       company: b.company ?? "",
       title: b.title ?? "",
-      url: normalizeJobUrl(b.url),
-      description: b.description,
+      url: normUrl,
+      description,
       status: "bookmarked",
       sort_order: maxOrd + 1,
-      source: "manual",
+      source: b.source ?? "manual",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

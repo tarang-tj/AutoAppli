@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/site";
+import { Toaster } from "sonner";
 
 const siteUrl = getSiteUrl();
 
@@ -55,6 +56,7 @@ export default function RootLayout({
         }}
       >
         {children}
+        <Toaster theme="dark" richColors position="top-center" />
       </body>
     </html>
   );

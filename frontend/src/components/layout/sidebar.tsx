@@ -22,10 +22,16 @@ export function Sidebar() {
         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
       <aside className={cn("fixed inset-y-0 left-0 z-40 w-64 bg-zinc-950 border-r border-zinc-800 transform transition-transform duration-200 md:translate-x-0 flex flex-col", open ? "translate-x-0" : "-translate-x-full")}>
-        <div className="flex items-center gap-2 px-6 py-5 border-b border-zinc-800 shrink-0">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">A</div>
+        <Link
+          href="/"
+          onClick={() => setOpen(false)}
+          className="flex items-center gap-2 px-6 py-5 border-b border-zinc-800 shrink-0 hover:bg-zinc-900/50 transition-colors"
+        >
+          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+            A
+          </div>
           <span className="text-lg font-semibold text-white">AutoAppli</span>
-        </div>
+        </Link>
         <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");

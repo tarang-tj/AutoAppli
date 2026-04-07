@@ -23,7 +23,10 @@ Generate personalized cold emails and LinkedIn messages for recruiters and hirin
 Visual drag-and-drop board to manage applications across stages: **Bookmarked → Applied → Interviewing → Offer → Rejected**
 
 ### 🔍 Job Search & Scraping
-Search for job listings across the web and save them directly to your tracker with one click.
+Search live listings (e.g. Indeed), save to the Kanban in one click, optionally **scrape the full job description** from the posting URL for better resume tailoring, and avoid duplicates when the same URL is already on your board.
+
+### 🏠 Public landing
+Signed-out visitors see a **marketing home page** at `/` (with Supabase auth enabled, signed-in users are redirected to the dashboard). **`/privacy`** and **`/terms`** stay public alongside login and signup.
 
 ---
 
@@ -180,7 +183,7 @@ Other tables you may add for a full product (not all are defined in-repo yet):
 | `POST` | `/resumes/generate` | Generate tailored resume with AI |
 | `POST` | `/outreach/generate` | Draft outreach email/LinkedIn message |
 | `GET` | `/jobs` | List job applications |
-| `POST` | `/jobs` | Add a job application |
+| `POST` | `/jobs` | Add a job (`fetch_full_description` scrapes posting HTML; same URL returns `{ ..., duplicate: true }`) |
 | `PATCH` | `/jobs/{id}` | Partial update: `status`, `notes`, or both |
 | `PUT` | `/jobs/reorder` | Persist column order (`status`, `ordered_ids`) |
 | `DELETE` | `/jobs/{id}` | Remove a job application |

@@ -8,6 +8,10 @@ from pydantic import BaseModel, Field
 from app.config import get_settings
 from app.deps.jobs_auth import get_jobs_user_id, jobs_use_supabase
 from app.repositories import jobs_memory, jobs_supabase
+from app.services import scraper_service
+from app.utils.job_url import normalize_job_url
+
+_MAX_DESCRIPTION_LEN = 60_000
 
 router = APIRouter(tags=["jobs"])
 
@@ -27,6 +31,10 @@ class JobCreate(BaseModel):
     url: str | None = None
     description: str | None = None
     source: str = "manual"
+    fetch_full_description: bool = Field(
+        default=False,
+        description="If true and url is set, scrape the posting page to fill description (Indeed and similar).",
+    )
 
 
 class JobPatch(BaseModel):
@@ -49,26 +57,43 @@ async def create_job(
     user_id: str | None = Depends(get_jobs_user_id),
 ):
     settings = get_settings()
+    url_norm = normalize_job_url(body.url)
+    description = body.description
+
+    if body.fetch_full_description and url_norm:
+        details = await scraper_service.scrape_job_details(url_norm)
+        scraped = details.get("description")
+        if isinstance(scraped, str) and scraped.strip():
+            description = scraped.strip()[:_MAX_DESCRIPTION_LEN]
+
     if _persisted(settings):
         if user_id is None:
             raise HTTPException(status_code=401, detail="Authorization required")
+        existing = jobs_supabase.find_job_by_url(settings, user_id, url_norm)
+        if existing:
+            return {**existing, "duplicate": True}
         try:
-            return jobs_supabase.create_job(
+            job = jobs_supabase.create_job(
                 settings,
                 user_id,
                 body.company,
                 body.title,
-                body.url,
-                body.description,
+                url_norm,
+                description,
                 body.source,
             )
+            return job
         except RuntimeError as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
+
+    existing_mem = jobs_memory.find_job_by_url(url_norm)
+    if existing_mem:
+        return {**existing_mem, "duplicate": True}
     return jobs_memory.create_job(
         body.company,
         body.title,
-        body.url,
-        body.description,
+        url_norm,
+        description,
         body.source,
     )
 

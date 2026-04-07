@@ -60,6 +60,23 @@ def _next_sort_order(sb: Client, user_id: str, status: str) -> int:
     return int(rows[0]["sort_order"]) + 1
 
 
+def find_job_by_url(settings: Settings, user_id: str, url: str | None) -> dict | None:
+    """Return an existing job if this user already saved the same normalized URL."""
+    if not url:
+        return None
+    sb = _client(settings)
+    res = (
+        sb.table("jobs")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("url", url)
+        .limit(1)
+        .execute()
+    )
+    rows = res.data or []
+    return _public_row(rows[0]) if rows else None
+
+
 def create_job(
     settings: Settings,
     user_id: str,

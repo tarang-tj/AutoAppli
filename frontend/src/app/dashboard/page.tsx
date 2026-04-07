@@ -1,5 +1,6 @@
 "use client";
 import { KanbanBoard } from "@/components/dashboard/kanban-board";
+import { PipelineStats } from "@/components/dashboard/pipeline-stats";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { apiPost, isJobsApiConfigured } from "@/lib/api";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { useJobs } from "@/hooks/use-jobs";
+import type { Job } from "@/types";
 import { LayoutGrid, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -26,13 +28,18 @@ export default function DashboardPage() {
     const form = new FormData(e.currentTarget);
     const rawUrl = String(form.get("url") ?? "").trim();
     try {
-      await apiPost("/jobs", {
+      const res = await apiPost<Job>("/jobs", {
         company: form.get("company"),
         title: form.get("title"),
         url: normalizeJobUrl(rawUrl),
-        description: form.get("description") || undefined,
+        description: (form.get("description") as string) || undefined,
+        fetch_full_description: form.get("fetch_full_description") === "on",
       });
-      toast.success("Job added to tracker");
+      if (res.duplicate) {
+        toast.info("Already on your board");
+      } else {
+        toast.success("Job added to tracker");
+      }
       setOpen(false);
       (e.target as HTMLFormElement).reset();
       mutate();
@@ -97,6 +104,17 @@ export default function DashboardPage() {
                 <Label className="text-zinc-300">Job Description</Label>
                 <Textarea name="description" rows={4} className="bg-zinc-800 border-zinc-700 text-white" />
               </div>
+              <label className="flex items-start gap-2 text-sm text-zinc-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="fetch_full_description"
+                  className="mt-1 rounded border-zinc-600 bg-zinc-800 text-blue-600"
+                />
+                <span>
+                  Fetch full description from posting URL (Indeed-style pages; slower, better for resume
+                  tailoring)
+                </span>
+              </label>
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={creating}>
                 {creating ? "Adding..." : "Add Job"}
               </Button>
@@ -113,6 +131,8 @@ export default function DashboardPage() {
           between columns to update status.
         </p>
       ) : null}
+
+      <PipelineStats jobs={jobs} />
 
       {!isLoading && jobs.length === 0 ? (
         <Card className="mb-6 bg-zinc-900/80 border-zinc-800 border-dashed">
