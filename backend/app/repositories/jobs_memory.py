@@ -71,6 +71,12 @@ def create_job(company: str, title: str, url: str | None, description: str | Non
     return job
 
 
+def get_job(job_id: str) -> dict:
+    if job_id not in _jobs:
+        raise KeyError("not found")
+    return _jobs[job_id]
+
+
 def list_jobs(status: str | None) -> list[dict]:
     jobs = list(_jobs.values())
     if status:
@@ -99,4 +105,16 @@ def patch_job(job_id: str, patch: dict) -> dict:
         if row["status"] != new_status:
             row["status"] = new_status
             row["sort_order"] = _next_sort_order(new_status)
-            if new_status == "appl
+            if new_status == "applied" and row.get("applied_at") in (None, ""):
+                row["applied_at"] = now
+    if "notes" in patch:
+        n = patch["notes"]
+        row["notes"] = None if n in ("", None) else n
+    row["updated_at"] = now
+    return row
+
+
+def delete_job(job_id: str) -> None:
+    if job_id not in _jobs:
+        raise KeyError("not found")
+    del _jobs[job_id]

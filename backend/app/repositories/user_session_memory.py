@@ -1,0 +1,27 @@
+"""Per-user in-memory stores for resume uploads and outreach when Postgres is not used for those domains."""
+
+from __future__ import annotations
+
+DEMO_KEY = "__demo__"
+
+
+def _key(user_id: str | None) -> str:
+    return user_id if user_id is not None else DEMO_KEY
+
+
+_resumes_by_user: dict[str, dict[str, dict]] = {}
+_outreach_by_user: dict[str, list[dict]] = {}
+
+
+def resume_store(user_id: str | None) -> dict[str, dict]:
+    k = _key(user_id)
+    if k not in _resumes_by_user:
+        _resumes_by_user[k] = {}
+    return _resumes_by_user[k]
+
+
+def outreach_messages(user_id: str | None) -> list[dict]:
+    k = _key(user_id)
+    if k not in _outreach_by_user:
+        _outreach_by_user[k] = []
+    return _outreach_by_user[k]

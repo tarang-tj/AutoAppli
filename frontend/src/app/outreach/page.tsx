@@ -1,19 +1,22 @@
 "use client";
 import { OutreachForm } from "@/components/outreach/outreach-form";
 import { MessagePreview } from "@/components/outreach/message-preview";
-import { apiGet } from "@/lib/api";
+import { apiGet, isJobsApiConfigured } from "@/lib/api";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { getDemoOutreachMessages } from "@/lib/demo-data";
 import {
   consumeOutreachHandoff,
+  outreachHandoffFromJob,
   type TrackerOutreachHandoff,
 } from "@/lib/tracker-handoff";
-import type { OutreachMessage } from "@/types";
-import { startTransition, useCallback, useEffect, useState } from "react";
+import type { Job, OutreachMessage } from "@/types";
+import { startTransition, Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
+import { useSearchParams } from "next/navigation";
 
-export default function OutreachPage() {
+function OutreachPageContent() {
+  const searchParams = useSearchParams();
   const [demoMode] = useState(!isSupabaseConfigured());
 
   const { data: history } = useSWR<OutreachMessage[]>(
@@ -31,14 +34,41 @@ export default function OutreachPage() {
   const [trackerPrefill, setTrackerPrefill] = useState<TrackerOutreachHandoff | null>(null);
 
   useEffect(() => {
-    const h = consumeOutreachHandoff();
-    if (!h) return;
-    const label = [h.jobTitle, h.company].filter(Boolean).join(" · ");
-    startTransition(() => {
-      setTrackerPrefill(h);
-      toast.success(label ? `Loaded from tracker: ${label}` : "Loaded job context from tracker");
-    });
-  }, []);
+    const jobId = searchParams.get("jobId");
+
+    const applySessionHandoff = () => {
+      const h = consumeOutreachHandoff();
+      if (!h) return;
+      const label = [h.jobTitle, h.company].filter(Boolean).join(" · ");
+      startTransition(() => {
+        setTrackerPrefill(h);
+        toast.success(label ? `Loaded from tracker: ${label}` : "Loaded job context from tracker");
+      });
+    };
+
+    if (jobId && isJobsApiConfigured()) {
+      let cancelled = false;
+      void apiGet<Job>(`/jobs/${encodeURIComponent(jobId)}`)
+        .then((job) => {
+          if (cancelled) return;
+          const h = outreachHandoffFromJob(job);
+          const label = [h.jobTitle, h.company].filter(Boolean).join(" · ");
+          startTransition(() => {
+            setTrackerPrefill(h);
+            toast.success(label ? `Loaded from tracker: ${label}` : "Loaded role from tracker");
+          });
+        })
+        .catch(() => {
+          if (cancelled) return;
+          applySessionHandoff();
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    applySessionHandoff();
+  }, [searchParams]);
 
   const clearTrackerPrefill = useCallback(() => {
     setTrackerPrefill(null);
@@ -85,5 +115,19 @@ export default function OutreachPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OutreachPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-zinc-400 p-6 text-sm" role="status">
+          Loading outreach…
+        </div>
+      }
+    >
+      <OutreachPageContent />
+    </Suspense>
   );
 }

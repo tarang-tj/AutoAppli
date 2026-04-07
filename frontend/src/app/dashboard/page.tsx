@@ -13,7 +13,7 @@ import { filterJobsByQuery } from "@/lib/filter-jobs";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { useJobs } from "@/hooks/use-jobs";
 import type { Job } from "@/types";
-import { Download, LayoutGrid, ListFilter, Plus, Search } from "lucide-react";
+import { Download, LayoutGrid, ListFilter, Plus, Search, Send, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -205,29 +205,55 @@ export default function DashboardPage() {
                 <p className="text-zinc-50 font-medium">No roles on your board yet</p>
                 <p className="text-zinc-300 text-sm mt-1 leading-relaxed">
                   Add a job manually or save listings from Job Search. Then drag cards across stages
-                  (Bookmarked → Applied → Interviewing…).
+                  (Bookmarked → Applied → Interviewing…). Use sparkles or send on any card to open{" "}
+                  <strong className="text-zinc-100">Resume</strong> or <strong className="text-zinc-100">Outreach</strong>{" "}
+                  with that role prefilled.
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Button
-                type="button"
-                className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => setOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add job
-              </Button>
-              <Link
-                href="/jobs"
-                className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "border-zinc-600 text-zinc-100 bg-zinc-900/50 no-underline inline-flex items-center justify-center hover:bg-zinc-800"
-                )}
-              >
-                <Search className="h-4 w-4 mr-2" />
-                Browse jobs
-              </Link>
+            <div className="flex flex-col gap-3 w-full sm:w-auto">
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Button
+                  type="button"
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => setOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add job
+                </Button>
+                <Link
+                  href="/jobs"
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "border-zinc-600 text-zinc-100 bg-zinc-900/50 no-underline inline-flex items-center justify-center hover:bg-zinc-800"
+                  )}
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Browse jobs
+                </Link>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Link
+                  href="/resume"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "border-violet-500/40 text-violet-200 bg-zinc-900/50 no-underline inline-flex items-center justify-center hover:bg-violet-950/40"
+                  )}
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Resume Builder
+                </Link>
+                <Link
+                  href="/outreach"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "border-emerald-500/40 text-emerald-200 bg-zinc-900/50 no-underline inline-flex items-center justify-center hover:bg-emerald-950/30"
+                  )}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Outreach
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

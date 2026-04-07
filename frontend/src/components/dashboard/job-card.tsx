@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { isJobsApiConfigured } from "@/lib/api";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { cn } from "@/lib/utils";
 import {
@@ -136,7 +137,11 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
                     onClick={(e) => {
                       e.stopPropagation();
                       storeResumeHandoffFromJob(job);
-                      router.push("/resume");
+                      router.push(
+                        isJobsApiConfigured()
+                          ? `/resume?jobId=${encodeURIComponent(job.id)}`
+                          : "/resume"
+                      );
                     }}
                   >
                     <Sparkles className="h-3.5 w-3.5" />
@@ -149,7 +154,11 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
                     onClick={(e) => {
                       e.stopPropagation();
                       storeOutreachHandoffFromJob(job);
-                      router.push("/outreach");
+                      router.push(
+                        isJobsApiConfigured()
+                          ? `/outreach?jobId=${encodeURIComponent(job.id)}`
+                          : "/outreach"
+                      );
                     }}
                   >
                     <Send className="h-3.5 w-3.5" />

@@ -111,6 +111,25 @@ async def list_jobs(
     return jobs_memory.list_jobs(status)
 
 
+@router.get("/jobs/{job_id}")
+async def get_job(
+    job_id: str,
+    user_id: str | None = Depends(get_jobs_user_id),
+):
+    settings = get_settings()
+    if _persisted(settings):
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        try:
+            return jobs_supabase.get_job(settings, user_id, job_id)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="Job not found") from None
+    try:
+        return jobs_memory.get_job(job_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not found") from None
+
+
 @router.put("/jobs/reorder")
 async def reorder_jobs(
     body: ReorderJobsBody,

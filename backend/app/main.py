@@ -33,4 +33,5 @@ async def health():
         "status": "ok",
         "jobs_storage": "supabase" if supa else "memory",
         "search_history": "on" if supa else "off",
+        "resume_outreach_storage": "per_user_memory",
     }

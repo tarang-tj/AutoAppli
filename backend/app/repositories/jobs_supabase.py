@@ -104,6 +104,22 @@ def create_job(
     return _public_row(res.data[0])
 
 
+def get_job(settings: Settings, user_id: str, job_id: str) -> dict:
+    sb = _client(settings)
+    res = (
+        sb.table("jobs")
+        .select("*")
+        .eq("id", job_id)
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    rows = res.data or []
+    if not rows:
+        raise KeyError("not found")
+    return _public_row(rows[0])
+
+
 def list_jobs(settings: Settings, user_id: str, status: str | None) -> list[dict]:
     sb = _client(settings)
     q = sb.table("jobs").select("*").eq("user_id", user_id)

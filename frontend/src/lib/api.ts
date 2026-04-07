@@ -47,6 +47,10 @@ function isJobsListPath(path: string): boolean {
   return path === "/jobs" || path.startsWith("/jobs?");
 }
 
+function isJobsDetailPath(path: string): boolean {
+  return /^\/jobs\/[^/]+$/.test(path);
+}
+
 /** Resume routes can use FastAPI (when configured) or in-browser demo session. */
 function resumePathUsesBackend(path: string): boolean {
   return path === "/resumes" || path.startsWith("/resumes/");
@@ -126,6 +130,16 @@ async function fetchBackend<T>(path: string, init?: RequestInit): Promise<T> {
 function handleDemoGet(path: string): unknown {
   if (path === "/jobs") {
     return sortJobsKanbanOrder(getDemoJobs());
+  }
+  {
+    const m = path.match(/^\/jobs\/([^/]+)$/);
+    if (m) {
+      const job = getDemoJobs().find((j) => j.id === m[1]);
+      if (!job) {
+        throw new Error("Job not found");
+      }
+      return job;
+    }
   }
   if (path.startsWith("/jobs?status=")) {
     const status = new URLSearchParams(path.split("?")[1]).get("status");
@@ -386,7 +400,7 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     return fetchBackend<T>(path);
   }
 
-  if (isJobsListPath(path) && !API_URL) {
+  if ((isJobsListPath(path) || isJobsDetailPath(path)) && !API_URL) {
     return handleDemoGet(path) as T;
   }
 

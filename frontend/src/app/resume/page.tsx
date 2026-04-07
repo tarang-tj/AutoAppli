@@ -3,22 +3,23 @@ import { ResumeUpload } from "@/components/resume/resume-upload";
 import { JdInput } from "@/components/resume/jd-input";
 import { ResumePreview } from "@/components/resume/resume-preview";
 import { Button } from "@/components/ui/button";
-import { apiGet, apiPost, isResumeApiConfigured } from "@/lib/api";
+import { apiGet, apiPost, isJobsApiConfigured, isResumeApiConfigured } from "@/lib/api";
 import {
   loadSampleResumesForBuilder,
   SAMPLE_JOB_DESCRIPTION_FOR_BUILDER,
 } from "@/lib/demo-data";
-import { consumeResumeHandoff } from "@/lib/tracker-handoff";
+import { consumeResumeHandoff, tailoringTextFromJob } from "@/lib/tracker-handoff";
 import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
-import type { Resume, GeneratedDocument, ResumeReview } from "@/types";
+import type { Job, Resume, GeneratedDocument, ResumeReview } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { FileStack, Info, Sparkles, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
+import { useSearchParams } from "next/navigation";
 
-export default function ResumePage() {
+function ResumeBuilderContent() {
   const { data: resumes, mutate } = useSWR<Resume[]>(
     "/resumes",
     () => apiGet<Resume[]>("/resumes"),
@@ -33,6 +34,7 @@ export default function ResumePage() {
   const [review, setReview] = useState<ResumeReview | null>(null);
   const [reviewing, setReviewing] = useState(false);
 
+  const searchParams = useSearchParams();
   const liveApi = isResumeApiConfigured();
   const [demoHintDismissed, setDemoHintDismissed] = useState(false);
 
@@ -53,13 +55,38 @@ export default function ResumePage() {
   }, [resumes, selectedResumeId]);
 
   useEffect(() => {
-    const handoff = consumeResumeHandoff();
-    if (!handoff) return;
-    setJobDescription(handoff.description);
-    setGenerated(null);
-    const label = [handoff.title, handoff.company].filter(Boolean).join(" · ");
-    toast.success(label ? `Loaded from tracker: ${label}` : "Loaded job context from tracker");
-  }, []);
+    const jobId = searchParams.get("jobId");
+
+    const applySessionHandoff = () => {
+      const handoff = consumeResumeHandoff();
+      if (!handoff) return;
+      setJobDescription(handoff.description);
+      setGenerated(null);
+      const label = [handoff.title, handoff.company].filter(Boolean).join(" · ");
+      toast.success(label ? `Loaded from tracker: ${label}` : "Loaded job context from tracker");
+    };
+
+    if (jobId && isJobsApiConfigured()) {
+      let cancelled = false;
+      void apiGet<Job>(`/jobs/${encodeURIComponent(jobId)}`)
+        .then((job) => {
+          if (cancelled) return;
+          setJobDescription(tailoringTextFromJob(job));
+          setGenerated(null);
+          const label = [job.title, job.company].filter(Boolean).join(" · ");
+          toast.success(label ? `Loaded from tracker: ${label}` : "Loaded role from tracker");
+        })
+        .catch(() => {
+          if (cancelled) return;
+          applySessionHandoff();
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    applySessionHandoff();
+  }, [searchParams]);
 
   const handleLoadSample = () => {
     setJobDescription(SAMPLE_JOB_DESCRIPTION_FOR_BUILDER);
@@ -242,5 +269,19 @@ export default function ResumePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResumePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-zinc-400 p-6 text-sm" role="status">
+          Loading resume builder…
+        </div>
+      }
+    >
+      <ResumeBuilderContent />
+    </Suspense>
   );
 }

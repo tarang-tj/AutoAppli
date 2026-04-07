@@ -29,6 +29,11 @@ function clip(s: string): string {
   return `${s.slice(0, MAX_DESC)}\n\n… (truncated for browser storage)`;
 }
 
+/** Build job-description-style text for resume / outreach (also used after fetching a job by id). */
+export function tailoringTextFromJob(job: Job): string {
+  return buildJdBlock(job);
+}
+
 function buildJdBlock(job: Job): string {
   const title = (job.title ?? "").trim() || "Role";
   const company = (job.company ?? "").trim() || "Company";
@@ -43,6 +48,16 @@ function buildJdBlock(job: Job): string {
     return `${header}\n\n(No full description saved in your tracker.)\nPosting: ${url}\n\nPaste the job description from the posting page, or re-save the job with “import full description”.`;
   }
   return `${header}\n\nPaste the job description from the posting here.`;
+}
+
+/** Build outreach prefill from a job (same shape as sessionStorage handoff). */
+export function outreachHandoffFromJob(job: Job): TrackerOutreachHandoff {
+  return {
+    v: 1,
+    jobTitle: (job.title ?? "").trim(),
+    company: (job.company ?? "").trim(),
+    jobContext: buildJdBlock(job),
+  };
 }
 
 export function storeResumeHandoffFromJob(job: Job): void {

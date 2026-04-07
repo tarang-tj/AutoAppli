@@ -3,22 +3,17 @@ import { getSiteUrl } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = getSiteUrl();
-  const now = new Date();
   const paths = [
     "/",
-    "/dashboard",
-    "/resume",
-    "/outreach",
-    "/jobs",
     "/login",
     "/signup",
+    "/forgot-password",
     "/privacy",
     "/terms",
   ];
   return paths.map((path) => ({
-    url: path === "/" ? base : `${base}${path}`,
-    lastModified: now,
-    changeFrequency: "weekly" as const,
-    priority: path === "/dashboard" ? 1 : path === "/" ? 0.9 : 0.7,
+    url: `${base}${path}`,
+    changeFrequency: path === "/" ? "weekly" : "monthly",
+    priority: path === "/" ? 1 : 0.5,
   }));
 }
