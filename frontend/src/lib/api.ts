@@ -29,6 +29,17 @@ export function isResumeApiConfigured(): boolean {
   return Boolean(API_URL);
 }
 
+/** GET `/api/v1/health` — for UI connectivity checks (browser fetch; requires CORS on the API). */
+export async function checkApiHealth(): Promise<boolean> {
+  if (!API_URL) return false;
+  try {
+    const res = await fetch(`${API_URL}/health`, { method: "GET", cache: "no-store" });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 /** Alias: jobs use the same API base as resumes. */
 export const isJobsApiConfigured = isResumeApiConfigured;
 

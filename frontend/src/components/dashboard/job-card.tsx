@@ -51,7 +51,14 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
     }
   }, [notesOpen, job.notes]);
 
-  const date = new Date(job.created_at).toLocaleDateString("en-US", {
+  const appliedStamp =
+    job.status === "applied" && job.applied_at
+      ? new Date(job.applied_at).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        })
+      : null;
+  const addedStamp = new Date(job.created_at).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
@@ -178,14 +185,31 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
                   {job.notes}
                 </p>
               ) : null}
-              <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center justify-between mt-2 gap-2">
                 <Badge
                   variant="outline"
                   className="text-[10px] border-zinc-500 bg-zinc-950/50 text-zinc-200 font-medium"
                 >
                   {job.source}
                 </Badge>
-                <span className="text-[10px] text-zinc-300 tabular-nums">{date}</span>
+                <span
+                  className="text-[10px] text-zinc-300 tabular-nums text-right leading-tight"
+                  title={
+                    appliedStamp
+                      ? `Applied ${appliedStamp} · Added ${addedStamp}`
+                      : `Added ${addedStamp}`
+                  }
+                >
+                  {appliedStamp ? (
+                    <>
+                      <span className="text-emerald-400/90">Applied {appliedStamp}</span>
+                      <span className="text-zinc-500 mx-0.5">·</span>
+                      <span className="text-zinc-500">{addedStamp}</span>
+                    </>
+                  ) : (
+                    addedStamp
+                  )}
+                </span>
               </div>
             </CardContent>
           </Card>

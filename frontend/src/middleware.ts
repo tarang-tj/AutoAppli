@@ -4,6 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
 const PUBLIC_PATH_PREFIXES = [
   "/login",
   "/signup",
+  "/forgot-password",
+  "/auth",
   "/privacy",
   "/terms",
 ] as const;
@@ -36,20 +38,4 @@ export async function middleware(request: NextRequest) {
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
         },
-      },
-    }
-  );
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-  return supabaseResponse;
-}
-
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon.svg|login|signup|privacy|terms|robots.txt|sitemap.xml|api).*)",
-  ],
-};
+      

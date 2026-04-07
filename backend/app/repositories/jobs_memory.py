@@ -62,6 +62,8 @@ def create_job(company: str, title: str, url: str | None, description: str | Non
         "status": "bookmarked",
         "source": source,
         "sort_order": sort_order,
+        "applied_at": None,
+        "notes": None,
         "created_at": now,
         "updated_at": now,
     }
@@ -97,14 +99,4 @@ def patch_job(job_id: str, patch: dict) -> dict:
         if row["status"] != new_status:
             row["status"] = new_status
             row["sort_order"] = _next_sort_order(new_status)
-    if "notes" in patch:
-        n = patch["notes"]
-        row["notes"] = None if n in ("", None) else n
-    row["updated_at"] = now
-    return row
-
-
-def delete_job(job_id: str) -> None:
-    if job_id not in _jobs:
-        raise KeyError("not found")
-    del _jobs[job_id]
+            if new_status == "appl

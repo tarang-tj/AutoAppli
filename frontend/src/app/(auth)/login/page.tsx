@@ -67,7 +67,17 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-zinc-300">Password</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="password" className="text-zinc-300">Password</Label>
+                {isSupabaseConfigured() ? (
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-blue-400 hover:underline shrink-0"
+                  >
+                    Forgot password?
+                  </Link>
+                ) : null}
+              </div>
               <Input
                 id="password"
                 type="password"

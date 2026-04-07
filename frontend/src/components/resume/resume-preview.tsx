@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadResumeHtml, openResumePrintWindow } from "@/lib/resume-export-html";
 import type { GeneratedDocument } from "@/types";
-import { Download, FileText, LayoutTemplate, Printer, ScrollText } from "lucide-react";
+import { Copy, Download, FileText, LayoutTemplate, Printer, ScrollText } from "lucide-react";
+import { toast } from "sonner";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -156,6 +157,18 @@ export function ResumePreview({ document: doc }: { document: GeneratedDocument |
               >
                 <Printer className="h-4 w-4 mr-2" />
                 Print
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-zinc-600 text-zinc-100 bg-zinc-800/80 hover:bg-zinc-800"
+                onClick={() => {
+                  void navigator.clipboard.writeText(content);
+                  toast.success("Resume text copied");
+                }}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy text
               </Button>
             </>
           ) : null}

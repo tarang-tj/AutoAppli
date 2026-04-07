@@ -141,7 +141,7 @@ def patch_job(settings: Settings, user_id: str, job_id: str, patch: dict) -> dic
     sb = _client(settings)
     cur = (
         sb.table("jobs")
-        .select("status")
+        .select("status, applied_at")
         .eq("id", job_id)
         .eq("user_id", user_id)
         .limit(1)
@@ -157,6 +157,8 @@ def patch_job(settings: Settings, user_id: str, job_id: str, patch: dict) -> dic
         if rows[0]["status"] != new_status:
             update["status"] = new_status
             update["sort_order"] = _next_sort_order(sb, user_id, new_status)
+            if new_status == "applied" and not rows[0].get("applied_at"):
+                update["applied_at"] = now
     if "notes" in patch:
         n = patch["notes"]
         update["notes"] = None if n in ("", None) else n
