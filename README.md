@@ -162,4 +162,97 @@ This adds **`job_listings`** (deduped by URL), **`job_searches`** (one row per s
 
 Other tables you may add for a full product (not all are defined in-repo yet):
 
-- `profiles` — User p
+- `profiles` — User profiles
+- `resumes` — Uploaded resumes with parsed text
+- `generated_documents` — Tailored resumes & cover letters
+- `outreach_messages` — Generated emails & LinkedIn messages
+- `contacts` — Recruiter/hiring manager contacts
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/auth/me` | Resolve caller from Bearer token when Supabase-backed jobs are enabled |
+| `POST` | `/resumes/upload` | Upload and parse a PDF resume |
+| `GET` | `/resumes` | List user's resumes |
+| `POST` | `/resumes/generate` | Generate tailored resume with AI |
+| `POST` | `/outreach/generate` | Draft outreach email/LinkedIn message |
+| `GET` | `/jobs` | List job applications |
+| `POST` | `/jobs` | Add a job application |
+| `PATCH` | `/jobs/{id}` | Partial update: `status`, `notes`, or both |
+| `PUT` | `/jobs/reorder` | Persist column order (`status`, `ordered_ids`) |
+| `DELETE` | `/jobs/{id}` | Remove a job application |
+| `GET` | `/search/history` | Recent job searches (requires Bearer when using Supabase persistence) |
+| `GET` | `/search/runs/{search_id}/results` | Saved listings for a past search (cached; Bearer + persistence) |
+| `POST` | `/search` | Scrape job listings; body may include `remote_only`; returns `{ results, search_id, persisted }` |
+
+When jobs are stored in Supabase (see Database Setup), the **`/jobs`** routes require a valid Supabase **`Bearer` access token** verified with **`SUPABASE_JWT_SECRET`**.
+
+---
+
+## Demo Mode
+
+AutoAppli works without Supabase credentials in **demo mode** — the app loads with sample data so you can explore the UI and features without any setup.
+
+---
+
+## Production launch checklist
+
+1. **Vercel (frontend)**  
+   See [Vercel deployment](#vercel-deployment) below. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, optional `NEXT_PUBLIC_API_URL`, and **`NEXT_PUBLIC_SITE_URL`** (see [NEXT_PUBLIC_SITE_URL](#next_public_site_url)).
+
+2. **API host (e.g. Render, Fly)**  
+   Set `ANTHROPIC_API_KEY`, Supabase keys, and **`CORS_ORIGINS`** to your exact frontend origin(s), comma-separated if needed. Confirm **`GET /api/v1/health`** returns `{"status":"ok"}`.
+
+3. **Supabase**  
+   Apply SQL migrations (Kanban: `20260406120000_create_jobs.sql`; job search history: `20260407120000_job_search.sql`), configure Auth redirect URLs for your production domain, and review Row Level Security policies.
+
+4. **Legal**  
+   Replace the placeholder copy on `/privacy` and `/terms` with counsel-reviewed documents before marketing the product broadly.
+
+5. **Secrets**  
+   Never commit `.env` or `.env.local`. Rotate any keys that were ever committed or shared.
+
+### Vercel deployment
+
+Deploy from the **latest `main`** so you pick up current TypeScript and build fixes.
+
+**Option A — Root Directory: `frontend`**
+
+- Install Command: default (`npm install` in `frontend`).
+- Build Command: default (`npm run build` → `next build --webpack`).
+
+**Option B — Root Directory: repository root** *(empty / default root)*
+
+- The root `package.json` **`postinstall`** runs `npm ci` (or `npm install`) in `frontend/`, and **`npm run build`** runs `npm run build --prefix frontend` (same as `next build --webpack` inside `frontend/`).
+
+After changing Root Directory or env vars, trigger a **Redeploy** on the latest commit. If the build fails, open the deployment **Build** log and jump to the first `Error` line (often TypeScript or a missing module).
+
+### NEXT_PUBLIC_SITE_URL
+
+This is the **canonical public URL of your Next.js app** (the address people type in the browser). It drives `metadataBase`, Open Graph links, `sitemap.xml`, and `robots.txt`.
+
+**What to set it to**
+
+- **Production:** Your real site, with `https` and **no trailing slash**, for example:
+  - `https://your-project.vercel.app`, or
+  - `https://www.yourdomain.com` if you use a custom domain on Vercel.
+- **Local dev:** You usually **omit** it; the app falls back to `http://localhost:3000`.
+- **If you omit it on Vercel:** The app uses the `VERCEL_URL` hostname (still `https://…` in code). That works for previews, but production URLs in metadata may look like deployment-specific hostnames unless you set this variable.
+
+**Where to set it (Vercel)**
+
+1. Project → **Settings** → **Environment Variables**.
+2. Add **`NEXT_PUBLIC_SITE_URL`** = `https://your-exact-production-domain`.
+3. Scope it at least to **Production** (add **Preview** too only if you want previews to advertise a fixed URL—often you leave Preview unset so `VERCEL_URL` is used per deployment).
+4. Redeploy so the new value is baked into the client bundle.
+
+**Also set `CORS_ORIGINS`** on the API to the **same origin** (e.g. `https://www.yourdomain.com`) so the browser can call your FastAPI backend.
+
+---
+
+## License
+
+MIT

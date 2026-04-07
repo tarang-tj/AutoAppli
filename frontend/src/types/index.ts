@@ -48,4 +48,40 @@ export interface ResumeReview {
 
 export interface OutreachMessage {
   id: string;
-  message_type: "email" | "linkedi
+  message_type: "email" | "linkedin";
+  recipient_name: string;
+  recipient_role?: string;
+  subject?: string;
+  body: string;
+  created_at: string;
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  role?: string;
+  email?: string;
+  linkedin_url?: string;
+  notes?: string;
+  created_at: string;
+}
+
+export interface JobSearchResult {
+  title: string;
+  company: string;
+  location: string;
+  url: string;
+  snippet: string;
+  posted_date?: string;
+  source: string;
+}
+
+/** Row from GET /search/history (Supabase-backed API, signed-in user). */
+export interface JobSearchHistoryItem {
+  id: string;
+  query: string;
+  location: string;
+  remote_only: boolean;
+  result_count: number;
+  created_at: string;
+}

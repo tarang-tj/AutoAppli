@@ -25,4 +25,12 @@ app.include_router(search.router, prefix="/api/v1")
 
 @app.get("/api/v1/health")
 async def health():
-    from app.deps.jobs_auth 
+    from app.deps.jobs_auth import jobs_use_supabase
+
+    s = get_settings()
+    supa = jobs_use_supabase(s)
+    return {
+        "status": "ok",
+        "jobs_storage": "supabase" if supa else "memory",
+        "search_history": "on" if supa else "off",
+    }

@@ -91,6 +91,59 @@ def persist_search_run(
         return None
 
 
+def get_saved_results_for_run(
+    settings: Settings, user_id: str, search_id: str
+) -> list[dict] | None:
+    """Return API-shaped result rows for a past search, or None if not found / not owned."""
+    sb = _client(settings)
+    own = (
+        sb.table("job_searches")
+        .select("id")
+        .eq("id", search_id)
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    if not own.data:
+        return None
+
+    items = (
+        sb.table("job_search_result_items")
+        .select("listing_id, sort_order")
+        .eq("search_id", search_id)
+        .order("sort_order")
+        .execute()
+    )
+    rows = items.data or []
+    if not rows:
+        return []
+
+    ids = [str(r["listing_id"]) for r in rows]
+    listings = sb.table("job_listings").select("*").in_("id", ids).execute()
+    by_id = {str(r["id"]): r for r in (listings.data or [])}
+
+    out: list[dict] = []
+    for r in rows:
+        lid = str(r["listing_id"])
+        row = by_id.get(lid)
+        if not row:
+            continue
+        out.append(_listing_row_to_api(row))
+    return out
+
+
+def _listing_row_to_api(row: dict) -> dict:
+    return {
+        "title": row.get("title") or "",
+        "company": row.get("company") or "",
+        "location": row.get("location") or "",
+        "url": row.get("url") or "",
+        "snippet": row.get("snippet") or "",
+        "posted_date": row.get("posted_date"),
+        "source": row.get("source") or "unknown",
+    }
+
+
 def list_search_history(settings: Settings, user_id: str, limit: int) -> list[dict]:
     sb = _client(settings)
     res = (
