@@ -14,7 +14,7 @@ An AI-powered job application automation platform that helps job seekers streaml
 ## Features
 
 ### 🎯 AI Resume Tailoring
-Upload your base resume and paste a job description — AutoAppli uses Claude AI to generate a tailored resume that highlights relevant experience and matches keywords.
+Upload your base resume and paste a job description — AutoAppli uses Claude AI to generate a tailored resume that highlights relevant experience and matches keywords. The UI shows a **formatted “paper” preview** (aligned with the PDF layout), an **embedded PDF preview** when available, plus **download PDF**, **download HTML**, and **print** (save as PDF from the browser). The API defaults to **`include_pdf: true`** so the downloadable file matches the on-screen structure.
 
 ### ✉️ Smart Outreach Drafting
 Generate personalized cold emails and LinkedIn messages for recruiters and hiring managers, customized to each role and company.
@@ -180,7 +180,7 @@ Other tables you may add for a full product (not all are defined in-repo yet):
 | `GET` | `/auth/me` | Resolve caller from Bearer token when Supabase-backed jobs are enabled |
 | `POST` | `/resumes/upload` | Upload and parse a PDF resume |
 | `GET` | `/resumes` | List user's resumes |
-| `POST` | `/resumes/generate` | Generate tailored resume with AI |
+| `POST` | `/resumes/generate` | Tailored resume text + optional `pdf_base64` (default `include_pdf: true`) |
 | `POST` | `/outreach/generate` | Draft outreach email/LinkedIn message |
 | `GET` | `/jobs` | List job applications |
 | `POST` | `/jobs` | Add a job (`fetch_full_description` scrapes posting HTML; same URL returns `{ ..., duplicate: true }`) |

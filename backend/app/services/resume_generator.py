@@ -265,7 +265,9 @@ async def generate_tailored_resume(
     }
     if include_pdf:
         try:
-            pdf_bytes = generate_resume_pdf(content)
+            lines = content.strip().split("\n")
+            candidate_name = (lines[0].strip() if lines else "") or "Candidate"
+            pdf_bytes = generate_resume_pdf(content, candidate_name=candidate_name)
             out["pdf_base64"] = base64.standard_b64encode(pdf_bytes).decode("ascii")
         except Exception:
             logger.exception("Tailored resume PDF generation failed")

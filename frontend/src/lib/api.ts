@@ -201,15 +201,27 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     const doc: GeneratedDocument = {
       id: `doc-${Date.now()}`,
       doc_type: "tailored_resume",
-      content:
-        "DEMO OUTPUT (NEXT_PUBLIC_API_URL not set)\n\n" +
-        "This is stub text so you can test the UI. Deploy the FastAPI app and set NEXT_PUBLIC_API_URL for real Claude tailoring.\n\n" +
-        "---\nTARGET ROLE SUMMARY\n" +
-        jd.slice(0, 500) +
-        (jd.length > 500 ? "…" : "") +
-        "\n\n---\nSOURCE RESUME (excerpt)\n" +
-        source.slice(0, 2500) +
-        (source.length > 2500 ? "\n…" : ""),
+      content: [
+        "Alex Morgan",
+        "alex@example.com | (555) 010-2030 | linkedin.com/in/alexmorgan",
+        "",
+        "PROFESSIONAL SUMMARY",
+        "DEMO OUTPUT — set NEXT_PUBLIC_API_URL for real Claude tailoring and a downloadable PDF.",
+        "Target role context (excerpt):",
+        jd.slice(0, 380) + (jd.length > 380 ? "…" : ""),
+        "",
+        "EXPERIENCE",
+        "- Shipped features aligned with job keywords from the posting you pasted.",
+        "- Collaborated cross-functionally; metrics and outcomes would appear here in a real run.",
+        "",
+        "SKILLS",
+        "Keywords from your resume excerpt: " +
+          (source.slice(0, 120) || "(upload a resume)") +
+          (source.length > 120 ? "…" : ""),
+        "",
+        "EDUCATION",
+        "Your education section would be tailored to match the role.",
+      ].join("\n"),
       storage_path: "",
       download_url: "",
       pdf_base64: null,

@@ -8,7 +8,7 @@ class ResumeGenerateRequest(BaseModel):
     job_description: str
     resume_text: str = ""
     instructions: str = ""
-    include_pdf: bool = False
+    include_pdf: bool = True
 
 
 class ResumeGenerateResponse(BaseModel):

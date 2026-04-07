@@ -23,6 +23,10 @@ def sanitize_tailored_resume_text(raw: str) -> str:
         s = re.sub(r"^```(?:[\w+-]*)?\s*\r?\n?", "", s)
         s = re.sub(r"\r?\n```\s*$", "", s).strip()
 
+    # Remove lightweight markdown so PDF / plain layout stay clean
+    s = re.sub(r"\*\*([^*]+)\*\*", r"\1", s)
+    s = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"\1", s)
+
     lower = s.lower()
     for prefix in (
         "here is the tailored resume:",

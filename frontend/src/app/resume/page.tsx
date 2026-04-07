@@ -93,7 +93,7 @@ export default function ResumePage() {
         job_description: jobDescription,
         resume_text: selected?.parsed_text ?? "",
         instructions: tailoringInstructions.trim(),
-        include_pdf: liveApi,
+        include_pdf: true,
       });
       setGenerated(result);
       toast.success(
@@ -136,8 +136,9 @@ export default function ResumePage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Resume Builder</h1>
-        <p className="text-zinc-300 text-sm mt-1">
-          Upload your resume and paste a job description to get an AI-tailored version
+        <p className="text-zinc-300 text-sm mt-1 max-w-2xl leading-relaxed">
+          Upload your resume and paste a job description. You’ll see a formatted preview, optional PDF
+          preview, and downloads (PDF + HTML) when the API is connected.
         </p>
         {!liveApi && !demoHintDismissed ? (
           <div
