@@ -11,13 +11,12 @@ const DEMO_USER = {
 } as unknown as User;
 
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const configured = isSupabaseConfigured();
+  const [user, setUser] = useState<User | null>(() => (configured ? null : DEMO_USER));
+  const [loading, setLoading] = useState(() => configured);
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      setUser(DEMO_USER);
-      setLoading(false);
+    if (!configured) {
       return;
     }
 
@@ -36,7 +35,7 @@ export function useUser() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [configured]);
 
   return { user, loading };
 }

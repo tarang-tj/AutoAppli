@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { apiGet, apiPost, isResumeApiConfigured } from "@/lib/api";
+import { apiPost, isResumeApiConfigured } from "@/lib/api";
 import { normalizeJobSearchResponse } from "@/lib/job-search";
 import type { JobSearchHistoryItem, JobSearchResult } from "@/types";
 import { Clock, Search } from "lucide-react";

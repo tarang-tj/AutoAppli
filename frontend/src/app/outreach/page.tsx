@@ -9,7 +9,7 @@ import {
   type TrackerOutreachHandoff,
 } from "@/lib/tracker-handoff";
 import type { OutreachMessage } from "@/types";
-import { useCallback, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
@@ -33,9 +33,11 @@ export default function OutreachPage() {
   useEffect(() => {
     const h = consumeOutreachHandoff();
     if (!h) return;
-    setTrackerPrefill(h);
     const label = [h.jobTitle, h.company].filter(Boolean).join(" · ");
-    toast.success(label ? `Loaded from tracker: ${label}` : "Loaded job context from tracker");
+    startTransition(() => {
+      setTrackerPrefill(h);
+      toast.success(label ? `Loaded from tracker: ${label}` : "Loaded job context from tracker");
+    });
   }, []);
 
   const clearTrackerPrefill = useCallback(() => {

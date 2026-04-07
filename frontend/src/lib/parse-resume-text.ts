@@ -90,7 +90,7 @@ export function parseResumePlainText(raw: string): ResumeBlock[] {
   blocks.push({ type: "divider" });
 
   while (i < lines.length) {
-    let line = lines[i];
+    const line = lines[i];
     const trimmed = line.trim();
     i += 1;
 

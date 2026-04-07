@@ -8,7 +8,7 @@ import type { GeneratedDocument } from "@/types";
 import { Copy, Download, FileText, LayoutTemplate, Printer, ScrollText } from "lucide-react";
 import { toast } from "sonner";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type PreviewTab = "formatted" | "pdf" | "source";
@@ -39,29 +39,28 @@ export function ResumePreview({ document: doc }: { document: GeneratedDocument |
 
   useEffect(() => {
     if (!doc?.pdf_base64?.trim()) {
-      setPdfObjectUrl(null);
+      startTransition(() => setPdfObjectUrl(null));
       return;
     }
     const url = base64ToBlobUrl(doc.pdf_base64);
-    setPdfObjectUrl(url);
+    startTransition(() => setPdfObjectUrl(url));
     return () => {
       if (url) URL.revokeObjectURL(url);
     };
   }, [doc?.id, doc?.pdf_base64]);
 
   useEffect(() => {
-    if (!doc) return;
-    const hasRemotePdf =
-      Boolean(doc.download_url?.trim()) &&
-      doc.download_url !== "" &&
-      !doc.download_url.startsWith("/api/download");
-    const hasB64 = Boolean(doc.pdf_base64?.trim());
-    if (hasB64 || hasRemotePdf) {
-      setTab("pdf");
-    } else {
-      setTab("formatted");
-    }
-  }, [doc?.id]);
+    const u = doc?.download_url?.trim() ?? "";
+    const hasRemotePdf = Boolean(u) && !u.startsWith("/api/download");
+    const hasB64 = Boolean(doc?.pdf_base64?.trim());
+    startTransition(() => {
+      if (hasB64 || hasRemotePdf) {
+        setTab("pdf");
+      } else {
+        setTab("formatted");
+      }
+    });
+  }, [doc?.id, doc?.download_url, doc?.pdf_base64]);
 
   if (!doc) {
     return (

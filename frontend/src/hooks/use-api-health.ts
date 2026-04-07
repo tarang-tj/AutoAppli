@@ -9,13 +9,13 @@ export type ApiHealthState = "idle" | "checking" | "ok" | "error";
  * Polls the FastAPI `/health` endpoint when `NEXT_PUBLIC_API_URL` is set.
  */
 export function useApiHealth(): ApiHealthState {
+  const configured = isJobsApiConfigured();
   const [state, setState] = useState<ApiHealthState>(() =>
-    isJobsApiConfigured() ? "checking" : "idle"
+    configured ? "checking" : "idle"
   );
 
   useEffect(() => {
-    if (!isJobsApiConfigured()) {
-      setState("idle");
+    if (!configured) {
       return;
     }
 
@@ -36,7 +36,7 @@ export function useApiHealth(): ApiHealthState {
       window.clearInterval(id);
       window.removeEventListener("focus", onFocus);
     };
-  }, []);
+  }, [configured]);
 
-  return state;
+  return configured ? state : "idle";
 }

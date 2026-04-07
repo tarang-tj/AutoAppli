@@ -48,7 +48,7 @@ function isJobsListPath(path: string): boolean {
 }
 
 /** Resume routes can use FastAPI (when configured) or in-browser demo session. */
-function useBackendForResumePath(path: string): boolean {
+function resumePathUsesBackend(path: string): boolean {
   return path === "/resumes" || path.startsWith("/resumes/");
 }
 
@@ -390,7 +390,7 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     return handleDemoGet(path) as T;
   }
 
-  if (useBackendForResumePath(path)) {
+  if (resumePathUsesBackend(path)) {
     if (!API_URL) {
       if (path === "/resumes") {
         return getDemoResumes() as T;
@@ -423,7 +423,7 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
     return handleDemoPost(path, body) as T;
   }
 
-  if (useBackendForResumePath(path)) {
+  if (resumePathUsesBackend(path)) {
     if (!API_URL) {
       return handleDemoPost(path, body) as T;
     }
@@ -446,7 +446,7 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
 }
 
 export async function apiPostFormData<T = unknown>(path: string, formData: FormData): Promise<T> {
-  if (useBackendForResumePath(path)) {
+  if (resumePathUsesBackend(path)) {
     if (!API_URL) {
       if (path === "/resumes/upload") {
         return handleDemoResumeUpload(formData) as T;

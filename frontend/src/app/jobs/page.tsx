@@ -29,7 +29,8 @@ export default function JobsPage() {
   }, []);
 
   useEffect(() => {
-    void loadHistory();
+    const id = window.setTimeout(() => void loadHistory(), 0);
+    return () => window.clearTimeout(id);
   }, [loadHistory]);
 
   const handleResults = useCallback((data: JobSearchResult[]) => {
