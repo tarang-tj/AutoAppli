@@ -1,7 +1,9 @@
 "use client";
 import { useJobs } from "@/hooks/use-jobs";
+import { filterJobsByQuery } from "@/lib/filter-jobs";
 import { Job, JobStatus } from "@/types";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { useMemo } from "react";
 import { KanbanColumn } from "./kanban-column";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -15,7 +17,7 @@ const COLUMNS: { id: JobStatus; label: string; color: string }[] = [
   { id: "ghosted", label: "Ghosted", color: "bg-zinc-600" },
 ];
 
-export function KanbanBoard() {
+export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
   const {
     jobs,
     isLoading,
@@ -25,6 +27,11 @@ export function KanbanBoard() {
     deleteJob,
     patchJob,
   } = useJobs();
+
+  const visibleJobs = useMemo(
+    () => filterJobsByQuery(jobs, searchQuery),
+    [jobs, searchQuery]
+  );
 
   const handleSaveNotes = async (jobId: string, notes: string) => {
     try {
@@ -84,7 +91,7 @@ export function KanbanBoard() {
     }
   };
   const getJobsByStatus = (status: JobStatus): Job[] =>
-    jobs.filter((j) => j.status === status);
+    visibleJobs.filter((j) => j.status === status);
 
   const knownIds = new Set<string>(COLUMNS.map((c) => c.id));
 
@@ -108,7 +115,7 @@ export function KanbanBoard() {
         {COLUMNS.map((col) => {
           const colJobs =
             col.id === "bookmarked"
-              ? jobs.filter(
+              ? visibleJobs.filter(
                   (j) => j.status === "bookmarked" || !knownIds.has(j.status)
                 )
               : getJobsByStatus(col.id);

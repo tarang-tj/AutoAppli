@@ -61,8 +61,8 @@ export default function JobsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Job Search</h1>
-        <p className="text-zinc-400 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-zinc-50">Job Search</h1>
+        <p className="text-zinc-200 text-sm mt-1 leading-relaxed max-w-2xl">
           Search job boards and save interesting positions to your tracker. Signed-in users with a
           connected API also get searchable history.
         </p>
@@ -75,7 +75,7 @@ export default function JobsPage() {
       />
       {searched && results.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-zinc-500">No jobs found. Try different search terms.</p>
+          <p className="text-zinc-300">No jobs found. Try different search terms.</p>
         </div>
       )}
       {results.length > 0 && (

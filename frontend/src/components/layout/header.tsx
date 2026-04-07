@@ -32,7 +32,7 @@ export function Header() {
       <DropdownMenu>
         <DropdownMenuTrigger>
           <span className="flex items-center gap-2 outline-none cursor-pointer">
-            <span className="text-sm text-zinc-400 hidden sm:block">{user?.email}</span>
+            <span className="text-sm text-zinc-200 hidden sm:block">{user?.email}</span>
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-blue-600 text-white text-xs">{initials}</AvatarFallback>
             </Avatar>

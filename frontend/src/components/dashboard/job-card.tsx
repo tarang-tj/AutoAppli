@@ -15,8 +15,20 @@ import {
 } from "@/components/ui/dialog";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { cn } from "@/lib/utils";
-import { Building2, ExternalLink, StickyNote, Trash2 } from "lucide-react";
+import {
+  Building2,
+  ExternalLink,
+  Send,
+  Sparkles,
+  StickyNote,
+  Trash2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  storeOutreachHandoffFromJob,
+  storeResumeHandoffFromJob,
+} from "@/lib/tracker-handoff";
 
 interface JobCardProps {
   job: Job;
@@ -26,6 +38,7 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
+  const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [draft, setDraft] = useState(job.notes ?? "");
@@ -85,10 +98,10 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
             <CardContent className="p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{job.title}</p>
+                  <p className="text-sm font-medium text-zinc-50 truncate">{job.title}</p>
                   <div className="flex items-center gap-1 mt-1">
-                    <Building2 className="h-3 w-3 text-zinc-500" />
-                    <p className="text-xs text-zinc-400 truncate">{job.company}</p>
+                    <Building2 className="h-3 w-3 shrink-0 text-zinc-400" />
+                    <p className="text-xs text-zinc-300 truncate">{job.company}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0">
@@ -97,7 +110,7 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
                       type="button"
                       className={cn(
                         "p-1 -m-1 rounded hover:bg-zinc-800/80",
-                        hasNotes ? "text-amber-400/90" : "text-zinc-500 hover:text-zinc-300"
+                        hasNotes ? "text-amber-400/90" : "text-zinc-400 hover:text-zinc-200"
                       )}
                       aria-label={hasNotes ? "Edit notes" : "Add notes"}
                       onClick={(e) => {
@@ -108,12 +121,38 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
                       <StickyNote className={cn("h-3.5 w-3.5", hasNotes && "fill-current")} />
                     </button>
                   ) : null}
+                  <button
+                    type="button"
+                    title="Open in Resume Builder with this role"
+                    aria-label="Open in Resume Builder with this role"
+                    className="text-zinc-400 hover:text-violet-400 p-1 -m-1 rounded hover:bg-zinc-800/80"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      storeResumeHandoffFromJob(job);
+                      router.push("/resume");
+                    }}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    title="Open Outreach with this role"
+                    aria-label="Open Outreach with this role"
+                    className="text-zinc-400 hover:text-emerald-400 p-1 -m-1 rounded hover:bg-zinc-800/80"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      storeOutreachHandoffFromJob(job);
+                      router.push("/outreach");
+                    }}
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
                   {linkHref ? (
                     <a
                       href={linkHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-zinc-500 hover:text-blue-400 p-1 -m-1 rounded hover:bg-zinc-800/80"
+                      className="text-zinc-400 hover:text-sky-400 p-1 -m-1 rounded hover:bg-zinc-800/80"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
@@ -122,7 +161,7 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
                   {onRemove ? (
                     <button
                       type="button"
-                      className="text-zinc-500 hover:text-red-400 p-1 -m-1 rounded hover:bg-zinc-800/80"
+                      className="text-zinc-400 hover:text-red-400 p-1 -m-1 rounded hover:bg-zinc-800/80"
                       aria-label="Remove job"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -135,18 +174,18 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
                 </div>
               </div>
               {hasNotes ? (
-                <p className="text-[11px] text-zinc-500 mt-2 line-clamp-2 border-l-2 border-amber-500/40 pl-2">
+                <p className="text-[11px] text-zinc-200 mt-2 line-clamp-3 border-l-2 border-amber-400/70 pl-2 leading-snug">
                   {job.notes}
                 </p>
               ) : null}
               <div className="flex items-center justify-between mt-2">
                 <Badge
                   variant="outline"
-                  className="text-[10px] border-zinc-700 text-zinc-400"
+                  className="text-[10px] border-zinc-500 bg-zinc-950/50 text-zinc-200 font-medium"
                 >
                   {job.source}
                 </Badge>
-                <span className="text-[10px] text-zinc-500">{date}</span>
+                <span className="text-[10px] text-zinc-300 tabular-nums">{date}</span>
               </div>
             </CardContent>
           </Card>
@@ -161,7 +200,7 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
           >
             <DialogHeader>
               <DialogTitle className="text-white">Notes</DialogTitle>
-              <DialogDescription className="text-zinc-400">
+              <DialogDescription className="text-zinc-300">
                 {job.title} · {job.company}
               </DialogDescription>
             </DialogHeader>
@@ -202,7 +241,7 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
           >
             <DialogHeader>
               <DialogTitle className="text-white">Remove this role?</DialogTitle>
-              <DialogDescription className="text-zinc-400">
+              <DialogDescription className="text-zinc-300">
                 {job.title} at {job.company} will be removed from your tracker. This cannot be undone.
               </DialogDescription>
             </DialogHeader>

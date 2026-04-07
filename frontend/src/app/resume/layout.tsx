@@ -1,11 +1,5 @@
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
+import { AppShell } from "@/components/layout/app-shell";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen">
-      <Sidebar />
-      <div className="md:ml-64"><Header /><main className="p-6">{children}</main></div>
-    </div>
-  );
+  return <AppShell>{children}</AppShell>;
 }

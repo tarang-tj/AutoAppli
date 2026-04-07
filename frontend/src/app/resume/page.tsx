@@ -8,6 +8,7 @@ import {
   loadSampleResumesForBuilder,
   SAMPLE_JOB_DESCRIPTION_FOR_BUILDER,
 } from "@/lib/demo-data";
+import { consumeResumeHandoff } from "@/lib/tracker-handoff";
 import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
 import type { Resume, GeneratedDocument, ResumeReview } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +51,15 @@ export default function ResumePage() {
       setSelectedResumeId(resumes[0].id);
     }
   }, [resumes, selectedResumeId]);
+
+  useEffect(() => {
+    const handoff = consumeResumeHandoff();
+    if (!handoff) return;
+    setJobDescription(handoff.description);
+    setGenerated(null);
+    const label = [handoff.title, handoff.company].filter(Boolean).join(" · ");
+    toast.success(label ? `Loaded from tracker: ${label}` : "Loaded job context from tracker");
+  }, []);
 
   const handleLoadSample = () => {
     setJobDescription(SAMPLE_JOB_DESCRIPTION_FOR_BUILDER);

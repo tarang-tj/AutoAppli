@@ -4,8 +4,13 @@ import { MessagePreview } from "@/components/outreach/message-preview";
 import { apiGet } from "@/lib/api";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { getDemoOutreachMessages } from "@/lib/demo-data";
+import {
+  consumeOutreachHandoff,
+  type TrackerOutreachHandoff,
+} from "@/lib/tracker-handoff";
 import type { OutreachMessage } from "@/types";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import useSWR from "swr";
 
 export default function OutreachPage() {
@@ -23,6 +28,19 @@ export default function OutreachPage() {
   );
 
   const [currentMessage, setCurrentMessage] = useState<OutreachMessage | null>(null);
+  const [trackerPrefill, setTrackerPrefill] = useState<TrackerOutreachHandoff | null>(null);
+
+  useEffect(() => {
+    const h = consumeOutreachHandoff();
+    if (!h) return;
+    setTrackerPrefill(h);
+    const label = [h.jobTitle, h.company].filter(Boolean).join(" · ");
+    toast.success(label ? `Loaded from tracker: ${label}` : "Loaded job context from tracker");
+  }, []);
+
+  const clearTrackerPrefill = useCallback(() => {
+    setTrackerPrefill(null);
+  }, []);
 
   return (
     <div>
@@ -33,7 +51,11 @@ export default function OutreachPage() {
         </p>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <OutreachForm onGenerated={setCurrentMessage} />
+        <OutreachForm
+          onGenerated={setCurrentMessage}
+          trackerPrefill={trackerPrefill}
+          onTrackerPrefillConsumed={clearTrackerPrefill}
+        />
         <div className="space-y-6">
           <MessagePreview message={currentMessage} />
           {history && history.length > 0 && (

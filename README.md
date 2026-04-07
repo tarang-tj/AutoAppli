@@ -20,7 +20,7 @@ Upload your base resume and paste a job description — AutoAppli uses Claude AI
 Generate personalized cold emails and LinkedIn messages for recruiters and hiring managers, customized to each role and company.
 
 ### 📋 Kanban Job Tracker
-Visual drag-and-drop board to manage applications across stages: **Bookmarked → Applied → Interviewing → Offer → Rejected**
+Visual drag-and-drop board to manage applications across stages: **Bookmarked → Applied → Interviewing → Offer → Rejected**. Jump from any card to **Resume Builder** or **Outreach** with the role’s title, company, and saved description carried over (via a one-time browser handoff).
 
 ### 🔍 Job Search & Scraping
 Search live listings (e.g. Indeed), save to the Kanban in one click, optionally **scrape the full job description** from the posting URL for better resume tailoring, and avoid duplicates when the same URL is already on your board.
@@ -34,7 +34,7 @@ Signed-out visitors see a **marketing home page** at `/` (with Supabase auth ena
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | Next.js 16, TypeScript, Tailwind CSS, shadcn/ui |
+| **Frontend** | Next.js 16, TypeScript, Tailwind CSS, shadcn/ui (default **dark** UI for contrast) |
 | **Backend** | Python FastAPI |
 | **AI Engine** | Claude API (Anthropic SDK) |
 | **Database** | Supabase (PostgreSQL + Auth + Storage) |

@@ -1,4 +1,5 @@
 "use client";
+import type { TrackerOutreachHandoff } from "@/lib/tracker-handoff";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,11 +8,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { apiPost } from "@/lib/api";
 import type { OutreachMessage } from "@/types";
 import { Send, Mail, MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-export function OutreachForm({ onGenerated }: { onGenerated: (msg: OutreachMessage) => void }) {
+export function OutreachForm({
+  onGenerated,
+  trackerPrefill,
+  onTrackerPrefillConsumed,
+}: {
+  onGenerated: (msg: OutreachMessage) => void;
+  trackerPrefill?: TrackerOutreachHandoff | null;
+  onTrackerPrefillConsumed?: () => void;
+}) {
   const [messageType, setMessageType] = useState<"email" | "linkedin">("email");
   const [recipientName, setRecipientName] = useState("");
   const [recipientRole, setRecipientRole] = useState("");
@@ -19,6 +28,20 @@ export function OutreachForm({ onGenerated }: { onGenerated: (msg: OutreachMessa
   const [company, setCompany] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [generating, setGenerating] = useState(false);
+  const prefillAppliedRef = useRef(false);
+
+  useEffect(() => {
+    if (!trackerPrefill) {
+      prefillAppliedRef.current = false;
+      return;
+    }
+    if (prefillAppliedRef.current) return;
+    prefillAppliedRef.current = true;
+    setJobTitle(trackerPrefill.jobTitle);
+    setCompany(trackerPrefill.company);
+    setJobDescription(trackerPrefill.jobContext);
+    onTrackerPrefillConsumed?.();
+  }, [trackerPrefill, onTrackerPrefillConsumed]);
 
   const handleGenerate = async () => {
     if (!recipientName.trim()) { toast.error("Please enter a recipient name"); return; }
