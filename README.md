@@ -105,6 +105,7 @@ Create `frontend/.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SITE_URL=https://your-frontend.vercel.app
 NEXT_PUBLIC_API_URL=https://your-deployed-api.example.com
 ```
 
@@ -123,13 +124,14 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Create `backend/.env`:
+Create `backend/.env` (see `backend/.env.example`):
 
 ```env
 SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_KEY=your_supabase_service_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SUPABASE_JWT_SECRET=your_supabase_jwt_secret
 ANTHROPIC_API_KEY=your_anthropic_api_key
-JWT_SECRET=your_jwt_secret
+CORS_ORIGINS=https://your-frontend.vercel.app
 ```
 
 ```bash
@@ -171,6 +173,25 @@ Run the SQL migration in your Supabase dashboard to create the required tables:
 ## Demo Mode
 
 AutoAppli works without Supabase credentials in **demo mode** — the app loads with sample data so you can explore the UI and features without any setup.
+
+---
+
+## Production launch checklist
+
+1. **Vercel (frontend)**  
+   Set Root Directory to `frontend` *or* use the repo root with the existing `postinstall` that installs frontend dependencies. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, optional `NEXT_PUBLIC_API_URL`, and **`NEXT_PUBLIC_SITE_URL`** (your canonical `https://…` URL) so metadata and sitemap URLs are correct.
+
+2. **API host (e.g. Render, Fly)**  
+   Set `ANTHROPIC_API_KEY`, Supabase keys, and **`CORS_ORIGINS`** to your exact frontend origin(s), comma-separated if needed. Confirm **`GET /api/v1/health`** returns `{"status":"ok"}`.
+
+3. **Supabase**  
+   Apply SQL migrations, configure Auth redirect URLs for your production domain, and review Row Level Security policies.
+
+4. **Legal**  
+   Replace the placeholder copy on `/privacy` and `/terms` with counsel-reviewed documents before marketing the product broadly.
+
+5. **Secrets**  
+   Never commit `.env` or `.env.local`. Rotate any keys that were ever committed or shared.
 
 ---
 

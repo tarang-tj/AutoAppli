@@ -1,10 +1,24 @@
 import type { NextConfig } from "next";
 
+const securityHeaders = [
+  { key: "X-DNS-Prefetch-Control", value: "on" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  },
+];
+
 const nextConfig: NextConfig = {
   // Avoid Turbopack picking a parent directory when multiple lockfiles exist (local monorepos / home).
   // Vercel runs with cwd = Root Directory (e.g. frontend); pinning root stabilizes CI builds.
   turbopack: {
     root: process.cwd(),
+  },
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
   },
 };
 
