@@ -101,3 +101,46 @@ def _get_type_instructions(outreach_type: str) -> str:
 - Write an appropriate professional message for this context.
 - Be concise and specific.
 """
+
+
+OUTREACH_SYSTEM = """You are an expert career coach helping job seekers write concise, personalized outreach.
+Messages must feel human and specific to the role and company — never generic templates.
+Follow the user's format instructions exactly (e.g. SUBJECT:/BODY: for email)."""
+
+
+OUTREACH_EMAIL_USER = """Write a professional outreach email.
+
+Recipient: {recipient_name} ({recipient_role})
+Company: {company}
+Role they are hiring for: {job_title}
+
+About the candidate (resume summary):
+{resume_summary}
+
+{extra_context}
+{applicant_context}
+
+Output format:
+SUBJECT: <compelling, specific subject line>
+
+BODY:
+<email body: greeting, 2–3 short paragraphs, professional sign-off. Sign with the candidate's name if provided above; otherwise use a neutral closing.>"""
+
+
+OUTREACH_LINKEDIN_USER = """Write a short LinkedIn message (connection request or InMail style).
+
+Recipient: {recipient_name} ({recipient_role})
+Company: {company}
+Role: {job_title}
+
+About the candidate:
+{resume_summary}
+
+{extra_context}
+{applicant_context}
+
+Rules:
+- No subject line.
+- Under ~150 words, warm and specific.
+- Reference the role or company where natural.
+- End with a soft call to action."""

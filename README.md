@@ -17,7 +17,10 @@ An AI-powered job application automation platform that helps job seekers streaml
 Upload your base resume and paste a job description — AutoAppli uses Claude AI to generate a tailored resume that highlights relevant experience and matches keywords. The UI shows a **formatted “paper” preview** (aligned with the PDF layout), an **embedded PDF preview** when available, plus **download PDF**, **download HTML**, and **print** (save as PDF from the browser). The API defaults to **`include_pdf: true`** so the downloadable file matches the on-screen structure.
 
 ### ✉️ Smart Outreach Drafting
-Generate personalized cold emails and LinkedIn messages for recruiters and hiring managers, customized to each role and company.
+Generate personalized cold emails and LinkedIn messages for recruiters and hiring managers, customized to each role and company. Optional **display name** from **Settings** is passed to the model for better greetings and sign-offs.
+
+### 👤 Profile & saved drafts
+**Settings** (`/settings`) stores **display name**, **headline**, and **LinkedIn URL** (Postgres when Supabase is configured on the API; session-only demo otherwise). Each successful **tailored resume** run saves **plain text** to **`generated_documents`** for history in the Resume Builder (PDFs are not re-stored; regenerate or use HTML/PDF at generation time).
 
 ### 📋 Kanban Job Tracker
 Visual drag-and-drop board to manage applications across stages: **Bookmarked → Applied → Interviewing → Offer → Rejected**. Jump from any card to **Resume Builder** or **Outreach** with the role’s title, company, and saved description carried over (via a one-time browser handoff).
@@ -53,7 +56,8 @@ AutoAppli/
 │   │   ├── dashboard/            # Kanban job tracker
 │   │   ├── resume/               # Resume upload & tailoring
 │   │   ├── outreach/             # Message generation
-│   │   └── jobs/                 # Job search
+│   │   ├── jobs/                 # Job search
+│   │   └── settings/             # User profile
 │   ├── src/components/           # UI components
 │   ├── src/hooks/                # Data fetching hooks
 │   ├── src/lib/                  # Supabase clients, API utils
@@ -65,6 +69,7 @@ AutoAppli/
 │   │   ├── auth.py               # JWT authentication
 │   │   ├── resume.py             # Upload & generate resumes
 │   │   ├── outreach.py           # Generate outreach messages
+│   │   ├── profile.py            # GET/PATCH user profile
 │   │   ├── jobs.py               # CRUD job applications
 │   │   └── search.py             # Job search & scraping
 │   ├── app/services/             # Business logic
@@ -163,12 +168,24 @@ Apply:
 
 This adds **`job_listings`** (deduped by URL), **`job_searches`** (one row per search run), and **`job_search_result_items`** (ordered links). With Supabase configured, **`POST /search`** persists when the request includes a valid Bearer token; **`GET /search/history`** lists recent runs for that user. Anonymous searches still work but are not stored.
 
+**Resume uploads & outreach history**
+
+Apply:
+
+`supabase/migrations/20260407180000_resume_outreach.sql`
+
+This adds **`user_resumes`** (parsed PDF text per user) and **`outreach_messages`** (saved drafts). With Supabase configured, **`POST /resumes/upload`**, **`GET /resumes`**, **`POST /outreach/generate`**, and **`GET /outreach`** use Postgres instead of in-memory storage (still per-user memory when Supabase env vars are unset).
+
+**Profiles & generated document history**
+
+Apply:
+
+`supabase/migrations/20260407190000_profiles_generated_documents.sql`
+
+This adds **`profiles`** (display name, headline, LinkedIn URL) and **`generated_documents`** (saved tailored resume text after each **`POST /resumes/generate`**). The app exposes **`GET/PATCH /profile`** and **`GET /resumes/generated`**.
+
 Other tables you may add for a full product (not all are defined in-repo yet):
 
-- `profiles` — User profiles
-- `resumes` — Uploaded resumes with parsed text
-- `generated_documents` — Tailored resumes & cover letters
-- `outreach_messages` — Generated emails & LinkedIn messages
 - `contacts` — Recruiter/hiring manager contacts
 
 ---
@@ -180,7 +197,10 @@ Other tables you may add for a full product (not all are defined in-repo yet):
 | `GET` | `/auth/me` | Resolve caller from Bearer token when Supabase-backed jobs are enabled |
 | `POST` | `/resumes/upload` | Upload and parse a PDF resume |
 | `GET` | `/resumes` | List user's resumes |
-| `POST` | `/resumes/generate` | Tailored resume text + optional `pdf_base64` (default `include_pdf: true`) |
+| `GET` | `/profile` | User profile (empty defaults until first PATCH) |
+| `PATCH` | `/profile` | Update `display_name`, `headline`, `linkedin_url` |
+| `GET` | `/resumes/generated` | Recent saved tailored resume text (Supabase mode) |
+| `POST` | `/resumes/generate` | Tailored resume text + optional `pdf_base64` (default `include_pdf: true`); persists text when Supabase is on |
 | `POST` | `/outreach/generate` | Draft outreach email/LinkedIn message |
 | `GET` | `/jobs` | List job applications |
 | `POST` | `/jobs` | Add a job (`fetch_full_description` scrapes posting HTML; same URL returns `{ ..., duplicate: true }`) |
@@ -207,16 +227,27 @@ AutoAppli works without Supabase credentials in **demo mode** — the app loads 
    See [Vercel deployment](#vercel-deployment) below. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, optional `NEXT_PUBLIC_API_URL`, and **`NEXT_PUBLIC_SITE_URL`** (see [NEXT_PUBLIC_SITE_URL](#next_public_site_url)).
 
 2. **API host (e.g. Render, Fly)**  
-   Set `ANTHROPIC_API_KEY`, Supabase keys, and **`CORS_ORIGINS`** to your exact frontend origin(s), comma-separated if needed. Confirm **`GET /api/v1/health`** returns `{"status":"ok"}`.
+   Set `ANTHROPIC_API_KEY`, Supabase keys, and **`CORS_ORIGINS`** to your exact frontend origin(s), comma-separated if needed. Confirm **`GET /api/v1/health`** returns `{"status":"ok"}`.  
+   This repo includes **`backend/Dockerfile`** and **`render.yaml`** so you can deploy the API on Render without your own domain.
 
 3. **Supabase**  
-   Apply SQL migrations (Kanban: `20260406120000_create_jobs.sql`; job search history: `20260407120000_job_search.sql`), configure Auth redirect URLs for your production domain, and review Row Level Security policies.
+   Apply SQL migrations (Kanban: `20260406120000_create_jobs.sql`; job search history: `20260407120000_job_search.sql`; resumes & outreach: `20260407180000_resume_outreach.sql`; profiles & generated docs: `20260407190000_profiles_generated_documents.sql`), configure Auth redirect URLs for your production domain, and review Row Level Security policies.
 
 4. **Legal**  
    Replace the placeholder copy on `/privacy` and `/terms` with counsel-reviewed documents before marketing the product broadly.
 
 5. **Secrets**  
    Never commit `.env` or `.env.local`. Rotate any keys that were ever committed or shared.
+
+### Deploy API on Render (Docker)
+
+You still complete this in **your** Render account (this repo only supplies the config).
+
+1. Push the repo to GitHub.
+2. In [Render](https://render.com): **New** → **Blueprint** → select the repo → apply the `render.yaml` service **or** **New** → **Web Service** → connect the repo → **Docker**, Dockerfile path **`backend/Dockerfile`**, Docker build context **`backend`**.
+3. Under **Environment**, add at least **`ANTHROPIC_API_KEY`** and **`CORS_ORIGINS`** (e.g. `https://your-app.vercel.app` — must match the browser origin exactly). Add Supabase variables from `backend/.env.example` if you use persisted jobs/search.
+4. Deploy, then open **`https://<your-service>.onrender.com/api/v1/health`** — expect `{"status":"ok"}`.
+5. In Vercel (or `frontend/.env.local`), set **`NEXT_PUBLIC_API_URL`** to `https://<your-service>.onrender.com` (with or without `/api/v1`; the app normalizes it).
 
 ### Vercel deployment
 

@@ -10,10 +10,10 @@ import {
 } from "@/lib/demo-data";
 import { consumeResumeHandoff, tailoringTextFromJob } from "@/lib/tracker-handoff";
 import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
-import type { Job, Resume, GeneratedDocument, ResumeReview } from "@/types";
+import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocument } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { FileStack, Info, Sparkles, X } from "lucide-react";
+import { FileStack, History, Info, Sparkles, X } from "lucide-react";
 import { Suspense, useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -23,6 +23,12 @@ function ResumeBuilderContent() {
   const { data: resumes, mutate } = useSWR<Resume[]>(
     "/resumes",
     () => apiGet<Resume[]>("/resumes"),
+    { revalidateOnFocus: false }
+  );
+
+  const { data: savedGenerated, mutate: mutateSavedGenerated } = useSWR<SavedTailoredDocument[]>(
+    "/resumes/generated",
+    () => apiGet<SavedTailoredDocument[]>("/resumes/generated"),
     { revalidateOnFocus: false }
   );
 
@@ -123,6 +129,7 @@ function ResumeBuilderContent() {
         include_pdf: true,
       });
       setGenerated(result);
+      void mutateSavedGenerated();
       toast.success(
         liveApi ? "Tailored resume generated!" : "Demo output ready (set API URL for real AI)"
       );
@@ -263,6 +270,43 @@ function ResumeBuilderContent() {
             disabled={!selectedResumeId || !(resumes?.find((r) => r.id === selectedResumeId)?.parsed_text ?? "").trim()}
             onRequestReview={handleReview}
           />
+          {savedGenerated && savedGenerated.length > 0 ? (
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-white text-base flex items-center gap-2">
+                  <History className="h-4 w-4 text-blue-400" aria-hidden />
+                  Saved tailored resumes
+                </CardTitle>
+                <p className="text-xs text-zinc-500">
+                  Text only (regenerate for a new PDF). Newest first.
+                </p>
+              </CardHeader>
+              <CardContent className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                {savedGenerated.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() =>
+                      setGenerated({
+                        id: s.id,
+                        doc_type: "tailored_resume",
+                        content: s.content,
+                        storage_path: "",
+                        download_url: "",
+                        pdf_base64: null,
+                      })
+                    }
+                    className="w-full text-left rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 hover:border-zinc-600 transition-colors"
+                  >
+                    <p className="text-sm text-zinc-100 line-clamp-2">{s.title || "Tailored resume"}</p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5">
+                      {new Date(s.created_at).toLocaleString()}
+                    </p>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
         <div>
           <ResumePreview document={generated} />

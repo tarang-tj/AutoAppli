@@ -33,16 +33,24 @@ async def generate_outreach(
     company: str,
     resume_summary: str = "",
     extra_context: str = "",
+    applicant_name: str = "",
 ) -> dict:
     template = OUTREACH_EMAIL_USER if message_type == "email" else OUTREACH_LINKEDIN_USER
 
+    applicant_context = ""
+    if applicant_name.strip():
+        applicant_context = (
+            f"Candidate name (use naturally in greeting and sign-off): {applicant_name.strip()}"
+        )
+
     user_prompt = template.format(
         recipient_name=recipient_name,
-        recipient_role=recipient_role,
-        company=company,
-        job_title=job_title,
+        recipient_role=recipient_role or "(not specified)",
+        company=company or "(not specified)",
+        job_title=job_title or "(not specified)",
         resume_summary=resume_summary or "(not provided)",
         extra_context=f"Additional context: {extra_context}" if extra_context else "",
+        applicant_context=applicant_context,
     )
 
     raw = await generate_text(

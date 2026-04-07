@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import auth, jobs, outreach, resume, search
+from app.routers import auth, jobs, outreach, profile, resume, search
 
 settings = get_settings()
 
@@ -17,6 +17,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/api/v1")
+app.include_router(profile.router, prefix="/api/v1")
 app.include_router(resume.router, prefix="/api/v1")
 app.include_router(outreach.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
@@ -33,5 +34,6 @@ async def health():
         "status": "ok",
         "jobs_storage": "supabase" if supa else "memory",
         "search_history": "on" if supa else "off",
-        "resume_outreach_storage": "per_user_memory",
+        "resume_outreach_storage": "supabase" if supa else "per_user_memory",
+        "profile_documents": "supabase" if supa else "off",
     }

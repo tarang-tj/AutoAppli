@@ -58,6 +58,24 @@ export interface OutreachMessage {
   created_at: string;
 }
 
+export interface UserProfile {
+  display_name: string;
+  headline: string;
+  linkedin_url: string;
+  updated_at?: string | null;
+}
+
+/** Saved tailored resume text from the API (Supabase) or demo store. */
+export interface SavedTailoredDocument {
+  id: string;
+  doc_type: string;
+  title: string;
+  resume_id?: string | null;
+  job_description_excerpt: string;
+  content: string;
+  created_at: string;
+}
+
 export interface Contact {
   id: string;
   name: string;

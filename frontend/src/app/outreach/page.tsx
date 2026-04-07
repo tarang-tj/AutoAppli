@@ -9,7 +9,7 @@ import {
   outreachHandoffFromJob,
   type TrackerOutreachHandoff,
 } from "@/lib/tracker-handoff";
-import type { Job, OutreachMessage } from "@/types";
+import type { Job, OutreachMessage, UserProfile } from "@/types";
 import { startTransition, Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -29,6 +29,10 @@ function OutreachPageContent() {
     },
     { revalidateOnFocus: false }
   );
+
+  const { data: profile } = useSWR<UserProfile>("/profile", () => apiGet<UserProfile>("/profile"), {
+    revalidateOnFocus: false,
+  });
 
   const [currentMessage, setCurrentMessage] = useState<OutreachMessage | null>(null);
   const [trackerPrefill, setTrackerPrefill] = useState<TrackerOutreachHandoff | null>(null);
@@ -87,6 +91,7 @@ function OutreachPageContent() {
           onGenerated={setCurrentMessage}
           trackerPrefill={trackerPrefill}
           onTrackerPrefillConsumed={clearTrackerPrefill}
+          applicantName={profile?.display_name}
         />
         <div className="space-y-6">
           <MessagePreview message={currentMessage} />

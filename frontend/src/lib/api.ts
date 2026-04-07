@@ -6,10 +6,21 @@ import {
   setDemoResumes,
   getDemoOutreachMessages,
   getDemoJobSearchResults,
+  getDemoProfile,
+  setDemoProfile,
+  getDemoGeneratedDocuments,
+  pushDemoGeneratedDocument,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { sortJobsKanbanOrder } from "@/lib/kanban-reorder";
-import type { Job, Resume, OutreachMessage, GeneratedDocument, ResumeReview } from "@/types";
+import type {
+  Job,
+  Resume,
+  OutreachMessage,
+  GeneratedDocument,
+  ResumeReview,
+  UserProfile,
+} from "@/types";
 
 const MISSING_API_URL =
   "Set NEXT_PUBLIC_API_URL to your deployed API (e.g. https://your-api.onrender.com). No default URL is used.";
@@ -153,6 +164,12 @@ function handleDemoGet(path: string): unknown {
   if (path === "/outreach") {
     return getDemoOutreachMessages();
   }
+  if (path === "/profile") {
+    return getDemoProfile();
+  }
+  if (path === "/resumes/generated") {
+    return getDemoGeneratedDocuments();
+  }
   throw new Error(`Demo mode does not support GET ${path}`);
 }
 
@@ -220,6 +237,7 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     const b = body as {
       job_description?: string;
       resume_text?: string;
+      resume_id?: string;
     };
     const jd = (b.job_description ?? "").trim() || "(no job description)";
     const source = (b.resume_text ?? "").trim();
@@ -251,6 +269,7 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       download_url: "",
       pdf_base64: null,
     };
+    pushDemoGeneratedDocument(doc, b.job_description ?? "", b.resume_id ?? "");
     return doc;
   }
   if (path === "/resumes/review") {
@@ -320,6 +339,14 @@ function handleDemoDelete(path: string): void {
 }
 
 function handleDemoPatch(path: string, body?: unknown): unknown {
+  if (path === "/profile") {
+    const b = body as Partial<UserProfile>;
+    return setDemoProfile({
+      ...(typeof b.display_name === "string" ? { display_name: b.display_name } : {}),
+      ...(typeof b.headline === "string" ? { headline: b.headline } : {}),
+      ...(typeof b.linkedin_url === "string" ? { linkedin_url: b.linkedin_url } : {}),
+    });
+  }
   if (path.startsWith("/jobs/")) {
     const jobId = path.split("/")[2];
     const jobs = getDemoJobs();
@@ -381,6 +408,13 @@ function handleDemoPut(path: string, body: unknown): unknown {
 }
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {
+  if (path === "/profile") {
+    if (!API_URL) {
+      return getDemoProfile() as T;
+    }
+    return fetchBackend<T>(path);
+  }
+
   if (path === "/search/history" || path.startsWith("/search/history?")) {
     if (!API_URL) {
       return [] as T;
@@ -409,6 +443,9 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
       if (path === "/resumes") {
         return getDemoResumes() as T;
       }
+      if (path === "/resumes/generated") {
+        return getDemoGeneratedDocuments() as T;
+      }
       throw new Error(MISSING_API_URL);
     }
     try {
@@ -416,6 +453,9 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     } catch {
       if (path === "/resumes") {
         return getDemoResumes() as T;
+      }
+      if (path === "/resumes/generated") {
+        return [] as T;
       }
       throw new Error(
         path === "/resumes"
@@ -504,6 +544,17 @@ export async function apiPut<T = unknown>(path: string, body: unknown): Promise<
 }
 
 export async function apiPatch<T = unknown>(path: string, body: unknown): Promise<T> {
+  if (path === "/profile") {
+    if (!API_URL) {
+      return handleDemoPatch(path, body) as T;
+    }
+    return fetchBackend<T>(path, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
   if (path.startsWith("/jobs/") && !API_URL) {
     return handleDemoPatch(path, body) as T;
   }

@@ -75,6 +75,7 @@ class OutreachGenerateRequest(BaseModel):
     company: str = ""
     resume_text: str = ""
     job_description: str = ""
+    applicant_name: str = ""
 
 
 class OutreachGenerateResponse(BaseModel):
@@ -104,6 +105,29 @@ class SearchRequest(BaseModel):
     remote_only: bool = False
     page: int = 1
     per_page: int = Field(default=20, ge=1, le=50)
+
+
+class ProfileResponse(BaseModel):
+    display_name: str = ""
+    headline: str = ""
+    linkedin_url: str = ""
+    updated_at: str | None = None
+
+
+class ProfilePatch(BaseModel):
+    display_name: str | None = None
+    headline: str | None = None
+    linkedin_url: str | None = None
+
+
+class SavedGeneratedDocument(BaseModel):
+    id: str
+    doc_type: str = "tailored_resume"
+    title: str
+    resume_id: str | None = None
+    job_description_excerpt: str = ""
+    content: str
+    created_at: str
 
 
 class HealthResponse(BaseModel):

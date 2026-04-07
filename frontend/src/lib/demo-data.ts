@@ -1,4 +1,12 @@
-import type { Job, Resume, OutreachMessage, JobSearchResult } from "@/types";
+import type {
+  Job,
+  Resume,
+  OutreachMessage,
+  JobSearchResult,
+  UserProfile,
+  SavedTailoredDocument,
+  GeneratedDocument,
+} from "@/types";
 
 // Demo state — updates persist for the browser session
 let demoJobs: Job[] = [
@@ -307,6 +315,15 @@ John Smith
   },
 ];
 
+let demoProfile: UserProfile = {
+  display_name: "",
+  headline: "",
+  linkedin_url: "",
+  updated_at: null,
+};
+
+let demoGeneratedDocuments: SavedTailoredDocument[] = [];
+
 const demoJobSearchResults: JobSearchResult[] = [
   {
     title: "Staff Data Engineer",
@@ -390,4 +407,43 @@ export function getDemoOutreachMessages(): OutreachMessage[] {
 
 export function getDemoJobSearchResults(): JobSearchResult[] {
   return demoJobSearchResults;
+}
+
+export function getDemoProfile(): UserProfile {
+  return { ...demoProfile };
+}
+
+export function setDemoProfile(patch: Partial<UserProfile>): UserProfile {
+  demoProfile = {
+    ...demoProfile,
+    ...patch,
+    updated_at: new Date().toISOString(),
+  };
+  return getDemoProfile();
+}
+
+export function getDemoGeneratedDocuments(): SavedTailoredDocument[] {
+  return [...demoGeneratedDocuments];
+}
+
+export function pushDemoGeneratedDocument(
+  doc: GeneratedDocument,
+  jobDescription: string,
+  resumeId: string
+): SavedTailoredDocument {
+  const jd = jobDescription.trim();
+  const excerpt = jd.length > 400 ? `${jd.slice(0, 400)}…` : jd;
+  const title =
+    jd.length > 0 ? (jd.split(/\s+/).slice(0, 12).join(" ") + (jd.length > 80 ? "…" : "")) : "Tailored resume";
+  const row: SavedTailoredDocument = {
+    id: doc.id,
+    doc_type: doc.doc_type,
+    title: title.slice(0, 200),
+    resume_id: resumeId,
+    job_description_excerpt: excerpt,
+    content: doc.content ?? "",
+    created_at: new Date().toISOString(),
+  };
+  demoGeneratedDocuments = [row, ...demoGeneratedDocuments].slice(0, 50);
+  return row;
 }

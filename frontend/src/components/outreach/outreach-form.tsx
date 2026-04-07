@@ -16,10 +16,13 @@ export function OutreachForm({
   onGenerated,
   trackerPrefill,
   onTrackerPrefillConsumed,
+  applicantName,
 }: {
   onGenerated: (msg: OutreachMessage) => void;
   trackerPrefill?: TrackerOutreachHandoff | null;
   onTrackerPrefillConsumed?: () => void;
+  /** From Settings → profile; improves sign-off in AI drafts. */
+  applicantName?: string;
 }) {
   const [messageType, setMessageType] = useState<"email" | "linkedin">("email");
   const [recipientName, setRecipientName] = useState("");
@@ -47,7 +50,15 @@ export function OutreachForm({
     if (!recipientName.trim()) { toast.error("Please enter a recipient name"); return; }
     setGenerating(true);
     try {
-      const result = await apiPost<OutreachMessage>("/outreach/generate", { message_type: messageType, recipient_name: recipientName, recipient_role: recipientRole || undefined, job_title: jobTitle || undefined, company: company || undefined, job_description: jobDescription || undefined });
+      const result = await apiPost<OutreachMessage>("/outreach/generate", {
+        message_type: messageType,
+        recipient_name: recipientName,
+        recipient_role: recipientRole || undefined,
+        job_title: jobTitle || undefined,
+        company: company || undefined,
+        job_description: jobDescription || undefined,
+        applicant_name: applicantName?.trim() || undefined,
+      });
       onGenerated(result);
       toast.success("Message generated!");
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : "Failed to generate message"); }
