@@ -179,7 +179,7 @@ AutoAppli works without Supabase credentials in **demo mode** — the app loads 
 ## Production launch checklist
 
 1. **Vercel (frontend)**  
-   Set Root Directory to `frontend` *or* use the repo root with the existing `postinstall` that installs frontend dependencies. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, optional `NEXT_PUBLIC_API_URL`, and **`NEXT_PUBLIC_SITE_URL`** (your canonical `https://…` URL) so metadata and sitemap URLs are correct.
+   See [Vercel deployment](#vercel-deployment) below. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, optional `NEXT_PUBLIC_API_URL`, and **`NEXT_PUBLIC_SITE_URL`** (see [NEXT_PUBLIC_SITE_URL](#next_public_site_url)).
 
 2. **API host (e.g. Render, Fly)**  
    Set `ANTHROPIC_API_KEY`, Supabase keys, and **`CORS_ORIGINS`** to your exact frontend origin(s), comma-separated if needed. Confirm **`GET /api/v1/health`** returns `{"status":"ok"}`.
@@ -192,6 +192,42 @@ AutoAppli works without Supabase credentials in **demo mode** — the app loads 
 
 5. **Secrets**  
    Never commit `.env` or `.env.local`. Rotate any keys that were ever committed or shared.
+
+### Vercel deployment
+
+Deploy from the **latest `main`** so you pick up current TypeScript and build fixes.
+
+**Option A — Root Directory: `frontend`**
+
+- Install Command: default (`npm install` in `frontend`).
+- Build Command: default (`npm run build` → `next build --webpack`).
+
+**Option B — Root Directory: repository root** *(empty / default root)*
+
+- The root `package.json` **`postinstall`** runs `npm ci` (or `npm install`) in `frontend/`, and **`npm run build`** runs `npm run build --prefix frontend` (same as `next build --webpack` inside `frontend/`).
+
+After changing Root Directory or env vars, trigger a **Redeploy** on the latest commit. If the build fails, open the deployment **Build** log and jump to the first `Error` line (often TypeScript or a missing module).
+
+### NEXT_PUBLIC_SITE_URL
+
+This is the **canonical public URL of your Next.js app** (the address people type in the browser). It drives `metadataBase`, Open Graph links, `sitemap.xml`, and `robots.txt`.
+
+**What to set it to**
+
+- **Production:** Your real site, with `https` and **no trailing slash**, for example:
+  - `https://your-project.vercel.app`, or
+  - `https://www.yourdomain.com` if you use a custom domain on Vercel.
+- **Local dev:** You usually **omit** it; the app falls back to `http://localhost:3000`.
+- **If you omit it on Vercel:** The app uses the `VERCEL_URL` hostname (still `https://…` in code). That works for previews, but production URLs in metadata may look like deployment-specific hostnames unless you set this variable.
+
+**Where to set it (Vercel)**
+
+1. Project → **Settings** → **Environment Variables**.
+2. Add **`NEXT_PUBLIC_SITE_URL`** = `https://your-exact-production-domain`.
+3. Scope it at least to **Production** (add **Preview** too only if you want previews to advertise a fixed URL—often you leave Preview unset so `VERCEL_URL` is used per deployment).
+4. Redeploy so the new value is baked into the client bundle.
+
+**Also set `CORS_ORIGINS`** on the API to the **same origin** (e.g. `https://www.yourdomain.com`) so the browser can call your FastAPI backend.
 
 ---
 

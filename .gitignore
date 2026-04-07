@@ -12,3 +12,7 @@ dist/
 build/
 .DS_Store
 .claude/
+
+# Accidental duplicate files from macOS Finder ("file 2.ext")
+**/* 2.*
+**/* 3.*
