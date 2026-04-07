@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import type { GeneratedDocument } from "@/types";
 import { Download, FileText } from "lucide-react";
 
-export function ResumePreview({ document }: { document: GeneratedDocument | null }) {
-  if (!document) {
+export function ResumePreview({ document: doc }: { document: GeneratedDocument | null }) {
+  if (!doc) {
     return (
       <Card className="bg-zinc-900 border-zinc-800 h-full min-h-[400px] flex items-center justify-center">
         <CardContent className="text-center">
@@ -20,14 +20,14 @@ export function ResumePreview({ document }: { document: GeneratedDocument | null
   }
 
   const hasPdfUrl =
-    Boolean(document.download_url?.trim()) &&
-    document.download_url !== "" &&
-    !document.download_url.startsWith("/api/download");
+    Boolean(doc.download_url?.trim()) &&
+    doc.download_url !== "" &&
+    !doc.download_url.startsWith("/api/download");
 
-  const hasPdfBase64 = Boolean(document.pdf_base64?.trim());
+  const hasPdfBase64 = Boolean(doc.pdf_base64?.trim());
 
   const downloadPdfFromBase64 = () => {
-    const b64 = document.pdf_base64;
+    const b64 = doc.pdf_base64;
     if (!b64?.trim()) return;
     const binary = atob(b64);
     const bytes = new Uint8Array(binary.length);
@@ -36,9 +36,9 @@ export function ResumePreview({ document }: { document: GeneratedDocument | null
     }
     const blob = new Blob([bytes], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = globalThis.document.createElement("a");
     a.href = url;
-    a.download = `tailored-resume-${document.id}.pdf`;
+    a.download = `tailored-resume-${doc.id}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -52,7 +52,7 @@ export function ResumePreview({ document }: { document: GeneratedDocument | null
             variant="outline"
             size="sm"
             className="border-zinc-700 text-zinc-300 shrink-0"
-            onClick={() => window.open(document.download_url, "_blank")}
+            onClick={() => window.open(doc.download_url, "_blank")}
           >
             <Download className="h-4 w-4 mr-2" />
             Download PDF
@@ -70,16 +70,16 @@ export function ResumePreview({ document }: { document: GeneratedDocument | null
         ) : null}
       </CardHeader>
       <CardContent>
-        {document.content ? (
+        {doc.content ? (
           <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 max-h-[560px] overflow-y-auto">
             <pre className="text-sm text-zinc-200 whitespace-pre-wrap font-sans leading-relaxed">
-              {document.content}
+              {doc.content}
             </pre>
           </div>
         ) : hasPdfUrl ? (
           <div className="bg-zinc-800 rounded-lg p-4 min-h-[400px]">
             <iframe
-              src={document.download_url}
+              src={doc.download_url}
               className="w-full h-[500px] rounded"
               title="Resume Preview"
             />
