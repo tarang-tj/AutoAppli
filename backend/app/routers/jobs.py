@@ -1,50 +1,14 @@
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.utils.job_url import normalize_job_url
-
+from app.config import get_settings
+from app.deps.jobs_auth import get_jobs_user_id, jobs_use_supabase
+from app.repositories import jobs_memory, jobs_supabase
 router = APIRouter(tags=["jobs"])
-
-_jobs: dict[str, dict] = {}
-
-STATUS_RANK: tuple[str, ...] = (
-    "bookmarked",
-    "applied",
-    "interviewing",
-    "offer",
-    "rejected",
-    "ghosted",
-)
-
-
-def _rank(status: str) -> int:
-    try:
-        return STATUS_RANK.index(status)
-    except ValueError:
-        return 0
-
-
-def _next_sort_order(status: str) -> int:
-    orders = [j["sort_order"] for j in _jobs.values() if j["status"] == status]
-    return (max(orders) if orders else -1) + 1
-
-
-def _sorted_jobs(jobs: list[dict]) -> list[dict]:
-    return sorted(
-        jobs,
-        key=lambda j: (
-            _rank(j["status"]),
-            j.get("sort_order", 0),
-            j.get("created_at", ""),
-        ),
-    )
-
 
 JobStatus = Literal[
     "bookmarked",
@@ -61,6 +25,7 @@ class JobCreate(BaseModel):
     title: str
     url: str | None = None
     description: str | None = None
+    source: str = "manual"
 
 
 class JobStatusUpdate(BaseModel):
@@ -72,66 +37,112 @@ class ReorderJobsBody(BaseModel):
     ordered_ids: list[str]
 
 
+def _persisted(settings: Settings) -> bool:
+    return jobs_use_supabase(settings)
+
+
 @router.post("/jobs")
-async def create_job(body: JobCreate):
-    job_id = f"job-{uuid.uuid4().hex[:12]}"
-    now = datetime.now(timezone.utc).isoformat()
-    sort_order = _next_sort_order("bookmarked")
-    job = {
-        "id": job_id,
-        "company": body.company,
-        "title": body.title,
-        "url": normalize_job_url(body.url),
-        "description": body.description,
-        "status": "bookmarked",
-        "source": "manual",
-        "sort_order": sort_order,
-        "created_at": now,
-        "updated_at": now,
-    }
-    _jobs[job_id] = job
-    return job
+async def create_job(
+    body: JobCreate,
+    user_id: str | None = Depends(get_jobs_user_id),
+):
+    settings = get_settings()
+    if _persisted(settings):
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        try:
+            return jobs_supabase.create_job(
+                settings,
+                user_id,
+                body.company,
+                body.title,
+                body.url,
+                body.description,
+                body.source,
+            )
+        except RuntimeError as e:
+            raise HTTPException(status_code=500, detail=str(e)) from e
+    return jobs_memory.create_job(
+        body.company,
+        body.title,
+        body.url,
+        body.description,
+        body.source,
+    )
 
 
 @router.get("/jobs")
-async def list_jobs(status: str | None = None):
-    jobs = list(_jobs.values())
-    if status:
-        jobs = [j for j in jobs if j["status"] == status]
-    return _sorted_jobs(jobs)
+async def list_jobs(
+    status: str | None = None,
+    user_id: str | None = Depends(get_jobs_user_id),
+):
+    settings = get_settings()
+    if _persisted(settings):
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        return jobs_supabase.list_jobs(settings, user_id, status)
+    return jobs_memory.list_jobs(status)
 
 
 @router.put("/jobs/reorder")
-async def reorder_jobs(body: ReorderJobsBody):
-    now = datetime.now(timezone.utc).isoformat()
-    for i, jid in enumerate(body.ordered_ids):
-        if jid not in _jobs:
-            raise HTTPException(status_code=400, detail=f"Unknown job id: {jid}")
-        if _jobs[jid]["status"] != body.status:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Job {jid} is not in column {body.status}",
-            )
-        _jobs[jid]["sort_order"] = i
-        _jobs[jid]["updated_at"] = now
+async def reorder_jobs(
+    body: ReorderJobsBody,
+    user_id: str | None = Depends(get_jobs_user_id),
+):
+    settings = get_settings()
+    if _persisted(settings):
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        try:
+            jobs_supabase.reorder_jobs(settings, user_id, body.status, body.ordered_ids)
+        except KeyError as e:
+            raise HTTPException(status_code=400, detail=str(e) or e.args[0]) from e
+        return {"ok": True}
+    try:
+        jobs_memory.reorder_jobs(body.status, body.ordered_ids)
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=str(e) or e.args[0]) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     return {"ok": True}
 
 
 @router.patch("/jobs/{job_id}")
-async def update_job_status(job_id: str, body: JobStatusUpdate):
-    if job_id not in _jobs:
-        raise HTTPException(status_code=404, detail="Job not found")
-    row = _jobs[job_id]
-    if row["status"] != body.status:
-        row["status"] = body.status
-        row["sort_order"] = _next_sort_order(body.status)
-    row["updated_at"] = datetime.now(timezone.utc).isoformat()
-    return row
+async def update_job_status(
+    job_id: str,
+    body: JobStatusUpdate,
+    user_id: str | None = Depends(get_jobs_user_id),
+):
+    settings = get_settings()
+    if _persisted(settings):
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        try:
+            return jobs_supabase.patch_job_status(settings, user_id, job_id, body.status)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="Job not found") from None
+    try:
+        return jobs_memory.patch_job_status(job_id, body.status)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not found") from None
 
 
 @router.delete("/jobs/{job_id}")
-async def delete_job(job_id: str):
-    if job_id not in _jobs:
-        raise HTTPException(status_code=404, detail="Job not found")
-    del _jobs[job_id]
+async def delete_job(
+    job_id: str,
+    user_id: str | None = Depends(get_jobs_user_id),
+):
+    settings = get_settings()
+    if _persisted(settings):
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        try:
+            jobs_supabase.delete_job(settings, user_id, job_id)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="Job not found") from None
+        return {"ok": True}
+    try:
+        jobs_memory.delete_job(job_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Job not found") from None
     return {"ok": True}

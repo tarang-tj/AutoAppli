@@ -142,11 +142,20 @@ Point `CORS_ORIGINS` in `backend/.env` at your real web origin(s); default in co
 
 ### 4. Database Setup
 
-Run the SQL migration in your Supabase dashboard to create the required tables:
+Run SQL in the Supabase **SQL Editor** (or via CLI) to create the tables you need.
+
+**Jobs (Kanban) — included in this repo**
+
+When the API has **`SUPABASE_URL`**, **`SUPABASE_SERVICE_ROLE_KEY`**, and **`SUPABASE_JWT_SECRET`** set, job routes persist to Postgres instead of in-memory storage. Apply:
+
+`supabase/migrations/20260406120000_create_jobs.sql`
+
+The frontend must send the Supabase session **`Authorization: Bearer <access_token>`** on job requests (already wired when Supabase auth is enabled).
+
+Other tables you may add for a full product (not all are defined in-repo yet):
 
 - `profiles` — User profiles
 - `resumes` — Uploaded resumes with parsed text
-- `jobs` — Job applications with status tracking
 - `generated_documents` — Tailored resumes & cover letters
 - `outreach_messages` — Generated emails & LinkedIn messages
 - `contacts` — Recruiter/hiring manager contacts
@@ -169,6 +178,8 @@ Run the SQL migration in your Supabase dashboard to create the required tables:
 | `DELETE` | `/jobs/{id}` | Remove a job application |
 | `POST` | `/search` | Search & scrape job listings |
 
+When jobs are stored in Supabase (see Database Setup), the **`/jobs`** routes require a valid Supabase **`Bearer` access token** verified with **`SUPABASE_JWT_SECRET`**.
+
 ---
 
 ## Demo Mode
@@ -186,7 +197,7 @@ AutoAppli works without Supabase credentials in **demo mode** — the app loads 
    Set `ANTHROPIC_API_KEY`, Supabase keys, and **`CORS_ORIGINS`** to your exact frontend origin(s), comma-separated if needed. Confirm **`GET /api/v1/health`** returns `{"status":"ok"}`.
 
 3. **Supabase**  
-   Apply SQL migrations, configure Auth redirect URLs for your production domain, and review Row Level Security policies.
+   Apply SQL migrations (at minimum `supabase/migrations/20260406120000_create_jobs.sql` for persisted Kanban), configure Auth redirect URLs for your production domain, and review Row Level Security policies.
 
 4. **Legal**  
    Replace the placeholder copy on `/privacy` and `/terms` with counsel-reviewed documents before marketing the product broadly.
