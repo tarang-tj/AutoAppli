@@ -39,18 +39,22 @@ def decode_supabase_user_sub(token: str, jwt_secret: str) -> str:
     return sub
 
 
-def get_jobs_user_id(
+def get_optional_user_id(
     authorization: Annotated[str | None, Header()] = None,
     settings: Settings = Depends(get_settings),
 ) -> str | None:
+    """Same JWT as jobs, but never 401 — used when persistence is optional (e.g. search)."""
     if not jobs_use_supabase(settings):
         return None
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Authorization required")
+        return None
     token = authorization.removeprefix("Bearer ").strip()
     try:
         return decode_supabase_user_sub(token, settings.SUPABASE_JWT_SECRET)
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired") from None
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token") from None
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+        return None
+
+
+def get_jobs_user_id(
+    authorization: Annotated[str | None, Header()] = None,
+    settings: Settings 

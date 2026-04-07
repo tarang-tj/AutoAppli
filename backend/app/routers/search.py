@@ -1,21 +1,19 @@
-from fastapi import APIRouter
+from __future__ import annotations
 
-from app.models.schemas import SearchRequest
+import logging
+
+from fastapi import APIRouter, Depends, Query
+
+from app.config import get_settings
+from app.deps.jobs_auth import get_optional_user_id, jobs_use_supabase
+from app.models.schemas import JobSearchResult, SearchRequest
+from app.repositories import search_supabase
 from app.services import scraper_service
 
 router = APIRouter(tags=["search"])
+logger = logging.getLogger(__name__)
 
 
-@router.post("/search")
-async def search_jobs(req: SearchRequest):
-    results = await scraper_service.search_jobs(
-        query=req.query,
-        location=req.location or None,
-        remote_only=req.remote_only,
-        page=req.page,
-        per_page=req.per_page,
-    )
-    return {
-        "results": [r.model_dump() for r in results],
-        "message": None,
-    }
+def _result_payload(r: JobSearchResult) -> dict:
+    d = r.model_dump()
+    d["snippet"] = d.pop("des
