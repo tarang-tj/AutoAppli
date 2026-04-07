@@ -23,9 +23,16 @@ function resolveApiBaseUrl(): string {
 
 const API_URL = resolveApiBaseUrl();
 
-/** True when resume upload/generate/list should call FastAPI. */
+/** True when the FastAPI base URL is set (resumes, jobs, outreach when wired to backend). */
 export function isResumeApiConfigured(): boolean {
   return Boolean(API_URL);
+}
+
+/** Alias: jobs use the same API base as resumes. */
+export const isJobsApiConfigured = isResumeApiConfigured;
+
+function isJobsListPath(path: string): boolean {
+  return path === "/jobs" || path.startsWith("/jobs?");
 }
 
 /** Resume routes can use FastAPI (when configured) or in-browser demo session. */
@@ -235,6 +242,15 @@ function handleDemoPost(path: string, body?: unknown): unknown {
   throw new Error(`Demo mode does not support POST ${path}`);
 }
 
+function handleDemoDelete(path: string): void {
+  if (path.startsWith("/jobs/")) {
+    const jobId = path.split("/")[2];
+    setDemoJobs(getDemoJobs().filter((j) => j.id !== jobId));
+    return;
+  }
+  throw new Error(`Demo mode does not support DELETE ${path}`);
+}
+
 function handleDemoPatch(path: string, body?: unknown): unknown {
   if (path.startsWith("/jobs/")) {
     const jobId = path.split("/")[2];
@@ -256,6 +272,10 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
 }
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {
+  if (isJobsListPath(path) && !API_URL) {
+    return handleDemoGet(path) as T;
+  }
+
   if (useBackendForResumePath(path)) {
     if (!API_URL) {
       if (path === "/resumes") {
@@ -285,6 +305,10 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
 }
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
+  if (path === "/jobs" && !API_URL) {
+    return handleDemoPost(path, body) as T;
+  }
+
   if (useBackendForResumePath(path)) {
     if (!API_URL) {
       return handleDemoPost(path, body) as T;
@@ -338,6 +362,10 @@ export async function apiPostFormData<T = unknown>(path: string, formData: FormD
 }
 
 export async function apiPatch<T = unknown>(path: string, body: unknown): Promise<T> {
+  if (path.startsWith("/jobs/") && !API_URL) {
+    return handleDemoPatch(path, body) as T;
+  }
+
   if (!isSupabaseConfigured()) {
     return handleDemoPatch(path, body) as T;
   }
@@ -350,6 +378,11 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
 }
 
 export async function apiDelete(path: string): Promise<void> {
+  if (path.startsWith("/jobs/") && !API_URL) {
+    handleDemoDelete(path);
+    return;
+  }
+
   if (!isSupabaseConfigured()) {
     return;
   }

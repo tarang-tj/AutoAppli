@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -12,6 +13,15 @@ router = APIRouter(tags=["jobs"])
 
 _jobs: dict[str, dict] = {}
 
+JobStatus = Literal[
+    "bookmarked",
+    "applied",
+    "interviewing",
+    "offer",
+    "rejected",
+    "ghosted",
+]
+
 
 class JobCreate(BaseModel):
     company: str
@@ -21,7 +31,7 @@ class JobCreate(BaseModel):
 
 
 class JobStatusUpdate(BaseModel):
-    status: str
+    status: JobStatus
 
 
 @router.post("/jobs")

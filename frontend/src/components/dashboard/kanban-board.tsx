@@ -12,6 +12,7 @@ const COLUMNS: { id: JobStatus; label: string; color: string }[] = [
   { id: "interviewing", label: "Interviewing", color: "bg-yellow-500" },
   { id: "offer", label: "Offer", color: "bg-green-500" },
   { id: "rejected", label: "Rejected", color: "bg-red-500" },
+  { id: "ghosted", label: "Ghosted", color: "bg-zinc-600" },
 ];
 
 export function KanbanBoard() {
@@ -37,7 +38,10 @@ export function KanbanBoard() {
       toast.error("Could not update job status. Try again.");
     }
   };
-  const getJobsByStatus = (status: JobStatus): Job[] => jobs.filter((j) => j.status === status);
+  const getJobsByStatus = (status: JobStatus): Job[] =>
+    jobs.filter((j) => j.status === status);
+
+  const knownIds = new Set<string>(COLUMNS.map((c) => c.id));
 
   if (isLoading) {
     return (
@@ -56,14 +60,22 @@ export function KanbanBoard() {
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex flex-col lg:flex-row gap-4 min-h-[65vh] items-stretch overflow-x-auto pb-1 -mx-1 px-1">
-        {COLUMNS.map((col) => (
-          <div
-            key={col.id}
-            className="min-w-[min(100%,18rem)] flex-1 lg:min-w-[11.5rem] flex flex-col"
-          >
-            <KanbanColumn id={col.id} label={col.label} color={col.color} jobs={getJobsByStatus(col.id)} />
-          </div>
-        ))}
+        {COLUMNS.map((col) => {
+          const colJobs =
+            col.id === "bookmarked"
+              ? jobs.filter(
+                  (j) => j.status === "bookmarked" || !knownIds.has(j.status)
+                )
+              : getJobsByStatus(col.id);
+          return (
+            <div
+              key={col.id}
+              className="min-w-[min(100%,18rem)] flex-1 lg:min-w-[11.5rem] flex flex-col"
+            >
+              <KanbanColumn id={col.id} label={col.label} color={col.color} jobs={colJobs} />
+            </div>
+          );
+        })}
       </div>
     </DragDropContext>
   );
