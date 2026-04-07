@@ -267,20 +267,26 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
     if (jobIndex === -1) {
       throw new Error("Job not found");
     }
-    const nextStatus =
-      (body as { status?: Job["status"] }).status ?? jobs[jobIndex].status;
-    const prevStatus = jobs[jobIndex].status;
+    const b = body as { status?: Job["status"]; notes?: string | null };
+    const row = { ...jobs[jobIndex] };
     const now = new Date().toISOString();
-    let row = { ...jobs[jobIndex], status: nextStatus, updated_at: now };
-    if (nextStatus !== prevStatus) {
-      const others = jobs.filter(
-        (j, i) => i !== jobIndex && j.status === nextStatus
-      );
-      const maxOrd = others.length
-        ? Math.max(...others.map((j) => j.sort_order ?? 0))
-        : -1;
-      row = { ...row, sort_order: maxOrd + 1 };
+    if (b.status !== undefined) {
+      const nextStatus = b.status;
+      if (nextStatus !== row.status) {
+        const others = jobs.filter(
+          (j, i) => i !== jobIndex && j.status === nextStatus
+        );
+        const maxOrd = others.length
+          ? Math.max(...others.map((j) => j.sort_order ?? 0))
+          : -1;
+        row.status = nextStatus;
+        row.sort_order = maxOrd + 1;
+      }
     }
+    if (b.notes !== undefined) {
+      row.notes = b.notes === null || b.notes === "" ? undefined : b.notes;
+    }
+    row.updated_at = now;
     jobs[jobIndex] = row;
     setDemoJobs(sortJobsKanbanOrder(jobs));
     return jobs[jobIndex];

@@ -11,9 +11,17 @@ interface KanbanColumnProps {
   color: string;
   jobs: Job[];
   onRemoveJob?: (jobId: string) => void | Promise<void>;
+  onSaveNotes?: (jobId: string, notes: string) => void | Promise<void>;
 }
 
-export function KanbanColumn({ id, label, color, jobs, onRemoveJob }: KanbanColumnProps) {
+export function KanbanColumn({
+  id,
+  label,
+  color,
+  jobs,
+  onRemoveJob,
+  onSaveNotes,
+}: KanbanColumnProps) {
   return (
     <div className="flex flex-col flex-1 min-h-[min(420px,55vh)]">
       <div className="flex items-center gap-2 mb-3 px-1 shrink-0">
@@ -39,6 +47,9 @@ export function KanbanColumn({ id, label, color, jobs, onRemoveJob }: KanbanColu
                 job={job}
                 index={index}
                 onRemove={onRemoveJob ? () => onRemoveJob(job.id) : undefined}
+                onSaveNotes={
+                  onSaveNotes ? (notes) => onSaveNotes(job.id, notes) : undefined
+                }
               />
             ))}
             {provided.placeholder}

@@ -23,7 +23,17 @@ export function KanbanBoard() {
     reorderJobsInColumn,
     persistColumnOrder,
     deleteJob,
+    patchJob,
   } = useJobs();
+
+  const handleSaveNotes = async (jobId: string, notes: string) => {
+    try {
+      await patchJob(jobId, { notes });
+      toast.success("Notes saved");
+    } catch {
+      toast.error("Could not save notes.");
+    }
+  };
 
   const handleRemoveJob = async (jobId: string) => {
     try {
@@ -113,6 +123,7 @@ export function KanbanBoard() {
                 color={col.color}
                 jobs={colJobs}
                 onRemoveJob={handleRemoveJob}
+                onSaveNotes={handleSaveNotes}
               />
             </div>
           );

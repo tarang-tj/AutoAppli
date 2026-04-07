@@ -166,14 +166,14 @@ Other tables you may add for a full product (not all are defined in-repo yet):
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/auth/me` | Get current user from JWT |
+| `GET` | `/auth/me` | Resolve caller from Bearer token when Supabase-backed jobs are enabled |
 | `POST` | `/resumes/upload` | Upload and parse a PDF resume |
 | `GET` | `/resumes` | List user's resumes |
 | `POST` | `/resumes/generate` | Generate tailored resume with AI |
 | `POST` | `/outreach/generate` | Draft outreach email/LinkedIn message |
 | `GET` | `/jobs` | List job applications |
 | `POST` | `/jobs` | Add a job application |
-| `PATCH` | `/jobs/{id}` | Update job status/details |
+| `PATCH` | `/jobs/{id}` | Partial update: `status`, `notes`, or both |
 | `PUT` | `/jobs/reorder` | Persist column order (`status`, `ordered_ids`) |
 | `DELETE` | `/jobs/{id}` | Remove a job application |
 | `POST` | `/search` | Search & scrape job listings |

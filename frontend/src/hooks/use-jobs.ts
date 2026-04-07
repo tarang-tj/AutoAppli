@@ -161,6 +161,18 @@ export function useJobs(status?: string) {
     await mutate();
   };
 
+  const patchJob = async (
+    jobId: string,
+    patch: { status?: JobStatus; notes?: string | null }
+  ) => {
+    const updated = await apiPatch<Job>(`/jobs/${jobId}`, patch);
+    await mutate(
+      (c) =>
+        sortJobsKanbanOrder((c ?? []).map((j) => (j.id === jobId ? updated : j))),
+      { revalidate: false }
+    );
+  };
+
   return {
     jobs,
     error,
@@ -170,5 +182,6 @@ export function useJobs(status?: string) {
     reorderJobsInColumn,
     persistColumnOrder,
     deleteJob,
+    patchJob,
   };
 }

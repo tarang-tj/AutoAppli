@@ -78,14 +78,20 @@ def reorder_jobs(status: str, ordered_ids: list[str]) -> None:
         _jobs[jid]["updated_at"] = now
 
 
-def patch_job_status(job_id: str, new_status: str) -> dict:
+def patch_job(job_id: str, patch: dict) -> dict:
     if job_id not in _jobs:
         raise KeyError("not found")
     row = _jobs[job_id]
-    if row["status"] != new_status:
-        row["status"] = new_status
-        row["sort_order"] = _next_sort_order(new_status)
-    row["updated_at"] = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc).isoformat()
+    if "status" in patch and patch["status"] is not None:
+        new_status = patch["status"]
+        if row["status"] != new_status:
+            row["status"] = new_status
+            row["sort_order"] = _next_sort_order(new_status)
+    if "notes" in patch:
+        n = patch["notes"]
+        row["notes"] = None if n in ("", None) else n
+    row["updated_at"] = now
     return row
 
 

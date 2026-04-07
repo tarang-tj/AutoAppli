@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from typing import Annotated
 
-router = APIRouter(tags=["auth"])
+import jwt
+from fastapi import APIRouter, Header
 
+from app.config import get_settings
+from app.deps.jobs_auth import decode_supabase_user_sub, jobs_use_supabase
 
-@router.get("/auth/me")
-async def get_me():
-    return {"user": None, "message": "Auth not configured - running in local mode"}
+rou

@@ -120,7 +120,7 @@ def reorder_jobs(settings: Settings, user_id: str, status: str, ordered_ids: lis
             raise KeyError(f"Unknown job id or wrong column: {jid}")
 
 
-def patch_job_status(settings: Settings, user_id: str, job_id: str, new_status: str) -> dict:
+def patch_job(settings: Settings, user_id: str, job_id: str, patch: dict) -> dict:
     sb = _client(settings)
     cur = (
         sb.table("jobs")
@@ -134,21 +134,26 @@ def patch_job_status(settings: Settings, user_id: str, job_id: str, new_status: 
     if not rows:
         raise KeyError("not found")
     now = datetime.now(timezone.utc).isoformat()
-    patch: dict = {"updated_at": now}
-    if rows[0]["status"] != new_status:
-        patch["status"] = new_status
-        patch["sort_order"] = _next_sort_order(sb, user_id, new_status)
+    update: dict = {"updated_at": now}
+    if "status" in patch and patch["status"] is not None:
+        new_status = patch["status"]
+        if rows[0]["status"] != new_status:
+            update["status"] = new_status
+            update["sort_order"] = _next_sort_order(sb, user_id, new_status)
+    if "notes" in patch:
+        n = patch["notes"]
+        update["notes"] = None if n in ("", None) else n
     res = (
         sb.table("jobs")
-        .update(patch)
+        .update(update)
         .eq("id", job_id)
         .eq("user_id", user_id)
+        .select("*")
         .execute()
     )
     if not res.data:
         raise KeyError("not found")
-    row = res.data[0]
-    return _public_row(row)
+    return _public_row(res.data[0])
 
 
 def delete_job(settings: Settings, user_id: str, job_id: str) -> None:

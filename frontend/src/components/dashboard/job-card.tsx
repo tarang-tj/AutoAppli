@@ -4,6 +4,7 @@ import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -14,23 +15,35 @@ import {
 } from "@/components/ui/dialog";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { cn } from "@/lib/utils";
-import { Building2, ExternalLink, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Building2, ExternalLink, StickyNote, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface JobCardProps {
   job: Job;
   index: number;
   onRemove?: () => void | Promise<void>;
+  onSaveNotes?: (notes: string) => void | Promise<void>;
 }
 
-export function JobCard({ job, index, onRemove }: JobCardProps) {
+export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [draft, setDraft] = useState(job.notes ?? "");
   const [removing, setRemoving] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
+
+  useEffect(() => {
+    if (notesOpen) {
+      setDraft(job.notes ?? "");
+    }
+  }, [notesOpen, job.notes]);
+
   const date = new Date(job.created_at).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
   const linkHref = normalizeJobUrl(job.url);
+  const hasNotes = Boolean(job.notes?.trim());
 
   const handleConfirmRemove = async () => {
     if (!onRemove) return;
@@ -40,6 +53,17 @@ export function JobCard({ job, index, onRemove }: JobCardProps) {
       setConfirmOpen(false);
     } finally {
       setRemoving(false);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!onSaveNotes) return;
+    setSavingNotes(true);
+    try {
+      await onSaveNotes(draft.trim());
+      setNotesOpen(false);
+    } finally {
+      setSavingNotes(false);
     }
   };
 
@@ -68,6 +92,22 @@ export function JobCard({ job, index, onRemove }: JobCardProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0">
+                  {onSaveNotes ? (
+                    <button
+                      type="button"
+                      className={cn(
+                        "p-1 -m-1 rounded hover:bg-zinc-800/80",
+                        hasNotes ? "text-amber-400/90" : "text-zinc-500 hover:text-zinc-300"
+                      )}
+                      aria-label={hasNotes ? "Edit notes" : "Add notes"}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setNotesOpen(true);
+                      }}
+                    >
+                      <StickyNote className={cn("h-3.5 w-3.5", hasNotes && "fill-current")} />
+                    </button>
+                  ) : null}
                   {linkHref ? (
                     <a
                       href={linkHref}
@@ -94,6 +134,11 @@ export function JobCard({ job, index, onRemove }: JobCardProps) {
                   ) : null}
                 </div>
               </div>
+              {hasNotes ? (
+                <p className="text-[11px] text-zinc-500 mt-2 line-clamp-2 border-l-2 border-amber-500/40 pl-2">
+                  {job.notes}
+                </p>
+              ) : null}
               <div className="flex items-center justify-between mt-2">
                 <Badge
                   variant="outline"
@@ -107,6 +152,47 @@ export function JobCard({ job, index, onRemove }: JobCardProps) {
           </Card>
         )}
       </Draggable>
+
+      {onSaveNotes ? (
+        <Dialog open={notesOpen} onOpenChange={setNotesOpen}>
+          <DialogContent
+            className="bg-zinc-900 border-zinc-800 text-zinc-100 sm:max-w-md"
+            showCloseButton
+          >
+            <DialogHeader>
+              <DialogTitle className="text-white">Notes</DialogTitle>
+              <DialogDescription className="text-zinc-400">
+                {job.title} · {job.company}
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Interview prep, contacts, salary range…"
+              className="min-h-[120px] bg-zinc-950 border-zinc-700 text-zinc-100 resize-y"
+            />
+            <DialogFooter className="border-zinc-800 bg-zinc-900/80 sm:justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-zinc-600 text-zinc-200"
+                onClick={() => setNotesOpen(false)}
+                disabled={savingNotes}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={savingNotes}
+                onClick={() => void handleSaveNotes()}
+              >
+                {savingNotes ? "Saving…" : "Save"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : null}
 
       {onRemove ? (
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>

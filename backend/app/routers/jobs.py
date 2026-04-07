@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.config import get_settings
 from app.deps.jobs_auth import get_jobs_user_id, jobs_use_supabase
 from app.repositories import jobs_memory, jobs_supabase
+
 router = APIRouter(tags=["jobs"])
 
 JobStatus = Literal[
@@ -28,8 +29,9 @@ class JobCreate(BaseModel):
     source: str = "manual"
 
 
-class JobStatusUpdate(BaseModel):
-    status: JobStatus
+class JobPatch(BaseModel):
+    status: JobStatus | None = Field(default=None, description="Kanban column")
+    notes: str | None = Field(default=None, description="Private notes (empty string clears)")
 
 
 class ReorderJobsBody(BaseModel):
@@ -37,7 +39,7 @@ class ReorderJobsBody(BaseModel):
     ordered_ids: list[str]
 
 
-def _persisted(settings: Settings) -> bool:
+def _persisted(settings) -> bool:
     return jobs_use_supabase(settings)
 
 
@@ -108,21 +110,27 @@ async def reorder_jobs(
 
 
 @router.patch("/jobs/{job_id}")
-async def update_job_status(
+async def patch_job(
     job_id: str,
-    body: JobStatusUpdate,
+    body: JobPatch,
     user_id: str | None = Depends(get_jobs_user_id),
 ):
+    patch = body.model_dump(exclude_unset=True)
+    if not patch:
+        raise HTTPException(
+            status_code=422,
+            detail="Provide at least one of: status, notes",
+        )
     settings = get_settings()
     if _persisted(settings):
         if user_id is None:
             raise HTTPException(status_code=401, detail="Authorization required")
         try:
-            return jobs_supabase.patch_job_status(settings, user_id, job_id, body.status)
+            return jobs_supabase.patch_job(settings, user_id, job_id, patch)
         except KeyError:
             raise HTTPException(status_code=404, detail="Job not found") from None
     try:
-        return jobs_memory.patch_job_status(job_id, body.status)
+        return jobs_memory.patch_job(job_id, patch)
     except KeyError:
         raise HTTPException(status_code=404, detail="Job not found") from None
 

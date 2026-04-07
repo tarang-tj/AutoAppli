@@ -25,4 +25,4 @@ app.include_router(search.router, prefix="/api/v1")
 
 @app.get("/api/v1/health")
 async def health():
-    return {"status": "ok"}
+    from app.deps.jobs_auth 
