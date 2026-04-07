@@ -7,6 +7,8 @@ export interface Job {
   url?: string;
   description?: string;
   status: JobStatus;
+  /** Order within the Kanban column; persisted when using the API or demo store. */
+  sort_order?: number;
   source: string;
   notes?: string;
   applied_at?: string;

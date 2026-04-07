@@ -8,6 +8,7 @@ import {
   getDemoJobSearchResults,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
+import { sortJobsKanbanOrder } from "@/lib/kanban-reorder";
 import type { Job, Resume, OutreachMessage, GeneratedDocument, ResumeReview } from "@/types";
 
 const MISSING_API_URL =
@@ -113,11 +114,13 @@ async function fetchBackend<T>(path: string, init?: RequestInit): Promise<T> {
 
 function handleDemoGet(path: string): unknown {
   if (path === "/jobs") {
-    return getDemoJobs();
+    return sortJobsKanbanOrder(getDemoJobs());
   }
   if (path.startsWith("/jobs?status=")) {
     const status = new URLSearchParams(path.split("?")[1]).get("status");
-    return getDemoJobs().filter((j) => j.status === status);
+    return sortJobsKanbanOrder(
+      getDemoJobs().filter((j) => j.status === status)
+    );
   }
   if (path === "/resumes") {
     return getDemoResumes();
@@ -136,6 +139,11 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       url?: string;
       description?: string;
     };
+    const jobs = getDemoJobs();
+    const bookmarked = jobs.filter((j) => j.status === "bookmarked");
+    const maxOrd = bookmarked.length
+      ? Math.max(...bookmarked.map((j) => j.sort_order ?? 0))
+      : -1;
     const newJob: Job = {
       id: `job-${Date.now()}`,
       company: b.company ?? "",
@@ -143,13 +151,13 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       url: normalizeJobUrl(b.url),
       description: b.description,
       status: "bookmarked",
+      sort_order: maxOrd + 1,
       source: "manual",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    const jobs = getDemoJobs();
     jobs.push(newJob);
-    setDemoJobs(jobs);
+    setDemoJobs(sortJobsKanbanOrder(jobs));
     return newJob;
   }
   if (path === "/resumes/upload") {
@@ -259,16 +267,51 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
     if (jobIndex === -1) {
       throw new Error("Job not found");
     }
-    const status = (body as { status?: Job["status"] }).status ?? jobs[jobIndex].status;
-    jobs[jobIndex] = {
-      ...jobs[jobIndex],
-      status,
-      updated_at: new Date().toISOString(),
-    };
-    setDemoJobs(jobs);
+    const nextStatus =
+      (body as { status?: Job["status"] }).status ?? jobs[jobIndex].status;
+    const prevStatus = jobs[jobIndex].status;
+    const now = new Date().toISOString();
+    let row = { ...jobs[jobIndex], status: nextStatus, updated_at: now };
+    if (nextStatus !== prevStatus) {
+      const others = jobs.filter(
+        (j, i) => i !== jobIndex && j.status === nextStatus
+      );
+      const maxOrd = others.length
+        ? Math.max(...others.map((j) => j.sort_order ?? 0))
+        : -1;
+      row = { ...row, sort_order: maxOrd + 1 };
+    }
+    jobs[jobIndex] = row;
+    setDemoJobs(sortJobsKanbanOrder(jobs));
     return jobs[jobIndex];
   }
   throw new Error(`Demo mode does not support PATCH ${path}`);
+}
+
+function handleDemoPut(path: string, body: unknown): unknown {
+  if (path !== "/jobs/reorder") {
+    throw new Error(`Demo mode does not support PUT ${path}`);
+  }
+  const parsed = body as {
+    status?: Job["status"];
+    ordered_ids?: string[];
+  };
+  const status = parsed.status;
+  const orderedIds = parsed.ordered_ids;
+  if (!status || !Array.isArray(orderedIds)) {
+    throw new Error("Invalid reorder body");
+  }
+  const now = new Date().toISOString();
+  const jobs = getDemoJobs();
+  const next = jobs.map((j) => {
+    const idx = orderedIds.indexOf(j.id);
+    if (j.status === status && idx >= 0) {
+      return { ...j, sort_order: idx, updated_at: now };
+    }
+    return j;
+  });
+  setDemoJobs(sortJobsKanbanOrder(next));
+  return { ok: true };
 }
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {
@@ -361,6 +404,20 @@ export async function apiPostFormData<T = unknown>(path: string, formData: FormD
   });
 }
 
+export async function apiPut<T = unknown>(path: string, body: unknown): Promise<T> {
+  if (path !== "/jobs/reorder") {
+    throw new Error(`Unsupported PUT ${path}`);
+  }
+  if (!API_URL) {
+    return handleDemoPut(path, body) as T;
+  }
+  return fetchBackend<T>(path, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 export async function apiPatch<T = unknown>(path: string, body: unknown): Promise<T> {
   if (path.startsWith("/jobs/") && !API_URL) {
     return handleDemoPatch(path, body) as T;
@@ -380,6 +437,11 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
 export async function apiDelete(path: string): Promise<void> {
   if (path.startsWith("/jobs/") && !API_URL) {
     handleDemoDelete(path);
+    return;
+  }
+
+  if (path.startsWith("/jobs/") && API_URL) {
+    await fetchBackend(path, { method: "DELETE" });
     return;
   }
 

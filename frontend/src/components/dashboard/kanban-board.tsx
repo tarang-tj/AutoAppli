@@ -16,7 +16,24 @@ const COLUMNS: { id: JobStatus; label: string; color: string }[] = [
 ];
 
 export function KanbanBoard() {
-  const { jobs, isLoading, updateJobStatus, reorderJobsInColumn } = useJobs();
+  const {
+    jobs,
+    isLoading,
+    updateJobStatus,
+    reorderJobsInColumn,
+    persistColumnOrder,
+    deleteJob,
+  } = useJobs();
+
+  const handleRemoveJob = async (jobId: string) => {
+    try {
+      await deleteJob(jobId);
+      toast.success("Removed from tracker");
+    } catch {
+      toast.error("Could not remove job.");
+    }
+  };
+
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
     const { source, destination } = result;
@@ -25,15 +42,33 @@ export function KanbanBoard() {
 
     if (source.droppableId === destination.droppableId) {
       if (source.index !== destination.index) {
-        reorderJobsInColumn(newStatus, source.index, destination.index);
+        try {
+          await reorderJobsInColumn(newStatus, source.index, destination.index);
+        } catch {
+          toast.error("Could not save card order.");
+        }
       }
       return;
     }
 
     const job = jobs.find((j) => j.id === jobId);
     if (!job || job.status === newStatus) return;
+
+    const sourceStatus = source.droppableId as JobStatus;
+    const sourceIds = jobs
+      .filter((j) => j.status === sourceStatus && j.id !== jobId)
+      .map((j) => j.id);
+    const destIds = jobs
+      .filter((j) => j.status === newStatus && j.id !== jobId)
+      .map((j) => j.id);
+    destIds.splice(destination.index, 0, jobId);
+
     try {
       await updateJobStatus(jobId, newStatus);
+      await persistColumnOrder(newStatus, destIds);
+      if (sourceIds.length > 0) {
+        await persistColumnOrder(sourceStatus, sourceIds);
+      }
     } catch {
       toast.error("Could not update job status. Try again.");
     }
@@ -72,7 +107,13 @@ export function KanbanBoard() {
               key={col.id}
               className="min-w-[min(100%,18rem)] flex-1 lg:min-w-[11.5rem] flex flex-col"
             >
-              <KanbanColumn id={col.id} label={col.label} color={col.color} jobs={colJobs} />
+              <KanbanColumn
+                id={col.id}
+                label={col.label}
+                color={col.color}
+                jobs={colJobs}
+                onRemoveJob={handleRemoveJob}
+              />
             </div>
           );
         })}

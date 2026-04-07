@@ -165,6 +165,7 @@ Run the SQL migration in your Supabase dashboard to create the required tables:
 | `GET` | `/jobs` | List job applications |
 | `POST` | `/jobs` | Add a job application |
 | `PATCH` | `/jobs/{id}` | Update job status/details |
+| `PUT` | `/jobs/reorder` | Persist column order (`status`, `ordered_ids`) |
 | `DELETE` | `/jobs/{id}` | Remove a job application |
 | `POST` | `/search` | Search & scrape job listings |
 

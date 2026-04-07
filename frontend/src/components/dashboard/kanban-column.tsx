@@ -5,9 +5,15 @@ import { JobCard } from "./job-card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-interface KanbanColumnProps { id: string; label: string; color: string; jobs: Job[]; }
+interface KanbanColumnProps {
+  id: string;
+  label: string;
+  color: string;
+  jobs: Job[];
+  onRemoveJob?: (jobId: string) => void | Promise<void>;
+}
 
-export function KanbanColumn({ id, label, color, jobs }: KanbanColumnProps) {
+export function KanbanColumn({ id, label, color, jobs, onRemoveJob }: KanbanColumnProps) {
   return (
     <div className="flex flex-col flex-1 min-h-[min(420px,55vh)]">
       <div className="flex items-center gap-2 mb-3 px-1 shrink-0">
@@ -28,7 +34,12 @@ export function KanbanColumn({ id, label, color, jobs }: KanbanColumnProps) {
             )}
           >
             {jobs.map((job, index) => (
-              <JobCard key={job.id} job={job} index={index} />
+              <JobCard
+                key={job.id}
+                job={job}
+                index={index}
+                onRemove={onRemoveJob ? () => onRemoveJob(job.id) : undefined}
+              />
             ))}
             {provided.placeholder}
           </div>
