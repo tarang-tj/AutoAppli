@@ -339,7 +339,7 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       : "";
     const memId = `msg-${Date.now()}`;
     const subject = `Thank you — ${title} interview`;
-    const body = `Dear ${who},\n\nThank you for taking the time to discuss the ${title} opportunity at ${co}. I appreciated the conversation and am even more interested in the role.\n\n${notesLine}[Demo draft — connect NEXT_PUBLIC_API_URL for a full AI thank-you note.]\n\nBest regards`;
+    const emailBody = `Dear ${who},\n\nThank you for taking the time to discuss the ${title} opportunity at ${co}. I appreciated the conversation and am even more interested in the role.\n\n${notesLine}[Demo draft — connect NEXT_PUBLIC_API_URL for a full AI thank-you note.]\n\nBest regards`;
     pushDemoOutreachMessage({
       id: memId,
       message_type: "email",
@@ -347,12 +347,12 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       recipient_name: b.interviewer_name?.trim() || "Interview thank-you",
       recipient_role: undefined,
       subject,
-      body,
+      body: emailBody,
       created_at: new Date().toISOString(),
     });
     return {
       subject,
-      body,
+      body: emailBody,
       saved_outreach_id: memId,
     };
   }
