@@ -3,7 +3,6 @@
 import { useApiHealth } from "@/hooks/use-api-health";
 import { useUser } from "@/hooks/use-user";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -70,11 +69,12 @@ export function Header() {
           </span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-700">
-          <DropdownMenuItem asChild className="text-zinc-300 cursor-pointer">
-            <Link href="/settings" className="flex items-center">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Link>
+          <DropdownMenuItem
+            className="text-zinc-300 cursor-pointer"
+            onClick={() => router.push("/settings")}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout} className="text-zinc-300 cursor-pointer">
             <LogOut className="h-4 w-4 mr-2" />

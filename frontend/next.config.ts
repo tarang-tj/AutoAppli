@@ -12,11 +12,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  // Avoid Turbopack picking a parent directory when multiple lockfiles exist (local monorepos / home).
-  // Vercel runs with cwd = Root Directory (e.g. frontend); pinning root stabilizes CI builds.
-  turbopack: {
-    root: process.cwd(),
-  },
+  // Omit `turbopack.root` / `outputFileTracingRoot`: on Vercel monorepos they must match exactly;
+  // `process.cwd()` vs inferred `/vercel/path0` triggers a Next.js warning during build.
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
