@@ -86,6 +86,7 @@ class OutreachGenerateResponse(BaseModel):
     subject: str | None = None
     body: str
     created_at: str
+    message_purpose: str = "outreach"
 
 
 class JobSearchResult(BaseModel):

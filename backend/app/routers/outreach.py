@@ -52,12 +52,14 @@ async def create_outreach(
                     recipient_role=result.get("recipient_role"),
                     subject=result.get("subject"),
                     body=result["body"],
+                    message_purpose="outreach",
                 )
                 return OutreachGenerateResponse(**saved)
             except RuntimeError as exc:
                 raise HTTPException(status_code=500, detail=str(exc)) from exc
-        outreach_messages(user_id).append(result)
-        return OutreachGenerateResponse(**result)
+        row = {**result, "message_purpose": "outreach"}
+        outreach_messages(user_id).append(row)
+        return OutreachGenerateResponse(**row)
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -105,6 +107,7 @@ async def create_thank_you(
                 recipient_role=None,
                 subject=raw["subject"],
                 body=raw["body"],
+                message_purpose="thank_you",
             )
             saved_id = saved["id"]
         except RuntimeError:
@@ -120,6 +123,7 @@ async def create_thank_you(
                 "subject": raw["subject"],
                 "body": raw["body"],
                 "created_at": datetime.now(timezone.utc).isoformat(),
+                "message_purpose": "thank_you",
             }
         )
         saved_id = mem_id
@@ -136,3 +140,32 @@ async def list_outreach(
         return outreach_sb.list_messages(settings, user_id)
     msgs = outreach_messages(user_id)
     return list(reversed(msgs))
+
+
+def _delete_outreach_message(
+    settings: Settings,
+    user_id: str | None,
+    message_id: str,
+) -> bool:
+    if _outreach_db(settings, user_id):
+        assert user_id is not None
+        return outreach_sb.delete_message(settings, user_id, message_id)
+    store = outreach_messages(user_id)
+    before = len(store)
+    kept = [m for m in store if str(m.get("id")) != message_id]
+    if len(kept) == before:
+        return False
+    store.clear()
+    store.extend(kept)
+    return True
+
+
+@router.delete("/outreach/{message_id}")
+async def delete_outreach(
+    message_id: str,
+    user_id: str | None = Depends(get_jobs_user_id),
+    settings: Settings = Depends(get_settings),
+):
+    if not _delete_outreach_message(settings, user_id, message_id):
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"ok": True}

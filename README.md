@@ -184,6 +184,14 @@ Apply:
 
 This adds **`profiles`** (display name, headline, LinkedIn URL) and **`generated_documents`** (saved tailored resume text after each **`POST /resumes/generate`**). The app exposes **`GET/PATCH /profile`** and **`GET /resumes/generated`**.
 
+**Outreach draft purpose (filter + delete UI)**
+
+Apply:
+
+`supabase/migrations/20260408120000_outreach_message_purpose.sql`
+
+This adds **`message_purpose`** (`outreach` | `thank_you`) on **`outreach_messages`** so the UI can separate cold outreach from thank-you emails and **`DELETE /outreach/{id}`** stays accurate. Run after the resume/outreach migration above.
+
 Other tables you may add for a full product (not all are defined in-repo yet):
 
 - `contacts` — Recruiter/hiring manager contacts
@@ -203,6 +211,7 @@ Other tables you may add for a full product (not all are defined in-repo yet):
 | `POST` | `/resumes/generate` | Tailored resume text + optional `pdf_base64` (default `include_pdf: true`); persists text when Supabase is on |
 | `POST` | `/outreach/generate` | Draft outreach email/LinkedIn message |
 | `POST` | `/outreach/thank-you` | Post-interview thank-you email (`job_id` or `job_title` + `company`; saved to outreach history when Supabase is on) |
+| `DELETE` | `/outreach/{message_id}` | Remove a saved outreach draft (Supabase or per-session memory) |
 | `DELETE` | `/resumes/generated/{id}` | Remove a saved tailored resume row (Supabase-backed session) |
 | `GET` | `/jobs` | List job applications |
 | `POST` | `/jobs` | Add a job (`fetch_full_description` scrapes posting HTML; same URL returns `{ ..., duplicate: true }`) |
@@ -233,7 +242,7 @@ AutoAppli works without Supabase credentials in **demo mode** — the app loads 
    This repo includes **`backend/Dockerfile`** and **`render.yaml`** so you can deploy the API on Render without your own domain.
 
 3. **Supabase**  
-   Apply SQL migrations (Kanban: `20260406120000_create_jobs.sql`; job search history: `20260407120000_job_search.sql`; resumes & outreach: `20260407180000_resume_outreach.sql`; profiles & generated docs: `20260407190000_profiles_generated_documents.sql`), configure Auth redirect URLs for your production domain, and review Row Level Security policies.
+   Apply SQL migrations (Kanban: `20260406120000_create_jobs.sql`; job search history: `20260407120000_job_search.sql`; resumes & outreach: `20260407180000_resume_outreach.sql`; profiles & generated docs: `20260407190000_profiles_generated_documents.sql`; outreach purpose: `20260408120000_outreach_message_purpose.sql`), configure Auth redirect URLs for your production domain, and review Row Level Security policies.
 
 4. **Legal**  
    Replace the placeholder copy on `/privacy` and `/terms` with counsel-reviewed documents before marketing the product broadly.

@@ -15,6 +15,7 @@ def _public_row(row: dict) -> dict:
         created_at = created.isoformat()
     else:
         created_at = str(created)
+    purpose = row.get("message_purpose") or "outreach"
     return {
         "id": str(row["id"]),
         "message_type": row["message_type"],
@@ -23,6 +24,7 @@ def _public_row(row: dict) -> dict:
         "subject": row.get("subject"),
         "body": row["body"],
         "created_at": created_at,
+        "message_purpose": purpose,
     }
 
 
@@ -35,6 +37,7 @@ def insert_message(
     recipient_role: str | None,
     subject: str | None,
     body: str,
+    message_purpose: str = "outreach",
 ) -> dict:
     sb = _client(settings)
     payload = {
@@ -44,6 +47,7 @@ def insert_message(
         "recipient_role": recipient_role,
         "subject": subject,
         "body": body,
+        "message_purpose": message_purpose,
     }
     res = sb.table("outreach_messages").insert(payload).select("*").execute()
     if not res.data:
@@ -61,3 +65,19 @@ def list_messages(settings: Settings, user_id: str) -> list[dict]:
         .execute()
     )
     return [_public_row(r) for r in (res.data or [])]
+
+
+def delete_message(settings: Settings, user_id: str, message_id: str) -> bool:
+    sb = _client(settings)
+    existing = (
+        sb.table("outreach_messages")
+        .select("id")
+        .eq("id", message_id)
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    if not (existing.data or []):
+        return False
+    sb.table("outreach_messages").delete().eq("id", message_id).eq("user_id", user_id).execute()
+    return True

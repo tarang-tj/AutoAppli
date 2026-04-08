@@ -48,6 +48,8 @@ export interface ResumeReview {
   keyword_suggestions: string[];
 }
 
+export type OutreachMessagePurpose = "outreach" | "thank_you";
+
 export interface OutreachMessage {
   id: string;
   message_type: "email" | "linkedin";
@@ -56,6 +58,8 @@ export interface OutreachMessage {
   subject?: string;
   body: string;
   created_at: string;
+  /** Cold outreach vs post-interview thank-you (Supabase after migration; defaults to outreach). */
+  message_purpose?: OutreachMessagePurpose;
 }
 
 export interface ThankYouResponse {

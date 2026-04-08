@@ -258,10 +258,11 @@ Requirements:
 
 Location: Remote (US) | Full-time`;
 
-const demoOutreachMessages: OutreachMessage[] = [
+let demoOutreachMessages: OutreachMessage[] = [
   {
     id: "msg-1",
     message_type: "email",
+    message_purpose: "outreach",
     recipient_name: "Sarah Johnson",
     recipient_role: "Hiring Manager",
     subject: "Data Analyst Position - Let's Connect",
@@ -280,6 +281,7 @@ John Smith`,
   {
     id: "msg-2",
     message_type: "linkedin",
+    message_purpose: "outreach",
     recipient_name: "Michael Chen",
     recipient_role: "Engineering Manager at Stripe",
     subject: undefined,
@@ -297,6 +299,7 @@ John`,
   {
     id: "msg-3",
     message_type: "email",
+    message_purpose: "outreach",
     recipient_name: "Emily Rodriguez",
     recipient_role: "Hiring Lead, Product Operations",
     subject: "Product Operations Manager Opportunity - John Smith",
@@ -312,6 +315,20 @@ Best,
 John Smith
 (555) 123-4567`,
     created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "msg-thankyou-demo",
+    message_type: "email",
+    message_purpose: "thank_you",
+    recipient_name: "Alex Rivera",
+    recipient_role: "Hiring Manager",
+    subject: "Thank you — Analytics Engineer interview",
+    body: `Dear Alex,
+
+Thank you for discussing the Analytics Engineer role at Figma. I appreciated learning more about how your team partners with product on experimentation.
+
+Best regards`,
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
 
@@ -402,7 +419,17 @@ export function setDemoResumes(resumes: Resume[]): void {
 }
 
 export function getDemoOutreachMessages(): OutreachMessage[] {
-  return demoOutreachMessages;
+  return [...demoOutreachMessages].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+}
+
+export function pushDemoOutreachMessage(msg: OutreachMessage): void {
+  demoOutreachMessages = [msg, ...demoOutreachMessages];
+}
+
+export function removeDemoOutreachMessage(id: string): void {
+  demoOutreachMessages = demoOutreachMessages.filter((m) => m.id !== id);
 }
 
 export function getDemoJobSearchResults(): JobSearchResult[] {

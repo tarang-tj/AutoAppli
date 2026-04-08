@@ -11,6 +11,8 @@ import {
   getDemoGeneratedDocuments,
   pushDemoGeneratedDocument,
   removeDemoGeneratedDocument,
+  pushDemoOutreachMessage,
+  removeDemoOutreachMessage,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { sortJobsKanbanOrder } from "@/lib/kanban-reorder";
@@ -307,6 +309,7 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     const msg: OutreachMessage = {
       id: `msg-${Date.now()}`,
       message_type: (b.message_type === "linkedin" ? "linkedin" : "email"),
+      message_purpose: "outreach",
       recipient_name: b.recipient_name ?? "",
       recipient_role: b.recipient_role,
       subject:
@@ -318,6 +321,7 @@ function handleDemoPost(path: string, body?: unknown): unknown {
         `With my experience, I believe I could make a great contribution to your team.\n\nLooking forward to connecting!\n\nBest regards`,
       created_at: new Date().toISOString(),
     };
+    pushDemoOutreachMessage(msg);
     return msg;
   }
   if (path === "/outreach/thank-you") {
@@ -333,10 +337,23 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     const notesLine = b.interview_notes?.trim()
       ? `I especially enjoyed our discussion about: ${b.interview_notes.trim().slice(0, 400)}\n\n`
       : "";
+    const memId = `msg-${Date.now()}`;
+    const subject = `Thank you — ${title} interview`;
+    const body = `Dear ${who},\n\nThank you for taking the time to discuss the ${title} opportunity at ${co}. I appreciated the conversation and am even more interested in the role.\n\n${notesLine}[Demo draft — connect NEXT_PUBLIC_API_URL for a full AI thank-you note.]\n\nBest regards`;
+    pushDemoOutreachMessage({
+      id: memId,
+      message_type: "email",
+      message_purpose: "thank_you",
+      recipient_name: b.interviewer_name?.trim() || "Interview thank-you",
+      recipient_role: undefined,
+      subject,
+      body,
+      created_at: new Date().toISOString(),
+    });
     return {
-      subject: `Thank you — ${title} interview`,
-      body: `Dear ${who},\n\nThank you for taking the time to discuss the ${title} opportunity at ${co}. I appreciated the conversation and am even more interested in the role.\n\n${notesLine}[Demo draft — connect NEXT_PUBLIC_API_URL for a full AI thank-you note.]\n\nBest regards`,
-      saved_outreach_id: `msg-${Date.now()}`,
+      subject,
+      body,
+      saved_outreach_id: memId,
     };
   }
   if (path === "/search") {
@@ -612,6 +629,19 @@ export async function apiDelete(path: string): Promise<void> {
     }
     if (!API_URL) {
       removeDemoGeneratedDocument(id);
+      return;
+    }
+    await fetchBackend(path, { method: "DELETE" });
+    return;
+  }
+
+  if (path.startsWith("/outreach/") && path.length > "/outreach/".length) {
+    const id = path.slice("/outreach/".length).split("/")[0];
+    if (!id) {
+      throw new Error("Invalid message id");
+    }
+    if (!API_URL) {
+      removeDemoOutreachMessage(id);
       return;
     }
     await fetchBackend(path, { method: "DELETE" });
