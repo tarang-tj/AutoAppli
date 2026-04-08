@@ -10,6 +10,7 @@ import {
   setDemoProfile,
   getDemoGeneratedDocuments,
   pushDemoGeneratedDocument,
+  removeDemoGeneratedDocument,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { sortJobsKanbanOrder } from "@/lib/kanban-reorder";
@@ -319,6 +320,25 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     };
     return msg;
   }
+  if (path === "/outreach/thank-you") {
+    const b = body as {
+      job_title?: string;
+      company?: string;
+      interviewer_name?: string;
+      interview_notes?: string;
+    };
+    const title = (b.job_title ?? "the role").trim() || "the role";
+    const co = (b.company ?? "your company").trim() || "your company";
+    const who = b.interviewer_name?.trim() || "there";
+    const notesLine = b.interview_notes?.trim()
+      ? `I especially enjoyed our discussion about: ${b.interview_notes.trim().slice(0, 400)}\n\n`
+      : "";
+    return {
+      subject: `Thank you — ${title} interview`,
+      body: `Dear ${who},\n\nThank you for taking the time to discuss the ${title} opportunity at ${co}. I appreciated the conversation and am even more interested in the role.\n\n${notesLine}[Demo draft — connect NEXT_PUBLIC_API_URL for a full AI thank-you note.]\n\nBest regards`,
+      saved_outreach_id: `msg-${Date.now()}`,
+    };
+  }
   if (path === "/search") {
     return {
       results: getDemoJobSearchResults(),
@@ -477,6 +497,10 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
     return handleDemoPost(path, body) as T;
   }
 
+  if (path === "/outreach/thank-you" && !API_URL) {
+    return handleDemoPost(path, body) as T;
+  }
+
   if (resumePathUsesBackend(path)) {
     if (!API_URL) {
       return handleDemoPost(path, body) as T;
@@ -577,6 +601,19 @@ export async function apiDelete(path: string): Promise<void> {
   }
 
   if (path.startsWith("/jobs/") && API_URL) {
+    await fetchBackend(path, { method: "DELETE" });
+    return;
+  }
+
+  if (path.startsWith("/resumes/generated/")) {
+    const id = path.slice("/resumes/generated/".length).split("/")[0];
+    if (!id) {
+      throw new Error("Invalid document id");
+    }
+    if (!API_URL) {
+      removeDemoGeneratedDocument(id);
+      return;
+    }
     await fetchBackend(path, { method: "DELETE" });
     return;
   }

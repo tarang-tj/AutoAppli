@@ -130,5 +130,21 @@ class SavedGeneratedDocument(BaseModel):
     created_at: str
 
 
+class ThankYouRequest(BaseModel):
+    """Post-interview thank-you email draft."""
+
+    job_id: str | None = None
+    job_title: str = ""
+    company: str = ""
+    interviewer_name: str | None = None
+    interview_notes: str | None = None
+
+
+class ThankYouResponse(BaseModel):
+    subject: str
+    body: str
+    saved_outreach_id: str | None = None
+
+
 class HealthResponse(BaseModel):
     status: str = "ok"

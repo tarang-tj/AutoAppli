@@ -112,6 +112,27 @@ async def list_generated_resumes(
         return []
 
 
+@router.delete("/resumes/generated/{doc_id}")
+async def delete_generated_resume(
+    doc_id: str,
+    user_id: str | None = Depends(get_jobs_user_id),
+    settings: Settings = Depends(get_settings),
+):
+    if not _resume_db(settings, user_id):
+        raise HTTPException(
+            status_code=404,
+            detail="No saved document storage for this session.",
+        )
+    assert user_id is not None
+    try:
+        ok = documents_sb.delete_document(settings, user_id, doc_id)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    if not ok:
+        raise HTTPException(status_code=404, detail="Document not found") from None
+    return {"ok": True}
+
+
 @router.post("/resumes/generate", response_model=ResumeGenerateResponse)
 async def generate_resume(
     req: ResumeGenerateRequest,

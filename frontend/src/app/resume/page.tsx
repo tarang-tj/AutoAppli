@@ -3,7 +3,7 @@ import { ResumeUpload } from "@/components/resume/resume-upload";
 import { JdInput } from "@/components/resume/jd-input";
 import { ResumePreview } from "@/components/resume/resume-preview";
 import { Button } from "@/components/ui/button";
-import { apiGet, apiPost, isJobsApiConfigured, isResumeApiConfigured } from "@/lib/api";
+import { apiDelete, apiGet, apiPost, isJobsApiConfigured, isResumeApiConfigured } from "@/lib/api";
 import {
   loadSampleResumesForBuilder,
   SAMPLE_JOB_DESCRIPTION_FOR_BUILDER,
@@ -13,7 +13,7 @@ import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
 import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocument } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { FileStack, History, Info, Sparkles, X } from "lucide-react";
+import { FileStack, History, Info, Sparkles, Trash2, X } from "lucide-react";
 import { Suspense, useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -283,26 +283,53 @@ function ResumeBuilderContent() {
               </CardHeader>
               <CardContent className="max-h-56 overflow-y-auto space-y-2 pr-1">
                 {savedGenerated.map((s) => (
-                  <button
+                  <div
                     key={s.id}
-                    type="button"
-                    onClick={() =>
-                      setGenerated({
-                        id: s.id,
-                        doc_type: "tailored_resume",
-                        content: s.content,
-                        storage_path: "",
-                        download_url: "",
-                        pdf_base64: null,
-                      })
-                    }
-                    className="w-full text-left rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 hover:border-zinc-600 transition-colors"
+                    className="flex gap-1 items-stretch rounded-lg border border-zinc-800 bg-zinc-950/80 overflow-hidden"
                   >
-                    <p className="text-sm text-zinc-100 line-clamp-2">{s.title || "Tailored resume"}</p>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">
-                      {new Date(s.created_at).toLocaleString()}
-                    </p>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setGenerated({
+                          id: s.id,
+                          doc_type: "tailored_resume",
+                          content: s.content,
+                          storage_path: "",
+                          download_url: "",
+                          pdf_base64: null,
+                        })
+                      }
+                      className="flex-1 min-w-0 text-left px-3 py-2 hover:bg-zinc-900/80 transition-colors"
+                    >
+                      <p className="text-sm text-zinc-100 line-clamp-2">{s.title || "Tailored resume"}</p>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">
+                        {new Date(s.created_at).toLocaleString()}
+                      </p>
+                    </button>
+                    <button
+                      type="button"
+                      title="Remove from saved list"
+                      aria-label="Remove from saved list"
+                      className="shrink-0 px-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-900 border-l border-zinc-800"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void (async () => {
+                          try {
+                            await apiDelete(`/resumes/generated/${encodeURIComponent(s.id)}`);
+                            if (generated?.id === s.id) {
+                              setGenerated(null);
+                            }
+                            void mutateSavedGenerated();
+                            toast.success("Removed from saved list");
+                          } catch (err: unknown) {
+                            toast.error(err instanceof Error ? err.message : "Could not delete");
+                          }
+                        })();
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 ))}
               </CardContent>
             </Card>

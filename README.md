@@ -17,7 +17,7 @@ An AI-powered job application automation platform that helps job seekers streaml
 Upload your base resume and paste a job description — AutoAppli uses Claude AI to generate a tailored resume that highlights relevant experience and matches keywords. The UI shows a **formatted “paper” preview** (aligned with the PDF layout), an **embedded PDF preview** when available, plus **download PDF**, **download HTML**, and **print** (save as PDF from the browser). The API defaults to **`include_pdf: true`** so the downloadable file matches the on-screen structure.
 
 ### ✉️ Smart Outreach Drafting
-Generate personalized cold emails and LinkedIn messages for recruiters and hiring managers, customized to each role and company. Optional **display name** from **Settings** is passed to the model for better greetings and sign-offs.
+Generate personalized cold emails and LinkedIn messages for recruiters and hiring managers, customized to each role and company. Optional **display name** from **Settings** is passed to the model for better greetings and sign-offs. From the Kanban, roles in **Interviewing** or **Offer** include a **thank-you email** draft (heart icon) after interviews.
 
 ### 👤 Profile & saved drafts
 **Settings** (`/settings`) stores **display name**, **headline**, and **LinkedIn URL** (Postgres when Supabase is configured on the API; session-only demo otherwise). Each successful **tailored resume** run saves **plain text** to **`generated_documents`** for history in the Resume Builder (PDFs are not re-stored; regenerate or use HTML/PDF at generation time).
@@ -202,6 +202,8 @@ Other tables you may add for a full product (not all are defined in-repo yet):
 | `GET` | `/resumes/generated` | Recent saved tailored resume text (Supabase mode) |
 | `POST` | `/resumes/generate` | Tailored resume text + optional `pdf_base64` (default `include_pdf: true`); persists text when Supabase is on |
 | `POST` | `/outreach/generate` | Draft outreach email/LinkedIn message |
+| `POST` | `/outreach/thank-you` | Post-interview thank-you email (`job_id` or `job_title` + `company`; saved to outreach history when Supabase is on) |
+| `DELETE` | `/resumes/generated/{id}` | Remove a saved tailored resume row (Supabase-backed session) |
 | `GET` | `/jobs` | List job applications |
 | `POST` | `/jobs` | Add a job (`fetch_full_description` scrapes posting HTML; same URL returns `{ ..., duplicate: true }`) |
 | `PATCH` | `/jobs/{id}` | Partial update: `status`, `notes`, or both |

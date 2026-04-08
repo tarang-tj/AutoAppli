@@ -58,6 +58,12 @@ export interface OutreachMessage {
   created_at: string;
 }
 
+export interface ThankYouResponse {
+  subject: string;
+  body: string;
+  saved_outreach_id?: string | null;
+}
+
 export interface UserProfile {
   display_name: string;
   headline: string;

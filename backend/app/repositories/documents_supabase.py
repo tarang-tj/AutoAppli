@@ -67,6 +67,22 @@ def insert_tailored_resume(
     return _public_row(res.data[0])
 
 
+def delete_document(settings: Settings, user_id: str, doc_id: str) -> bool:
+    sb = _client(settings)
+    check = (
+        sb.table("generated_documents")
+        .select("id")
+        .eq("id", doc_id)
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    if not check.data:
+        return False
+    sb.table("generated_documents").delete().eq("id", doc_id).eq("user_id", user_id).execute()
+    return True
+
+
 def list_documents(settings: Settings, user_id: str, limit: int = 50) -> list[dict]:
     sb = _client(settings)
     lim = max(1, min(limit, 100))

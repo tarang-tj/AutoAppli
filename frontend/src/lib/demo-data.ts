@@ -426,6 +426,10 @@ export function getDemoGeneratedDocuments(): SavedTailoredDocument[] {
   return [...demoGeneratedDocuments];
 }
 
+export function removeDemoGeneratedDocument(id: string): void {
+  demoGeneratedDocuments = demoGeneratedDocuments.filter((d) => d.id !== id);
+}
+
 export function pushDemoGeneratedDocument(
   doc: GeneratedDocument,
   jobDescription: string,
