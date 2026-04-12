@@ -211,7 +211,16 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
             <CardContent className="p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-zinc-50 truncate">{job.title}</p>
+                  <button
+                    type="button"
+                    className="text-sm font-medium text-zinc-50 truncate hover:text-blue-400 transition-colors text-left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/job/${job.id}`);
+                    }}
+                  >
+                    {job.title}
+                  </button>
                   <div className="flex items-center gap-1 mt-1">
                     <Building2 className="h-3 w-3 shrink-0 text-zinc-400" />
                     <p className="text-xs text-zinc-300 truncate">{job.company}</p>

@@ -437,63 +437,462 @@ let demoProfile: UserProfile = {
 let demoGeneratedDocuments: SavedTailoredDocument[] = [];
 
 const demoJobSearchResults: JobSearchResult[] = [
+  // STUDENT/INTERN/ENTRY-LEVEL (15+ roles)
+  {
+    title: "Software Engineering Intern",
+    company: "Google",
+    location: "Mountain View, CA",
+    url: "https://careers.google.com/intern/software-engineering-2024",
+    snippet:
+      "Join Google's internship program and work on real-world projects with experienced mentors. Perfect for undergrads interested in software engineering.",
+    posted_date: "2 days ago",
+    source: "company-website",
+    salary: "$25/hour",
+    closing_date: "2026-06-30",
+  },
+  {
+    title: "Data Science Intern",
+    company: "Meta",
+    location: "Menlo Park, CA",
+    url: "https://metacareers.com/jobs/data-science-intern-2024",
+    snippet:
+      "Work on data science problems impacting billions of users. Great opportunity for students to gain experience with large-scale data analysis.",
+    posted_date: "1 day ago",
+    source: "linkedin",
+    salary: "$28/hour",
+    closing_date: "2026-07-15",
+  },
+  {
+    title: "Product Management Intern",
+    company: "Amazon",
+    location: "Seattle, WA",
+    url: "https://www.amazon.jobs/en/jobs/product-intern-2024",
+    snippet:
+      "Get hands-on experience in product management at one of the world's largest tech companies. Mentor guidance included.",
+    posted_date: "3 days ago",
+    source: "handshake",
+    salary: "$27/hour",
+    closing_date: "2026-06-15",
+  },
+  {
+    title: "UX Research Intern",
+    company: "Apple",
+    location: "Cupertino, CA",
+    url: "https://jobs.apple.com/ux-research-intern",
+    snippet:
+      "Conduct user research that influences product design decisions. Learn from world-class UX researchers.",
+    posted_date: "4 days ago",
+    source: "company-website",
+    closing_date: "2026-07-01",
+  },
+  {
+    title: "Business Analyst Intern",
+    company: "Microsoft",
+    location: "Redmond, WA",
+    url: "https://careers.microsoft.com/students/internships",
+    snippet:
+      "Analyze business metrics and support decision-making across Microsoft's business units. Great for finance and business students.",
+    posted_date: "5 days ago",
+    source: "linkedin",
+    salary: "$26/hour",
+    closing_date: "2026-06-30",
+  },
+  {
+    title: "Software Engineering Intern",
+    company: "Stripe",
+    location: "Remote",
+    url: "https://stripe.com/jobs/listing/engineering-intern",
+    snippet:
+      "Build payment infrastructure for internet businesses. Intern-friendly culture with great mentorship.",
+    posted_date: "6 days ago",
+    source: "company-website",
+    salary: "$30/hour",
+    closing_date: "2026-08-31",
+  },
+  {
+    title: "Part-time Marketing Associate",
+    company: "Shopify",
+    location: "Toronto, ON",
+    url: "https://www.shopify.com/careers/marketing-associate-part-time",
+    snippet:
+      "Perfect for students! Work flexible hours on marketing campaigns while building your career.",
+    posted_date: "2 days ago",
+    source: "linkedin",
+    salary: "$22/hour",
+  },
+  {
+    title: "Campus Ambassador",
+    company: "Notion",
+    location: "Remote",
+    url: "https://notion.com/campus-ambassadors",
+    snippet:
+      "Lead a community of Notion users on your campus. Flexible, student-focused role with perks.",
+    posted_date: "3 days ago",
+    source: "company-website",
+  },
+  {
+    title: "Undergraduate Research Assistant",
+    company: "OpenAI",
+    location: "San Francisco, CA",
+    url: "https://openai.com/careers/research-assistant",
+    snippet:
+      "Contribute to AI research at OpenAI. Excellent opportunity for undergrads interested in machine learning.",
+    posted_date: "1 week ago",
+    source: "linkedin",
+    closing_date: "2026-08-15",
+  },
+  {
+    title: "Co-op Software Developer",
+    company: "Coinbase",
+    location: "San Francisco, CA",
+    url: "https://www.coinbase.com/careers/coop-developer",
+    snippet:
+      "6-month co-op program for students interested in cryptocurrency and blockchain development.",
+    posted_date: "4 days ago",
+    source: "handshake",
+    salary: "$29/hour",
+    closing_date: "2026-09-30",
+  },
+  {
+    title: "Junior Data Analyst",
+    company: "Airbnb",
+    location: "Remote",
+    url: "https://airbnb.com/careers/junior-analyst",
+    snippet:
+      "Start your analytics career at Airbnb! Entry-level role perfect for recent grads or final-year students.",
+    posted_date: "5 days ago",
+    source: "linkedin",
+    salary: "$65,000-$75,000",
+    closing_date: "2026-07-30",
+  },
+  {
+    title: "Quality Assurance Intern",
+    company: "Netflix",
+    location: "Los Gatos, CA",
+    url: "https://jobs.netflix.com/qa-intern",
+    snippet:
+      "Test streaming features and help improve Netflix's quality. Great for CS and QA students.",
+    posted_date: "2 days ago",
+    source: "company-website",
+    salary: "$26/hour",
+    closing_date: "2026-08-01",
+  },
+  {
+    title: "Growth Marketing Intern",
+    company: "Figma",
+    location: "San Francisco, CA",
+    url: "https://figma.com/careers/growth-intern",
+    snippet:
+      "Help scale Figma's user growth through marketing. Students and recent grads welcome.",
+    posted_date: "3 days ago",
+    source: "linkedin",
+    salary: "$25/hour",
+    closing_date: "2026-07-15",
+  },
+  {
+    title: "Backend Engineer Intern",
+    company: "Twilio",
+    location: "San Francisco, CA",
+    url: "https://www.twilio.com/careers/backend-intern",
+    snippet:
+      "Build communication APIs. Internship program with mentorship and real impact.",
+    posted_date: "6 days ago",
+    source: "company-website",
+    salary: "$27/hour",
+    closing_date: "2026-08-31",
+  },
+  {
+    title: "Finance Analyst Intern",
+    company: "Stripe",
+    location: "Remote",
+    url: "https://stripe.com/jobs/intern-finance",
+    snippet:
+      "Analyze financial data and support business strategy. Great for finance and econ students.",
+    posted_date: "4 days ago",
+    source: "linkedin",
+    salary: "$28/hour",
+    closing_date: "2026-08-15",
+  },
+
+  // MID-LEVEL POSITIONS (10+ roles)
+  {
+    title: "Senior Data Analyst",
+    company: "Spotify",
+    location: "New York, NY",
+    url: "https://jobs.spotify.com/careers/senior-data-analyst",
+    snippet:
+      "Lead data analysis initiatives for our streaming platform. Work with Python, SQL, and modern analytics tools.",
+    posted_date: "2 days ago",
+    source: "linkedin",
+    salary: "$130,000-$170,000",
+  },
+  {
+    title: "Business Intelligence Engineer",
+    company: "Stripe",
+    location: "San Francisco, CA",
+    url: "https://stripe.com/jobs/bi-engineer",
+    snippet:
+      "Build BI infrastructure for payments platform. Design and implement data pipelines using modern tools.",
+    posted_date: "4 days ago",
+    source: "company-website",
+    salary: "$150,000-$195,000",
+  },
+  {
+    title: "Product Operations Manager",
+    company: "Notion",
+    location: "San Francisco, CA",
+    url: "https://notion.so/careers/product-operations-manager",
+    snippet:
+      "Optimize product workflows and cross-functional processes. Help scale our product operations team.",
+    posted_date: "5 days ago",
+    source: "linkedin",
+    salary: "$120,000-$155,000",
+  },
+  {
+    title: "Analytics Engineer",
+    company: "Figma",
+    location: "San Francisco, CA",
+    url: "https://figma.com/careers/analytics-engineer",
+    snippet:
+      "Build data infrastructure and analytics pipelines for our design platform.",
+    posted_date: "3 days ago",
+    source: "company-website",
+    salary: "$140,000-$180,000",
+  },
+  {
+    title: "Product Manager, Analytics",
+    company: "HubSpot",
+    location: "Cambridge, MA",
+    url: "https://www.hubspot.com/careers/pm-analytics",
+    snippet:
+      "Own product strategy for our analytics and reporting platform.",
+    posted_date: "1 week ago",
+    source: "linkedin",
+    salary: "$135,000-$175,000",
+  },
+  {
+    title: "Operations Manager",
+    company: "Brex",
+    location: "San Francisco, CA",
+    url: "https://brex.com/careers/operations-manager",
+    snippet:
+      "Manage operations for fintech company scaling rapidly. Cross-functional leadership required.",
+    posted_date: "4 days ago",
+    source: "company-website",
+    salary: "$125,000-$160,000",
+  },
+  {
+    title: "Software Engineer II - Backend",
+    company: "Plaid",
+    location: "San Francisco, CA",
+    url: "https://plaid.com/careers/backend-engineer",
+    snippet:
+      "Build financial APIs at scale. Mid-level role with growth opportunities.",
+    posted_date: "2 days ago",
+    source: "linkedin",
+    salary: "$160,000-$210,000",
+  },
+  {
+    title: "Product Designer",
+    company: "Canva",
+    location: "Remote",
+    url: "https://canva.com/careers/product-designer",
+    snippet:
+      "Design features for millions of users. Great mid-level opportunity.",
+    posted_date: "6 days ago",
+    source: "company-website",
+    salary: "$135,000-$175,000",
+  },
+  {
+    title: "Data Engineer",
+    company: "Databricks",
+    location: "San Francisco, CA",
+    url: "https://databricks.com/careers/data-engineer",
+    snippet:
+      "Build data processing infrastructure. Mid-career growth role.",
+    posted_date: "3 days ago",
+    source: "linkedin",
+    salary: "$155,000-$200,000",
+  },
+  {
+    title: "Cloud Architect",
+    company: "Snowflake",
+    location: "Remote",
+    url: "https://snowflake.com/careers/cloud-architect",
+    snippet:
+      "Design cloud solutions for enterprise customers. 3-5 years of experience required.",
+    posted_date: "5 days ago",
+    source: "company-website",
+    salary: "$165,000-$215,000",
+  },
+
+  // SENIOR/LEAD POSITIONS (10+ roles)
   {
     title: "Staff Data Engineer",
     company: "DuckDB Labs",
     location: "Remote",
     url: "https://duckdblabs.com/careers/staff-data-engineer",
     snippet:
-      "Looking for an experienced data engineer to lead our analytics platform development. Must have 8+ years experience with distributed systems.",
+      "Lead data engineering initiatives for analytics platform. 8+ years experience required.",
     posted_date: "2 days ago",
     source: "company-website",
+    salary: "$200,000-$280,000",
   },
   {
-    title: "Product Analytics Lead",
+    title: "Senior Data Scientist",
+    company: "Google",
+    location: "Mountain View, CA",
+    url: "https://careers.google.com/senior-data-scientist",
+    snippet:
+      "Lead data science efforts across Google Cloud products. Director-track opportunity.",
+    posted_date: "1 week ago",
+    source: "linkedin",
+    salary: "$210,000-$300,000",
+  },
+  {
+    title: "VP Engineering",
+    company: "Anthropic",
+    location: "San Francisco, CA",
+    url: "https://anthropic.com/careers/vp-engineering",
+    snippet:
+      "Lead engineering team at AI safety research company. Significant leadership responsibility.",
+    posted_date: "3 days ago",
+    source: "company-website",
+    salary: "$250,000-$400,000",
+  },
+  {
+    title: "Principal Engineer",
+    company: "Meta",
+    location: "Menlo Park, CA",
+    url: "https://metacareers.com/jobs/principal-engineer",
+    snippet:
+      "Shape technical direction across Meta's infrastructure. Senior leadership role.",
+    posted_date: "5 days ago",
+    source: "linkedin",
+    salary: "$230,000-$320,000",
+  },
+  {
+    title: "Head of Product Analytics",
     company: "Retool",
     location: "Remote",
-    url: "https://retool.com/careers/product-analytics-lead",
+    url: "https://retool.com/careers/head-analytics",
     snippet:
-      "Join Retool to build analytics for our internal tools platform. Lead product analytics strategy and help define metrics for product decisions.",
-    posted_date: "1 week ago",
-    source: "linkedin",
+      "Lead analytics strategy and team. Director-level role reporting to VP Product.",
+    posted_date: "4 days ago",
+    source: "company-website",
+    salary: "$200,000-$280,000",
   },
   {
-    title: "Analytics Engineer Manager",
-    company: "Amplitude",
+    title: "Senior Manager, Data Engineering",
+    company: "Uber",
     location: "San Francisco, CA",
-    url: "https://amplitude.com/careers/analytics-engineer-manager",
+    url: "https://uber.com/careers/senior-manager-data",
     snippet:
-      "Manage team of analytics engineers building data infrastructure for product analytics company. Leadership experience required.",
-    posted_date: "3 days ago",
-    source: "indeed",
+      "Manage team of data engineers. Focus on infrastructure and scalability.",
+    posted_date: "2 days ago",
+    source: "linkedin",
+    salary: "$220,000-$300,000",
   },
   {
-    title: "Business Intelligence Developer",
+    title: "Distinguished Engineer",
+    company: "Microsoft",
+    location: "Redmond, WA",
+    url: "https://careers.microsoft.com/distinguished-engineer",
+    snippet:
+      "Senior technical leadership role shaping company direction. Highest engineer level.",
+    posted_date: "6 days ago",
+    source: "company-website",
+    salary: "$240,000-$350,000",
+  },
+  {
+    title: "Chief Data Officer",
     company: "Salesforce",
     location: "San Francisco, CA",
-    url: "https://careers.salesforce.com/bi-developer",
-    snippet: "Build BI solutions for enterprise CRM platform. Experience with Tableau and data warehouses required.",
-    posted_date: "4 days ago",
-    source: "linkedin",
-  },
-  {
-    title: "Data Analytics Engineer",
-    company: "Canva",
-    location: "Remote",
-    url: "https://www.canva.com/careers/data-analytics-engineer",
+    url: "https://salesforce.com/careers/cdo",
     snippet:
-      "Help scale Canva's analytics infrastructure. Work with large-scale event data and build analytics platforms for our product teams.",
-    posted_date: "5 days ago",
-    source: "company-website",
-  },
-  {
-    title: "Senior Product Manager, Analytics",
-    company: "Mixpanel",
-    location: "San Francisco, CA",
-    url: "https://mixpanel.com/careers/pm-analytics",
-    snippet: "Lead product roadmap for analytics platform. Work with engineers and customers to define product direction.",
+      "Lead data strategy organization-wide. C-suite level position.",
     posted_date: "1 week ago",
     source: "linkedin",
+    salary: "$300,000-$500,000",
+  },
+  {
+    title: "VP Product",
+    company: "Adobe",
+    location: "San Jose, CA",
+    url: "https://adobe.com/careers/vp-product",
+    snippet:
+      "Lead product organization for major Adobe product line.",
+    posted_date: "4 days ago",
+    source: "company-website",
+    salary: "$280,000-$400,000",
+  },
+  {
+    title: "Senior Engineering Manager",
+    company: "Apple",
+    location: "Cupertino, CA",
+    url: "https://jobs.apple.com/senior-em",
+    snippet:
+      "Manage large engineering team. Lead technical initiatives across organization.",
+    posted_date: "3 days ago",
+    source: "linkedin",
+    salary: "$210,000-$290,000",
+  },
+
+  // REMOTE-FIRST POSITIONS (5+ roles)
+  {
+    title: "Remote Senior Backend Engineer",
+    company: "Discord",
+    location: "Remote",
+    url: "https://discord.com/careers/backend-engineer",
+    snippet:
+      "Build chat and voice infrastructure from anywhere. Fully distributed team.",
+    posted_date: "2 days ago",
+    source: "company-website",
+    salary: "$180,000-$240,000",
+  },
+  {
+    title: "Full Remote Product Manager",
+    company: "Slack",
+    location: "Remote",
+    url: "https://slack.com/careers/product-manager-remote",
+    snippet:
+      "Build workplace communication features. Completely distributed company.",
+    posted_date: "4 days ago",
+    source: "linkedin",
+    salary: "$165,000-$220,000",
+  },
+  {
+    title: "Remote Data Scientist",
+    company: "Scale AI",
+    location: "Remote",
+    url: "https://scale.com/careers/data-scientist",
+    snippet:
+      "Work on data labeling platform from anywhere. Fully remote operation.",
+    posted_date: "3 days ago",
+    source: "company-website",
+    salary: "$150,000-$200,000",
+  },
+  {
+    title: "Global Remote Designer",
+    company: "Figma",
+    location: "Remote",
+    url: "https://figma.com/careers/remote-designer",
+    snippet:
+      "Design for Figma users worldwide. Remote-first culture.",
+    posted_date: "5 days ago",
+    source: "linkedin",
+    salary: "$140,000-$190,000",
+  },
+  {
+    title: "Distributed Systems Engineer (Remote)",
+    company: "Zoom",
+    location: "Remote",
+    url: "https://zoom.com/careers/distributed-systems",
+    snippet:
+      "Scale Zoom's infrastructure. Async-first remote team.",
+    posted_date: "6 days ago",
+    source: "company-website",
+    salary: "$170,000-$230,000",
   },
 ];
 
@@ -527,8 +926,59 @@ export function removeDemoOutreachMessage(id: string): void {
   demoOutreachMessages = demoOutreachMessages.filter((m) => m.id !== id);
 }
 
-export function getDemoJobSearchResults(): JobSearchResult[] {
-  return demoJobSearchResults;
+export function getDemoJobSearchResults(filters?: {
+  studentFriendly?: boolean;
+  jobType?: string;
+  experienceLevel?: string;
+}): JobSearchResult[] {
+  let results = [...demoJobSearchResults];
+
+  if (filters?.studentFriendly) {
+    results = results.filter((job) => {
+      const title = job.title.toLowerCase();
+      const company = job.company.toLowerCase();
+      const snippet = job.snippet.toLowerCase();
+      const studentKeywords = [
+        "intern", "part-time", "entry-level", "co-op", "undergrad",
+        "student", "junior", "recent grad", "campus", "research assistant"
+      ];
+      return studentKeywords.some(keyword =>
+        title.includes(keyword) || snippet.includes(keyword)
+      );
+    });
+  }
+
+  if (filters?.jobType && filters.jobType !== "all") {
+    results = results.filter((job) => {
+      const jobTypeMap: Record<string, string[]> = {
+        "full_time": ["full-time", "full time", "Senior", "Manager", "Head of", "VP", "Staff", "Principal"],
+        "part_time": ["part-time", "part time", "associate"],
+        "internship": ["intern", "internship"],
+        "contract": ["contractor", "contract"],
+        "freelance": ["freelance"]
+      };
+      const keywords = jobTypeMap[filters.jobType!] || [];
+      const titleLower = job.title.toLowerCase();
+      return keywords.some((kw: string) => titleLower.includes(kw));
+    });
+  }
+
+  if (filters?.experienceLevel && filters.experienceLevel !== "all") {
+    results = results.filter((job) => {
+      const title = job.title.toLowerCase();
+      const snippet = job.snippet.toLowerCase();
+      const expMap: Record<string, string[]> = {
+        "intern": ["intern", "entry-level"],
+        "entry": ["junior", "entry", "analyst", "associate"],
+        "mid": ["senior", "manager", "lead"],
+        "senior": ["senior", "staff", "principal", "head of", "vp", "director", "chief"]
+      };
+      const keywords = expMap[filters.experienceLevel!] || [];
+      return keywords.some((kw: string) => title.includes(kw) || snippet.includes(kw));
+    });
+  }
+
+  return results;
 }
 
 export function getDemoProfile(): UserProfile {

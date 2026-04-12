@@ -2,6 +2,7 @@
 import { KanbanBoard } from "@/components/dashboard/kanban-board";
 import { InsightsCards } from "@/components/dashboard/insights-cards";
 import { PipelineStats } from "@/components/dashboard/pipeline-stats";
+import { SmartFilters, useSmartFilters } from "@/components/dashboard/smart-filters";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -31,10 +32,12 @@ export default function DashboardPage() {
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
-  const filteredJobs = useMemo(
-    () => filterJobsByQuery(jobs, boardSearch),
-    [jobs, boardSearch]
-  );
+  const smartFilters = useSmartFilters();
+
+  const filteredJobs = useMemo(() => {
+    const textFiltered = filterJobsByQuery(jobs, boardSearch);
+    return smartFilters.applyFilters(textFiltered);
+  }, [jobs, boardSearch, smartFilters]);
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -381,6 +384,16 @@ export default function DashboardPage() {
       ) : null}
 
       <InsightsCards jobs={jobs} />
+      <SmartFilters
+        filters={smartFilters.filters}
+        setFilter={smartFilters.setFilter}
+        sortBy={smartFilters.sortBy}
+        setSortBy={smartFilters.setSortBy}
+        sortDir={smartFilters.sortDir}
+        setSortDir={smartFilters.setSortDir}
+        clearAll={smartFilters.clearAll}
+        activeFilterCount={smartFilters.activeFilterCount}
+      />
       <PipelineStats jobs={filteredJobs} allJobCount={jobs.length} />
 
       {!isLoading && jobs.length === 0 ? (
