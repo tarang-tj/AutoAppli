@@ -35,26 +35,94 @@
   }
 
   function parseLinkedIn(url) {
-    const title =
+    // LinkedIn's React app uses various class names across different views.
+    // We try multiple strategies: direct selectors, artdeco lockup components,
+    // and page-title parsing as a reliable fallback.
+
+    // Strategy 1: Direct DOM selectors (classic + newer layouts)
+    let title =
       getText("h1.t-24.t-bold") ||
       getText(".job-details-jobs-unified-top-card__job-title h1") ||
       getText("h1.topcard__title") ||
+      getText(".artdeco-entity-lockup__title") ||
       getText("h1");
 
-    const company =
-      getText(".job-details-jobs-unified-top-card__company-name a") ||
-      getText("a.topcard__org-name-link") ||
-      getText(".job-details-jobs-unified-top-card__company-name");
+    // Clean up doubled title text (LinkedIn sometimes renders it twice)
+    if (title && /^(.+)\n\1$/.test(title)) {
+      title = title.split("\n")[0].trim();
+    }
 
-    const location =
+    // Strategy 1: Direct selectors for company
+    let company =
+      getText(".job-details-jobs-unified-top-card__company-name a") ||
+      getText(".job-details-jobs-unified-top-card__company-name") ||
+      getText("a.topcard__org-name-link") ||
+      getText(".artdeco-entity-lockup__subtitle") ||
+      getText(".topcard__flavor--black-link");
+
+    // Strategy 2: Page title fallback — LinkedIn formats as "Title at Company | LinkedIn"
+    if (!company || !title) {
+      const pageTitle = document.title || "";
+      const atMatch = pageTitle.match(/^(.+?)\s+at\s+(.+?)(?:\s*\||\s*[-–—]|\s*$)/i);
+      if (atMatch) {
+        if (!title) title = atMatch[1].trim();
+        if (!company) company = atMatch[2].trim();
+      }
+      // Sometimes title is just "Job Title | LinkedIn" without company
+      if (!title) {
+        const pipeMatch = pageTitle.match(/^(.+?)(?:\s*\|)/);
+        if (pipeMatch) title = pipeMatch[1].trim();
+      }
+    }
+
+    // Strategy 2b: Parse from body text (LinkedIn minimal view)
+    if (!title) {
+      const lines = document.body.innerText.split("\n").map(l => l.trim()).filter(Boolean);
+      // Skip nav items, find first line after "Learning" that looks like a title
+      const navEnd = lines.findIndex(l => l === "Learning");
+      if (navEnd !== -1 && lines[navEnd + 1]) {
+        title = lines[navEnd + 1];
+      }
+    }
+
+    // Strategy 3: Find /company/ links near the title
+    if (!company) {
+      const companyLink = document.querySelector('a[href*="/company/"]');
+      if (companyLink && companyLink.innerText.trim().length < 80) {
+        company = companyLink.innerText.trim();
+      }
+    }
+
+    // Location — artdeco caption, then classic selectors, then body text regex
+    let location =
+      getText(".artdeco-entity-lockup__caption") ||
       getText(".job-details-jobs-unified-top-card__bullet") ||
       getText(".topcard__flavor--bullet");
 
+    if (!location) {
+      // Parse from body text: "City, ST" pattern near the top
+      const bodySnippet = document.body.innerText.substring(0, 800);
+      const locMatch = bodySnippet.match(/([A-Z][a-z]+(?:\s[A-Z][a-z]+)?,\s*[A-Z]{2})\b/);
+      if (locMatch) location = locMatch[0];
+    }
+
+    // Description — multiple possible containers, LinkedIn loads lazily
     const descEl =
       document.querySelector(".jobs-description__content .jobs-box__html-content") ||
       document.querySelector(".jobs-description-content__text") ||
-      document.querySelector("#job-details");
-    const description = descEl ? descEl.innerText.trim() : null;
+      document.querySelector("#job-details") ||
+      document.querySelector(".jobs-description__content") ||
+      document.querySelector("article.jobs-description");
+    let description = descEl ? descEl.innerText.trim() : null;
+
+    // Fallback: grab "About the job" section from body text
+    if (!description) {
+      const bodyText = document.body.innerText;
+      const aboutIdx = bodyText.indexOf("About the job");
+      if (aboutIdx !== -1) {
+        description = bodyText.substring(aboutIdx, aboutIdx + 5000).trim();
+      }
+    }
 
     const salary =
       getText(".salary.compensation__salary") ||
