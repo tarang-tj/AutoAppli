@@ -65,7 +65,7 @@ function RuleCard({
   const triggerInfo = TRIGGER_CONFIG[rule.trigger] || TRIGGER_CONFIG.manual;
   const TriggerIcon = triggerInfo.icon;
   const actionInfo = ACTION_CONFIG[rule.action] || { label: "Unknown" };
-  const config = rule.action_config as Record<string, unknown>;
+  const config = rule.action_config as Record<string, string | number>;
 
   return (
     <Card className="bg-zinc-900 border-zinc-800">
