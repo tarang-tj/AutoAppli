@@ -1,6 +1,7 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import * as sbJobs from "@/lib/supabase/jobs";
 import * as sbSearch from "@/lib/supabase/search";
+import * as sbInterviews from "@/lib/supabase/interviews";
 import {
   getDemoJobs,
   setDemoJobs,
@@ -1177,6 +1178,21 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
         return { results: [], search_id: null, from_cache: true, persisted: false } as T;
       }
     }
+    // Interviews → Supabase when configured
+    if (isSupabaseConfigured()) {
+      if (path === "/interviews" || path.startsWith("/interviews?")) {
+        const jobId = path.includes("job_id=")
+          ? new URLSearchParams(path.split("?")[1]).get("job_id") ?? undefined
+          : undefined;
+        const all = await sbInterviews.fetchInterviews();
+        return (jobId ? all.filter((n) => n.job_id === jobId) : all) as T;
+      }
+      if (path.startsWith("/interviews/") && !path.includes("/prep")) {
+        const id = path.split("/").pop()!;
+        return (await sbInterviews.fetchInterview(id)) as T;
+      }
+    }
+
     if (path === "/resumes") return getDemoResumes() as T;
     if (path === "/resumes/generated") return getDemoGeneratedDocuments() as T;
     // All other paths fall through to the generic demo handler
@@ -1259,6 +1275,19 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
         remote_only: b.remote_only,
         page: b.page,
         per_page: b.per_page,
+      })) as T;
+    }
+
+    // Interviews → Supabase when configured
+    if (isSupabaseConfigured() && path === "/interviews") {
+      const b = body as Record<string, unknown>;
+      return (await sbInterviews.createInterview({
+        job_id: b.job_id as string,
+        round_name: b.round_name as string | undefined,
+        scheduled_at: b.scheduled_at as string | null | undefined,
+        interviewer_name: b.interviewer_name as string | undefined,
+        notes: b.notes as string | undefined,
+        status: b.status as "upcoming" | "completed" | "cancelled" | undefined,
       })) as T;
     }
 
@@ -1372,6 +1401,10 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
   }
 
   if (path.startsWith("/interviews/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      return (await sbInterviews.updateInterview(id, body as Partial<InterviewNote>)) as T;
+    }
     return handleDemoPatch(path, body) as T;
   }
 
@@ -1400,6 +1433,11 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
 
 export async function apiDelete(path: string): Promise<void> {
   if (path.startsWith("/interviews/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      await sbInterviews.deleteInterview(id);
+      return;
+    }
     handleDemoDelete(path);
     return;
   }

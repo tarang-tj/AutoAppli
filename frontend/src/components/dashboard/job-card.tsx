@@ -210,10 +210,10 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
           >
             <CardContent className="p-3">
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <button
                     type="button"
-                    className="text-sm font-medium text-zinc-50 truncate hover:text-blue-400 transition-colors text-left"
+                    className="block w-full text-sm font-medium text-zinc-50 truncate hover:text-blue-400 transition-colors text-left"
                     onClick={(e) => {
                       e.stopPropagation();
                       router.push(`/job/${job.id}`);
