@@ -1,5 +1,6 @@
 "use client";
 import { KanbanBoard } from "@/components/dashboard/kanban-board";
+import { InsightsCards } from "@/components/dashboard/insights-cards";
 import { PipelineStats } from "@/components/dashboard/pipeline-stats";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -194,6 +195,7 @@ export default function DashboardPage() {
         </p>
       ) : null}
 
+      <InsightsCards jobs={jobs} />
       <PipelineStats jobs={filteredJobs} allJobCount={jobs.length} />
 
       {!isLoading && jobs.length === 0 ? (

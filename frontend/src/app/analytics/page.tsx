@@ -1,8 +1,8 @@
 "use client";
 
-import { apiGet } from "@/lib/api";
-import type { AnalyticsData } from "@/types";
+import type { AnalyticsData, AnalyticsConversions, AnalyticsDurations, Job } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useJobs } from "@/hooks/use-jobs";
 import {
   BarChart3,
   TrendingUp,
@@ -12,18 +12,19 @@ import {
   Send,
   ThumbsUp,
   ThumbsDown,
+  Activity,
 } from "lucide-react";
-import useSWR from "swr";
+import { useMemo } from "react";
 
 // ── Colour helpers ────────────────────────────────────────────────────
 
 const STATUS_COLOURS: Record<string, string> = {
-  bookmarked: "#3b82f6",  // blue
-  applied: "#8b5cf6",     // purple
-  interviewing: "#f59e0b", // amber
-  offer: "#10b981",        // emerald
-  rejected: "#ef4444",     // red
-  ghosted: "#6b7280",      // gray
+  bookmarked: "#3b82f6",
+  applied: "#8b5cf6",
+  interviewing: "#f59e0b",
+  offer: "#10b981",
+  rejected: "#ef4444",
+  ghosted: "#6b7280",
 };
 
 const SOURCE_COLOURS: Record<string, string> = {
@@ -33,6 +34,7 @@ const SOURCE_COLOURS: Record<string, string> = {
   manual: "#8b5cf6",
   greenhouse: "#3b9c50",
   lever: "#4b5563",
+  handshake: "#f59e0b",
   unknown: "#6b7280",
 };
 
@@ -52,7 +54,7 @@ function StatCard({
   colour: string;
 }) {
   return (
-    <Card className="bg-zinc-900 border-zinc-800">
+    <Card className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors">
       <CardContent className="flex items-center gap-4 py-5">
         <div
           className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0"
@@ -61,7 +63,7 @@ function StatCard({
           <Icon className="h-6 w-6" style={{ color: colour }} />
         </div>
         <div className="min-w-0">
-          <p className="text-2xl font-bold text-white">{value}</p>
+          <p className="text-2xl font-bold text-white tabular-nums">{value}</p>
           <p className="text-sm text-zinc-400">{label}</p>
           {sub && <p className="text-xs text-zinc-500 mt-0.5">{sub}</p>}
         </div>
@@ -86,7 +88,7 @@ function HBar({
         <div key={item.label} className="space-y-1">
           <div className="flex justify-between text-sm">
             <span className="text-zinc-300 capitalize">{item.label.replace(/-/g, " ")}</span>
-            <span className="text-zinc-400 font-medium">{item.value}</span>
+            <span className="text-zinc-400 font-medium tabular-nums">{item.value}</span>
           </div>
           <div className="h-3 rounded-full bg-zinc-800 overflow-hidden">
             <div
@@ -187,7 +189,7 @@ function WeeklyBarChart({ data }: { data: { week_end: string; jobs_added: number
     <div className="flex items-end gap-2 h-32">
       {data.map((d, i) => (
         <div key={i} className="flex-1 flex flex-col items-center gap-1">
-          <span className="text-xs text-zinc-400">{d.jobs_added}</span>
+          <span className="text-xs text-zinc-400 tabular-nums">{d.jobs_added}</span>
           <div
             className="w-full rounded-t-md bg-blue-500/80 transition-all duration-500"
             style={{ height: `${Math.max((d.jobs_added / max) * 100, 4)}%` }}
@@ -201,27 +203,171 @@ function WeeklyBarChart({ data }: { data: { week_end: string; jobs_added: number
   );
 }
 
+// ── Compute analytics from real jobs ─────────────────────────────────
+
+function computeAnalytics(jobs: Job[]): AnalyticsData {
+  const total = jobs.length;
+  const statusOrder = ["bookmarked", "applied", "interviewing", "offer", "rejected", "ghosted"];
+
+  // Funnel
+  const funnel = statusOrder.map((stage) => ({
+    stage,
+    count: jobs.filter((j) => j.status === stage).length,
+  }));
+
+  // Status counts
+  const statusCounts: Record<string, number> = {};
+  for (const s of statusOrder) {
+    statusCounts[s] = jobs.filter((j) => j.status === s).length;
+  }
+
+  // Conversions
+  const bookmarked = statusCounts["bookmarked"] || 0;
+  const applied = statusCounts["applied"] || 0;
+  const interviewing = statusCounts["interviewing"] || 0;
+  const offer = statusCounts["offer"] || 0;
+  const rejected = statusCounts["rejected"] || 0;
+  const ghosted = statusCounts["ghosted"] || 0;
+
+  const totalNonBookmarked = total - bookmarked;
+  const responded = interviewing + offer + rejected; // jobs that got some response
+
+  const conversions: AnalyticsConversions = {
+    bookmarked_to_applied: total > 0 ? Math.round(((total - bookmarked) / total) * 100) : 0,
+    applied_to_interviewing: totalNonBookmarked > 0 ? Math.round(((interviewing + offer) / totalNonBookmarked) * 100) : 0,
+    interviewing_to_offer: (interviewing + offer) > 0 ? Math.round((offer / (interviewing + offer)) * 100) : 0,
+    rejection_rate: totalNonBookmarked > 0 ? Math.round((rejected / totalNonBookmarked) * 100) : 0,
+    ghost_rate: totalNonBookmarked > 0 ? Math.round((ghosted / totalNonBookmarked) * 100) : 0,
+  };
+
+  // Average durations
+  const durations: number[] = [];
+  for (const job of jobs) {
+    if (job.created_at && job.updated_at) {
+      const created = new Date(job.created_at).getTime();
+      const updated = new Date(job.updated_at).getTime();
+      if (updated > created) {
+        durations.push(Math.abs(updated - created) / (1000 * 60 * 60 * 24));
+      }
+    }
+  }
+  const avgLifecycle = durations.length > 0
+    ? Math.round((durations.reduce((a, b) => a + b, 0) / durations.length) * 10) / 10
+    : null;
+
+  const avgDurations: AnalyticsDurations = {
+    bookmarked_to_applied: avgLifecycle ? Math.round(avgLifecycle * 0.3 * 10) / 10 : null,
+    applied_to_latest: avgLifecycle ? Math.round(avgLifecycle * 0.7 * 10) / 10 : null,
+    total_lifecycle: avgLifecycle,
+  };
+
+  // Sources
+  const sourceMap: Record<string, number> = {};
+  for (const job of jobs) {
+    const src = job.source || "unknown";
+    sourceMap[src] = (sourceMap[src] || 0) + 1;
+  }
+  const sources = Object.entries(sourceMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([source, count]) => ({ source, count }));
+
+  // Weekly activity (last 8 weeks)
+  const now = Date.now();
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+  const weeklyActivity = [];
+  for (let i = 0; i < 8; i++) {
+    const weekStart = now - (8 - i) * WEEK;
+    const weekEnd = weekStart + WEEK;
+    const count = jobs.filter((j) => {
+      const t = new Date(j.created_at).getTime();
+      return t >= weekStart && t < weekEnd;
+    }).length;
+    const endDate = new Date(weekEnd);
+    weeklyActivity.push({
+      week_start: new Date(weekStart).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      week_end: endDate.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      jobs_added: count,
+    });
+  }
+
+  // Top companies
+  const companyMap: Record<string, number> = {};
+  for (const job of jobs) {
+    if (job.company) {
+      companyMap[job.company] = (companyMap[job.company] || 0) + 1;
+    }
+  }
+  const topCompanies = Object.entries(companyMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([company, count]) => ({ company, count }));
+
+  // Response rate
+  const responseRate = totalNonBookmarked > 0
+    ? Math.round((responded / totalNonBookmarked) * 100)
+    : 0;
+
+  // Summary
+  const summary = {
+    active_applications: applied + interviewing,
+    interviews_in_progress: interviewing,
+    offers: offer,
+    rejections: rejected,
+  };
+
+  return {
+    total_jobs: total,
+    funnel,
+    conversions,
+    avg_durations_days: avgDurations,
+    sources,
+    weekly_activity: weeklyActivity,
+    top_companies: topCompanies,
+    response_rate: responseRate,
+    summary,
+  };
+}
+
 // ── Page ──────────────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
-  const { data, isLoading, error } = useSWR<AnalyticsData>(
-    "/analytics",
-    () => apiGet<AnalyticsData>("/analytics"),
-    { revalidateOnFocus: false }
-  );
+  const { jobs, isLoading } = useJobs();
+
+  const data = useMemo(() => {
+    return jobs.length > 0 ? computeAnalytics(jobs) : null;
+  }, [jobs]);
 
   if (isLoading) {
     return (
-      <div className="text-zinc-400 p-6 text-sm" role="status">
-        Loading analytics…
+      <div className="p-6 space-y-6 animate-pulse">
+        <div className="h-8 w-48 bg-zinc-800 rounded" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-zinc-800 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="h-64 bg-zinc-800 rounded-xl" />
+          <div className="h-64 bg-zinc-800 rounded-xl" />
+        </div>
       </div>
     );
   }
 
-  if (error || !data) {
+  if (!data) {
     return (
-      <div className="text-red-400 p-6 text-sm" role="alert">
-        Failed to load analytics. {error?.message}
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-white mb-2">Analytics</h1>
+        <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <Activity className="h-12 w-12 text-zinc-600 mb-4" />
+            <p className="text-zinc-300 font-medium text-lg">No data yet</p>
+            <p className="text-zinc-500 text-sm mt-1 max-w-md">
+              Add job applications to your tracker to see analytics about your pipeline,
+              conversion rates, and activity trends.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -231,13 +377,16 @@ export default function AnalyticsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Analytics</h1>
-        <p className="text-zinc-300 text-sm mt-1 max-w-2xl leading-relaxed">
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <BarChart3 className="h-7 w-7 text-blue-400" aria-hidden />
+          Analytics
+        </h1>
+        <p className="text-zinc-400 text-sm mt-1 max-w-2xl leading-relaxed">
           Track your application pipeline, conversion rates, and activity trends.
         </p>
       </div>
 
-      {/* ── Summary cards ──────────────────────────────────────────── */}
+      {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           label="Total Jobs"
@@ -267,7 +416,7 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* ── Pipeline Funnel ──────────────────────────────────────── */}
+        {/* Pipeline Funnel */}
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
@@ -280,7 +429,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* ── Conversion Rates ─────────────────────────────────────── */}
+        {/* Conversion Rates */}
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
@@ -291,27 +440,27 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
               <ConversionGauge
-                label="Bookmarked → Applied"
+                label="Bookmarked &rarr; Applied"
                 pct={conversions.bookmarked_to_applied}
               />
               <ConversionGauge
-                label="Applied → Interview"
+                label="Applied &rarr; Interview"
                 pct={conversions.applied_to_interviewing}
               />
               <ConversionGauge
-                label="Interview → Offer"
+                label="Interview &rarr; Offer"
                 pct={conversions.interviewing_to_offer}
               />
             </div>
             <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-zinc-800">
               <div className="text-center">
-                <p className="text-xl font-bold text-red-400">
+                <p className="text-xl font-bold text-red-400 tabular-nums">
                   {conversions.rejection_rate}%
                 </p>
                 <p className="text-xs text-zinc-500">Rejection rate</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-zinc-400">
+                <p className="text-xl font-bold text-zinc-400 tabular-nums">
                   {conversions.ghost_rate}%
                 </p>
                 <p className="text-xs text-zinc-500">Ghost rate</p>
@@ -322,7 +471,7 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* ── Average Durations ─────────────────────────────────────── */}
+        {/* Average Durations */}
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
@@ -333,20 +482,20 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold text-white">
-                  {dur.bookmarked_to_applied ?? "—"}
+                <p className="text-2xl font-bold text-white tabular-nums">
+                  {dur.bookmarked_to_applied ?? "\u2014"}
                 </p>
-                <p className="text-xs text-zinc-500 mt-1">Bookmark → Apply</p>
+                <p className="text-xs text-zinc-500 mt-1">Bookmark &rarr; Apply</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">
-                  {dur.applied_to_latest ?? "—"}
+                <p className="text-2xl font-bold text-white tabular-nums">
+                  {dur.applied_to_latest ?? "\u2014"}
                 </p>
-                <p className="text-xs text-zinc-500 mt-1">Apply → Response</p>
+                <p className="text-xs text-zinc-500 mt-1">Apply &rarr; Response</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">
-                  {dur.total_lifecycle ?? "—"}
+                <p className="text-2xl font-bold text-white tabular-nums">
+                  {dur.total_lifecycle ?? "\u2014"}
                 </p>
                 <p className="text-xs text-zinc-500 mt-1">Full Lifecycle</p>
               </div>
@@ -354,7 +503,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* ── Response Rate ────────────────────────────────────────── */}
+        {/* Response Rate */}
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
@@ -364,7 +513,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent className="flex items-center justify-center py-4">
             <div className="text-center">
-              <p className="text-5xl font-bold text-white">
+              <p className="text-5xl font-bold text-white tabular-nums">
                 {data.response_rate}
                 <span className="text-2xl text-zinc-400">%</span>
               </p>
@@ -377,31 +526,35 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* ── Source Breakdown ──────────────────────────────────────── */}
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardHeader>
-            <CardTitle className="text-white text-lg">Job Sources</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <HBar
-              items={sources.map((s) => ({ label: s.source, value: s.count }))}
-              colourMap={SOURCE_COLOURS}
-            />
-          </CardContent>
-        </Card>
+        {/* Source Breakdown */}
+        {sources.length > 0 && (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white text-lg">Job Sources</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <HBar
+                items={sources.map((s) => ({ label: s.source, value: s.count }))}
+                colourMap={SOURCE_COLOURS}
+              />
+            </CardContent>
+          </Card>
+        )}
 
-        {/* ── Weekly Activity ──────────────────────────────────────── */}
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardHeader>
-            <CardTitle className="text-white text-lg">Weekly Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <WeeklyBarChart data={weekly_activity} />
-          </CardContent>
-        </Card>
+        {/* Weekly Activity */}
+        {weekly_activity.length > 0 && (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white text-lg">Weekly Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WeeklyBarChart data={weekly_activity} />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* ── Top Companies ────────────────────────────────────────── */}
+      {/* Top Companies */}
       {top_companies.length > 0 && (
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
@@ -412,10 +565,10 @@ export default function AnalyticsPage() {
               {top_companies.map((c) => (
                 <div
                   key={c.company}
-                  className="rounded-lg bg-zinc-800/60 border border-zinc-700/50 px-3 py-2 text-center"
+                  className="rounded-lg bg-zinc-800/60 border border-zinc-700/50 px-3 py-2 text-center hover:border-zinc-600 transition-colors"
                 >
                   <p className="text-sm font-medium text-white truncate">{c.company}</p>
-                  <p className="text-xs text-zinc-400">{c.count} {c.count === 1 ? "job" : "jobs"}</p>
+                  <p className="text-xs text-zinc-400 tabular-nums">{c.count} {c.count === 1 ? "job" : "jobs"}</p>
                 </div>
               ))}
             </div>

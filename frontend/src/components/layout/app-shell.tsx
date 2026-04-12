@@ -4,12 +4,14 @@ import { Sidebar } from "@/components/layout/sidebar";
 /** Authenticated app chrome: dark sidebar, header, and a main area that respects global theme. */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-zinc-950">
       <Sidebar />
-      <div className="md:ml-64">
+      <div className="md:ml-64 flex flex-col min-h-screen">
         <Header />
-        <main className="min-h-[calc(100vh-3.5rem)] bg-background p-6 text-foreground">
-          {children}
+        <main className="flex-1 bg-gradient-to-b from-zinc-950 to-zinc-900 p-6 text-zinc-100">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>

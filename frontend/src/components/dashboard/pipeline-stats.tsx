@@ -21,12 +21,20 @@ const LABELS: Record<JobStatus, string> = {
   ghosted: "Ghosted",
 };
 
+const COLOURS: Record<JobStatus, string> = {
+  bookmarked: "border-zinc-500 bg-zinc-900 text-zinc-50",
+  applied: "border-blue-500/90 bg-blue-950/70 text-blue-50",
+  interviewing: "border-violet-500/90 bg-violet-950/70 text-violet-50",
+  offer: "border-emerald-500/90 bg-emerald-950/70 text-emerald-50",
+  rejected: "border-red-500/60 bg-red-950/40 text-red-200",
+  ghosted: "border-zinc-500 bg-zinc-900 text-zinc-100",
+};
+
 export function PipelineStats({
   jobs,
   allJobCount,
 }: {
   jobs: Job[];
-  /** Total jobs on the board before search filter (omit when not filtering). */
   allJobCount?: number;
 }) {
   if (jobs.length === 0 && (allJobCount === undefined || allJobCount === 0)) {
@@ -55,7 +63,7 @@ export function PipelineStats({
   );
 
   return (
-    <div className="mb-6 space-y-2">
+    <div className="mb-5 space-y-2">
       {filtered ? (
         <p className="text-sm font-medium text-amber-200">
           Showing <span className="tabular-nums text-white">{jobs.length}</span> of{" "}
@@ -63,14 +71,15 @@ export function PipelineStats({
           every column.
         </p>
       ) : null}
-      <div className="rounded-xl border border-zinc-600/90 bg-zinc-800/90 px-4 py-3 shadow-md shadow-black/30">
+      <div className="rounded-xl border border-zinc-700/70 bg-zinc-900/80 px-4 py-3 shadow-md shadow-black/20">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <p className="text-sm text-zinc-100">
+          <p className="text-sm text-zinc-200">
             <span className="font-bold tabular-nums text-white">{jobs.length}</span>{" "}
             {jobs.length === 1 ? "role" : "roles"}
-            {filtered ? " in view" : " on the board"}
+            {filtered ? " in view" : " tracked"}
           </p>
-          <ul className="flex flex-wrap gap-2" aria-label="Roles by stage">
+          <div className="h-4 w-px bg-zinc-700 hidden sm:block" />
+          <ul className="flex flex-wrap gap-1.5" aria-label="Roles by stage">
             {ORDER.map((status) => {
               const n = counts[status];
               if (n === 0) return null;
@@ -78,21 +87,11 @@ export function PipelineStats({
                 <li
                   key={status}
                   className={cn(
-                    "rounded-md border-2 px-2.5 py-1 text-xs font-semibold",
-                    status === "offer" &&
-                      "border-emerald-500/90 bg-emerald-950/70 text-emerald-50",
-                    status === "interviewing" &&
-                      "border-violet-500/90 bg-violet-950/70 text-violet-50",
-                    status === "applied" &&
-                      "border-blue-500/90 bg-blue-950/70 text-blue-50",
-                    status === "bookmarked" &&
-                      "border-zinc-500 bg-zinc-900 text-zinc-50",
-                    (status === "rejected" || status === "ghosted") &&
-                      "border-zinc-500 bg-zinc-900 text-zinc-100"
+                    "rounded-md border px-2.5 py-1 text-xs font-semibold tabular-nums transition-colors",
+                    COLOURS[status]
                   )}
                 >
-                  <span>{LABELS[status]}</span>{" "}
-                  <span className="tabular-nums text-white">{n}</span>
+                  {LABELS[status]} <span className="text-white">{n}</span>
                 </li>
               );
             })}
