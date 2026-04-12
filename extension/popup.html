@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoAppli</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 360px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #09090b;
+      color: #fafafa;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px;
+      border-bottom: 1px solid #27272a;
+    }
+    .header svg { width: 24px; height: 24px; color: #3b82f6; flex-shrink: 0; }
+    .header h1 { font-size: 16px; font-weight: 700; }
+
+    /* ── Content sections ───────────────────────────────── */
+    .content { padding: 16px; }
+
+    /* ── Job Card ────────────────────────────────────────── */
+    .job-card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .job-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fafafa;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .job-company {
+      font-size: 13px;
+      color: #a1a1aa;
+      margin-bottom: 2px;
+    }
+    .job-meta {
+      font-size: 12px;
+      color: #71717a;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .job-meta span { display: flex; align-items: center; gap: 3px; }
+    .job-desc-preview {
+      font-size: 12px;
+      color: #71717a;
+      margin-top: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .source-badge {
+      display: inline-block;
+      background: #1e3a5f;
+      color: #60a5fa;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:disabled { background: #1e3a5f; color: #60a5fa; cursor: wait; }
+    .btn-success { background: #166534; color: #bbf7d0; cursor: default; }
+    .btn-warning { background: #854d0e; color: #fef08a; cursor: default; }
+
+    /* ── Status messages ─────────────────────────────────── */
+    .status {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .status-error { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+    .status-success { background: #052e16; color: #86efac; border: 1px solid #166534; }
+    .status-info { background: #172554; color: #93c5fd; border: 1px solid #1e3a5f; }
+
+    /* ── No job state ────────────────────────────────────── */
+    .no-job {
+      text-align: center;
+      padding: 24px 16px;
+      color: #71717a;
+    }
+    .no-job svg { width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.4; }
+    .no-job p { font-size: 13px; line-height: 1.5; }
+
+    /* ── Settings ─────────────────────────────────────────── */
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: #71717a;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+    .settings-toggle:hover { color: #a1a1aa; }
+    .settings-panel {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+    .settings-panel label {
+      display: block;
+      font-size: 12px;
+      color: #a1a1aa;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .settings-panel input {
+      width: 100%;
+      padding: 8px 10px;
+      background: #09090b;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      color: #fafafa;
+      font-size: 13px;
+      margin-bottom: 10px;
+      outline: none;
+    }
+    .settings-panel input:focus { border-color: #3b82f6; }
+    .settings-panel .hint {
+      font-size: 11px;
+      color: #52525b;
+      margin-top: -6px;
+      margin-bottom: 10px;
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>
+    </svg>
+    <h1>AutoAppli</h1>
+  </div>
+
+  <div class="content">
+    <!-- Status area -->
+    <div id="status" class="hidden"></div>
+
+    <!-- Job detected -->
+    <div id="job-section" class="hidden">
+      <div class="job-card">
+        <div class="job-title" id="job-title">—</div>
+        <div class="job-company" id="job-company">—</div>
+        <div class="job-meta">
+          <span id="job-location"></span>
+          <span><span class="source-badge" id="job-source"></span></span>
+        </div>
+        <div class="job-desc-preview" id="job-desc-preview"></div>
+      </div>
+      <button class="btn btn-primary" id="save-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14m-7-7h14"/></svg>
+        Save to Board
+      </button>
+    </div>
+
+    <!-- No job detected -->
+    <div id="no-job-section" class="hidden">
+      <div class="no-job">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <p>No job posting detected on this page.<br/>Navigate to a job listing on LinkedIn, Greenhouse, Lever, Indeed, or another job board.</p>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <button class="settings-toggle" id="settings-toggle">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      Settings
+    </button>
+    <div id="settings-panel" class="settings-panel hidden">
+      <label for="api-url">AutoAppli API URL</label>
+      <input type="url" id="api-url" placeholder="https://your-backend.onrender.com" />
+      <div class="hint">Your FastAPI backend base URL (without /api/v1)</div>
+
+      <label for="auth-token">Auth Token (optional)</label>
+      <input type="password" id="auth-token" placeholder="Supabase JWT token" />
+      <div class="hint">Required if your backend enforces authentication</div>
+
+      <button class="btn btn-primary btn-sm" id="save-settings-btn">Save Settings</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
