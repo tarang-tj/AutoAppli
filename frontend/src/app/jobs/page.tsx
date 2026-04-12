@@ -38,17 +38,14 @@ export default function JobsPage() {
     setSearched(true);
   }, []);
 
-  const handleFormResults = (data: JobSearchResult[], filters?: {
+  const handleFormResults = (data: JobSearchResult[], _filters?: {
     studentFriendly?: boolean;
     jobType?: string;
     experienceLevel?: string;
   }) => {
-    if (demoMode) {
-      const filteredResults = getDemoJobSearchResults(filters);
-      handleResults(filteredResults);
-    } else {
-      handleResults(data);
-    }
+    // apiPost("/search") already routes through Adzuna → Supabase → demo.
+    // Always trust the API-layer results.
+    handleResults(data);
   };
 
   const loadCached = useCallback(
@@ -69,8 +66,8 @@ export default function JobsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-zinc-50">Job Search</h1>
         <p className="text-zinc-200 text-sm mt-1 leading-relaxed max-w-2xl">
-          Search 300+ internship and entry-level listings from LinkedIn, Indeed, and Handshake.
-          Find student-friendly roles, internships, and part-time positions. Save positions to your tracker with one click.
+          Search thousands of live job listings powered by Adzuna.
+          Find internships, entry-level roles, and part-time positions. Save any job to your tracker with one click.
         </p>
       </div>
       <JobSearchForm

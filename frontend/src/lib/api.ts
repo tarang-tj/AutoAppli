@@ -1260,22 +1260,38 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
       })) as T;
     }
 
-    // Search → Supabase when configured
-    if (isSupabaseConfigured() && path === "/search") {
-      const b = body as {
-        query?: string;
-        location?: string;
-        remote_only?: boolean;
-        page?: number;
-        per_page?: number;
-      };
-      return (await sbSearch.searchListings({
-        query: b.query ?? "",
-        location: b.location,
-        remote_only: b.remote_only,
-        page: b.page,
-        per_page: b.per_page,
-      })) as T;
+    // Search → Adzuna API route (server-side) first, then Supabase fallback
+    if (path === "/search") {
+      try {
+        const adzRes = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (adzRes.ok) {
+          const data = await adzRes.json();
+          if (data.results?.length > 0) return data as T;
+        }
+      } catch {
+        /* Adzuna unavailable — fall through */
+      }
+      // Fallback: Supabase local listings
+      if (isSupabaseConfigured()) {
+        const b = body as {
+          query?: string;
+          location?: string;
+          remote_only?: boolean;
+          page?: number;
+          per_page?: number;
+        };
+        return (await sbSearch.searchListings({
+          query: b.query ?? "",
+          location: b.location,
+          remote_only: b.remote_only,
+          page: b.page,
+          per_page: b.per_page,
+        })) as T;
+      }
     }
 
     // Interviews → Supabase when configured
