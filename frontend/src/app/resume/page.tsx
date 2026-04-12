@@ -120,12 +120,8 @@ function ResumeBuilderContent() {
       return;
     }
     setGenerating(true);
-    // eslint-disable-next-line no-console
-    console.log("[AutoAppli] handleGenerate: starting", { selectedResumeId, liveApi });
     try {
       const selected = resumes?.find((r) => r.id === selectedResumeId);
-      // eslint-disable-next-line no-console
-      console.log("[AutoAppli] handleGenerate: calling apiPost, resume_text length=", (selected?.parsed_text ?? "").length);
       const result = await apiPost<GeneratedDocument>("/resumes/generate", {
         resume_id: selectedResumeId,
         job_description: jobDescription,
@@ -133,16 +129,12 @@ function ResumeBuilderContent() {
         instructions: tailoringInstructions.trim(),
         include_pdf: true,
       });
-      // eslint-disable-next-line no-console
-      console.log("[AutoAppli] handleGenerate: got result", result?.id, result?.doc_type);
       setGenerated(result);
       void mutateSavedGenerated();
       toast.success(
         liveApi ? "Tailored resume generated!" : "Demo output ready (set API URL for real AI)"
       );
     } catch (err: unknown) {
-      // eslint-disable-next-line no-console
-      console.error("[AutoAppli] handleGenerate: CAUGHT ERROR", err);
       toast.error(err instanceof Error ? err.message : "Failed to generate resume");
     } finally {
       setGenerating(false);

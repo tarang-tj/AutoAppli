@@ -249,9 +249,6 @@ function resolveApiBaseUrl(): string {
 
 const API_URL = resolveApiBaseUrl();
 
-// eslint-disable-next-line no-console
-if (typeof window !== "undefined") console.log("[AutoAppli] API_URL =", JSON.stringify(API_URL), "supabase =", Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL));
-
 /** True when the FastAPI base URL is set (resumes, jobs, outreach when wired to backend). */
 export function isResumeApiConfigured(): boolean {
   return Boolean(API_URL);
@@ -286,32 +283,21 @@ const AI_ROUTE_MAP: Record<string, string> = {
 
 /** Call a local Next.js AI API route. Throws on any failure. */
 async function callLocalAI<T>(route: string, body?: unknown): Promise<T> {
-  // eslint-disable-next-line no-console
-  console.log("[AutoAppli] callLocalAI →", route);
   const res = await fetch(route, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
-    // NOTE: do NOT use redirect:"error" — it throws a TypeError("Failed to fetch")
-    // if any redirect occurs, making debugging impossible.
     redirect: "follow",
   });
-  // eslint-disable-next-line no-console
-  console.log("[AutoAppli] callLocalAI ← status", res.status, res.url);
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     let parsed: { error?: string } = {};
     try { parsed = JSON.parse(text); } catch { /* not JSON */ }
-    const msg = parsed.error || `AI route returned ${res.status}`;
-    // eslint-disable-next-line no-console
-    console.error("[AutoAppli] callLocalAI error:", msg, text.slice(0, 200));
-    throw new Error(msg);
+    throw new Error(parsed.error || `AI route returned ${res.status}`);
   }
   // Guard against non-JSON responses (e.g. HTML from redirect/error page)
   const ct = res.headers.get("content-type") || "";
   if (!ct.includes("application/json")) {
-    // eslint-disable-next-line no-console
-    console.error("[AutoAppli] callLocalAI non-JSON response, content-type:", ct);
     throw new Error("AI route returned non-JSON response");
   }
   return res.json();
@@ -323,9 +309,7 @@ async function tryLocalAI<T>(path: string, body?: unknown): Promise<T | null> {
   if (!route) return null;
   try {
     return await callLocalAI<T>(route, body);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn("[AutoAppli] AI route failed, falling back to demo:", route, e);
+  } catch {
     return null;
   }
 }
@@ -1140,8 +1124,6 @@ function handleDemoPut(path: string, body: unknown): unknown {
 }
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {
-  // eslint-disable-next-line no-console
-  console.log("[AutoAppli] apiGet", path, "API_URL=", JSON.stringify(API_URL));
   // ── No FastAPI backend: everything runs in demo mode ──
   if (!API_URL) {
     if (path === "/profile") return getDemoProfile() as T;
@@ -1181,8 +1163,6 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
 }
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
-  // eslint-disable-next-line no-console
-  console.log("[AutoAppli] apiPost", path, "API_URL=", JSON.stringify(API_URL));
   // ── When there is no FastAPI backend (!API_URL), ALL post operations use
   //    local AI routes (server-side Claude) with demo-mode fallback.
   //    This block catches every possible failure and always returns *something*.
@@ -1190,24 +1170,13 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
     // Try real AI first for routes that have a local AI handler
     if (AI_ROUTE_MAP[path]) {
       try {
-        // eslint-disable-next-line no-console
-        console.log("[AutoAppli] apiPost: trying local AI for", path);
         const aiResult = await tryLocalAI<T>(path, body);
-        if (aiResult !== null) {
-          // eslint-disable-next-line no-console
-          console.log("[AutoAppli] apiPost: AI succeeded for", path);
-          return aiResult;
-        }
-        // eslint-disable-next-line no-console
-        console.log("[AutoAppli] apiPost: AI returned null, falling back to demo for", path);
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn("[AutoAppli] apiPost: AI threw, falling back to demo for", path, e);
+        if (aiResult !== null) return aiResult;
+      } catch {
+        /* fall through to demo */
       }
     }
     // Always fall through to demo mode when there is no backend
-    // eslint-disable-next-line no-console
-    console.log("[AutoAppli] apiPost: returning demo data for", path);
     return handleDemoPost(path, body) as T;
   }
 
@@ -1233,13 +1202,9 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
 }
 
 export async function apiPostFormData<T = unknown>(path: string, formData: FormData): Promise<T> {
-  // eslint-disable-next-line no-console
-  console.log("[AutoAppli] apiPostFormData", path, "API_URL=", JSON.stringify(API_URL));
   // ── No backend: demo mode for everything ──
   if (!API_URL) {
     if (path === "/resumes/upload") {
-      // eslint-disable-next-line no-console
-      console.log("[AutoAppli] apiPostFormData: demo upload for", path);
       return handleDemoResumeUpload(formData) as T;
     }
     void formData;
