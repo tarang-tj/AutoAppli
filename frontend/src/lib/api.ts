@@ -270,9 +270,8 @@ export const isJobsApiConfigured = isResumeApiConfigured;
 
 // ── Local AI route mapping (Next.js API routes → /api/ai/*) ──────────
 // Maps backend API paths to local Next.js API routes that call Claude directly.
-// These are used when NEXT_PUBLIC_AI_ENABLED=true (set on Vercel alongside ANTHROPIC_API_KEY).
-const AI_ENABLED = process.env.NEXT_PUBLIC_AI_ENABLED === "true";
-
+// No env-var gate needed: routes return 500 if ANTHROPIC_API_KEY is missing,
+// and we fall back to demo mode on any error.
 const AI_ROUTE_MAP: Record<string, string> = {
   "/resumes/generate": "/api/ai/tailor-resume",
   "/resumes/review": "/api/ai/review-resume",
@@ -282,7 +281,7 @@ const AI_ROUTE_MAP: Record<string, string> = {
   "/cover-letter/generate": "/api/ai/cover-letter",
 };
 
-/** Call a local Next.js AI API route. */
+/** Call a local Next.js AI API route. Falls back to null on failure so callers can use demo mode. */
 async function callLocalAI<T>(route: string, body?: unknown): Promise<T> {
   const res = await fetch(route, {
     method: "POST",
@@ -294,6 +293,17 @@ async function callLocalAI<T>(route: string, body?: unknown): Promise<T> {
     throw new Error(err.error || `AI route returned ${res.status}`);
   }
   return res.json();
+}
+
+/** Try local AI route, return null on failure so caller can fall back to demo. */
+async function tryLocalAI<T>(path: string, body?: unknown): Promise<T | null> {
+  const route = AI_ROUTE_MAP[path];
+  if (!route) return null;
+  try {
+    return await callLocalAI<T>(route, body);
+  } catch {
+    return null;
+  }
 }
 
 function isJobsListPath(path: string): boolean {
@@ -1213,10 +1223,13 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
 }
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
-  // ── Route AI paths through local Next.js API routes when AI is enabled ──
-  const aiRoute = AI_ROUTE_MAP[path];
-  if (aiRoute && AI_ENABLED && !API_URL) {
-    return callLocalAI<T>(aiRoute, body);
+  // ── Always try local AI routes first (no env-var gate needed) ──
+  // If the route exists and ANTHROPIC_API_KEY is set server-side, we get real AI.
+  // If it fails (key missing, network issue), we silently fall back to demo mode below.
+  if (AI_ROUTE_MAP[path] && !API_URL) {
+    const aiResult = await tryLocalAI<T>(path, body);
+    if (aiResult !== null) return aiResult;
+    // AI failed — fall through to demo mode
   }
 
   if (path === "/jobs" && !API_URL) {
