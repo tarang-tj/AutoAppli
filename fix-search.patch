@@ -1,0 +1,118 @@
+From 539bb242960c82d0a4e8b76c5ac612671ce7125d Mon Sep 17 00:00:00 2001
+From: Tarang <tarangjammalamadaka9@gmail.com>
+Date: Sun, 12 Apr 2026 13:09:19 -0700
+Subject: [PATCH] =?UTF-8?q?fix:=20search=20=E2=80=94=20remove=20isResumeAp?=
+ =?UTF-8?q?iConfigured=20gates,=20pass=20through=20salary/closing=5Fdate?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- jobs/page.tsx: remove isResumeApiConfigured() gate from loadHistory and
+  loadCached — these now only check isSupabaseConfigured()
+- job-search-form.tsx: replace isResumeApiConfigured with isSupabaseConfigured
+  for history display; update label from "Indeed remote filter" to "Remote only"
+- job-search.ts: mapSearchRow now passes through closing_date and salary fields
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+---
+ frontend/src/app/jobs/page.tsx                   | 10 +++++-----
+ frontend/src/components/jobs/job-search-form.tsx |  9 +++++----
+ frontend/src/lib/job-search.ts                   |  2 ++
+ 3 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/frontend/src/app/jobs/page.tsx b/frontend/src/app/jobs/page.tsx
+index 951d112..e9dfad3 100644
+--- a/frontend/src/app/jobs/page.tsx
++++ b/frontend/src/app/jobs/page.tsx
+@@ -1,7 +1,7 @@
+ "use client";
+ import { JobSearchForm } from "@/components/jobs/job-search-form";
+ import { JobListingCard } from "@/components/jobs/job-listing-card";
+-import { apiGet, isResumeApiConfigured } from "@/lib/api";
++import { apiGet } from "@/lib/api";
+ import { getDemoJobSearchResults } from "@/lib/demo-data";
+ import { normalizeJobSearchHistory, normalizeJobSearchResponse } from "@/lib/job-search";
+ import { isSupabaseConfigured } from "@/lib/supabase/client";
+@@ -16,7 +16,7 @@ export default function JobsPage() {
+   const [history, setHistory] = useState<JobSearchHistoryItem[]>([]);
+ 
+   const loadHistory = useCallback(async () => {
+-    if (!isResumeApiConfigured() || !isSupabaseConfigured()) {
++    if (!isSupabaseConfigured()) {
+       setHistory([]);
+       return;
+     }
+@@ -48,7 +48,7 @@ export default function JobsPage() {
+ 
+   const loadCached = useCallback(
+     async (searchId: string) => {
+-      if (!isResumeApiConfigured() || demoMode) return;
++      if (demoMode) return;
+       const raw = await apiGet<unknown>(`/search/runs/${searchId}/results`);
+       const { results } = normalizeJobSearchResponse(raw);
+       if (!results.length) {
+@@ -64,8 +64,8 @@ export default function JobsPage() {
+       <div className="mb-6">
+         <h1 className="text-2xl font-bold text-zinc-50">Job Search</h1>
+         <p className="text-zinc-200 text-sm mt-1 leading-relaxed max-w-2xl">
+-          Search job boards and save interesting positions to your tracker. Signed-in users with a
+-          connected API also get searchable history.
++          Search internship listings from LinkedIn, Indeed, and Handshake. Save interesting
++          positions directly to your tracker board.
+         </p>
+       </div>
+       <JobSearchForm
+diff --git a/frontend/src/components/jobs/job-search-form.tsx b/frontend/src/components/jobs/job-search-form.tsx
+index 6f47689..3cd49b9 100644
+--- a/frontend/src/components/jobs/job-search-form.tsx
++++ b/frontend/src/components/jobs/job-search-form.tsx
+@@ -1,8 +1,9 @@
+ "use client";
+ import { Button } from "@/components/ui/button";
+ import { Input } from "@/components/ui/input";
+-import { apiPost, isResumeApiConfigured } from "@/lib/api";
++import { apiPost } from "@/lib/api";
+ import { normalizeJobSearchResponse } from "@/lib/job-search";
++import { isSupabaseConfigured } from "@/lib/supabase/client";
+ import type { JobSearchHistoryItem, JobSearchResult } from "@/types";
+ import { Clock, Search } from "lucide-react";
+ import { useCallback, useState } from "react";
+@@ -116,11 +117,11 @@ export function JobSearchForm({
+             onChange={(e) => setRemoteOnly(e.target.checked)}
+             className="rounded border-zinc-600 bg-zinc-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-zinc-950"
+           />
+-          Remote only (Indeed remote filter)
++          Remote only
+         </label>
+       </form>
+ 
+-      {isResumeApiConfigured() && history.length > 0 ? (
++      {isSupabaseConfigured() && history.length > 0 ? (
+         <div className="mt-4">
+           <p className="text-xs text-zinc-500 mb-2">Recent searches</p>
+           <div className="flex flex-wrap gap-2">
+@@ -150,7 +151,7 @@ export function JobSearchForm({
+                 {onLoadCached && h.result_count > 0 ? (
+                   <button
+                     type="button"
+-                    title="Load saved results (no new scrape)"
++                    title="Load saved results (no new search)"
+                     className="shrink-0 px-2 border-l border-zinc-700/80 text-zinc-500 hover:text-amber-400 hover:bg-zinc-800/90 disabled:opacity-40"
+                     disabled={searching}
+                     onClick={() => void handleLoadCached(h.id)}
+diff --git a/frontend/src/lib/job-search.ts b/frontend/src/lib/job-search.ts
+index b39f0c4..6107d0d 100644
+--- a/frontend/src/lib/job-search.ts
++++ b/frontend/src/lib/job-search.ts
+@@ -15,6 +15,8 @@ function mapSearchRow(row: unknown): JobSearchResult {
+     url: String(r.url ?? ""),
+     snippet: String(r.snippet ?? r.description_snippet ?? ""),
+     posted_date: r.posted_date ? String(r.posted_date) : undefined,
++    closing_date: r.closing_date != null ? String(r.closing_date) : null,
++    salary: r.salary != null ? String(r.salary) : null,
+     source: String(r.source ?? "unknown"),
+   };
+ }
+-- 
+2.34.1
+

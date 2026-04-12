@@ -15,6 +15,8 @@ function mapSearchRow(row: unknown): JobSearchResult {
     url: String(r.url ?? ""),
     snippet: String(r.snippet ?? r.description_snippet ?? ""),
     posted_date: r.posted_date ? String(r.posted_date) : undefined,
+    closing_date: r.closing_date ? String(r.closing_date) : null,
+    salary: r.salary ? String(r.salary) : null,
     source: String(r.source ?? "unknown"),
   };
 }

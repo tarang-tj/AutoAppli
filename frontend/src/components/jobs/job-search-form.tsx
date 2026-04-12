@@ -1,7 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { apiPost, isResumeApiConfigured } from "@/lib/api";
+import { apiPost } from "@/lib/api";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { normalizeJobSearchResponse } from "@/lib/job-search";
 import type { JobSearchHistoryItem, JobSearchResult } from "@/types";
 import { Clock, Search } from "lucide-react";
@@ -116,11 +117,11 @@ export function JobSearchForm({
             onChange={(e) => setRemoteOnly(e.target.checked)}
             className="rounded border-zinc-600 bg-zinc-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-zinc-950"
           />
-          Remote only (Indeed remote filter)
+          Remote only
         </label>
       </form>
 
-      {isResumeApiConfigured() && history.length > 0 ? (
+      {isSupabaseConfigured() && history.length > 0 ? (
         <div className="mt-4">
           <p className="text-xs text-zinc-500 mb-2">Recent searches</p>
           <div className="flex flex-wrap gap-2">

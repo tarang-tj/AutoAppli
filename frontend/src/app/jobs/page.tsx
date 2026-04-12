@@ -1,7 +1,7 @@
 "use client";
 import { JobSearchForm } from "@/components/jobs/job-search-form";
 import { JobListingCard } from "@/components/jobs/job-listing-card";
-import { apiGet, isResumeApiConfigured } from "@/lib/api";
+import { apiGet } from "@/lib/api";
 import { getDemoJobSearchResults } from "@/lib/demo-data";
 import { normalizeJobSearchHistory, normalizeJobSearchResponse } from "@/lib/job-search";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
@@ -16,7 +16,7 @@ export default function JobsPage() {
   const [history, setHistory] = useState<JobSearchHistoryItem[]>([]);
 
   const loadHistory = useCallback(async () => {
-    if (!isResumeApiConfigured() || !isSupabaseConfigured()) {
+    if (!isSupabaseConfigured()) {
       setHistory([]);
       return;
     }
@@ -48,13 +48,13 @@ export default function JobsPage() {
 
   const loadCached = useCallback(
     async (searchId: string) => {
-      if (!isResumeApiConfigured() || demoMode) return;
+      if (demoMode) return;
       const raw = await apiGet<unknown>(`/search/runs/${searchId}/results`);
-      const { results } = normalizeJobSearchResponse(raw);
-      if (!results.length) {
+      const { results: cached } = normalizeJobSearchResponse(raw);
+      if (!cached.length) {
         toast.info("No saved listings for this search.");
       }
-      handleResults(results);
+      handleResults(cached);
     },
     [demoMode, handleResults]
   );
@@ -64,8 +64,8 @@ export default function JobsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-zinc-50">Job Search</h1>
         <p className="text-zinc-200 text-sm mt-1 leading-relaxed max-w-2xl">
-          Search job boards and save interesting positions to your tracker. Signed-in users with a
-          connected API also get searchable history.
+          Search 178+ internship listings from LinkedIn, Indeed, and Handshake.
+          Save positions to your tracker with one click.
         </p>
       </div>
       <JobSearchForm
@@ -80,7 +80,14 @@ export default function JobsPage() {
         </div>
       )}
       {results.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div className="mt-4 mb-2 flex items-center justify-between">
+          <span className="text-xs text-zinc-500">
+            {results.length} result{results.length === 1 ? "" : "s"}
+          </span>
+        </div>
+      )}
+      {results.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {results.map((job, i) => (
             <JobListingCard key={`${job.url}-${i}`} job={job} />
           ))}
