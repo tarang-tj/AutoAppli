@@ -26,19 +26,23 @@ export async function searchListings(params: {
   const { query, location, remote_only, page = 1, per_page = 20 } = params;
   const sb = supabase();
 
-  // Full-text search: match title, company, snippet, or location
-  const searchTerms = query.trim().toLowerCase().split(/\s+/);
+  // Full-text search: every term must match at least one column (AND across terms)
+  const searchTerms = query
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
 
   let q = sb
     .from("job_listings")
     .select("*")
     .order("last_seen_at", { ascending: false });
 
-  // Apply text search filters — each term must match at least one column
+  // Each search term must appear in at least one of: title, company, snippet, location, salary
   for (const term of searchTerms) {
     const pattern = `%${term}%`;
     q = q.or(
-      `title.ilike.${pattern},company.ilike.${pattern},snippet.ilike.${pattern},location.ilike.${pattern}`
+      `title.ilike.${pattern},company.ilike.${pattern},snippet.ilike.${pattern},location.ilike.${pattern},salary.ilike.${pattern}`
     );
   }
 
@@ -66,6 +70,8 @@ export async function searchListings(params: {
     url: row.url,
     snippet: row.snippet ?? "",
     posted_date: row.posted_date ?? undefined,
+    closing_date: row.closing_date ?? null,
+    salary: row.salary ?? null,
     source: row.source ?? "unknown",
   }));
 
@@ -158,6 +164,8 @@ export async function fetchSearchResults(
         url: row.url,
         snippet: row.snippet ?? "",
         posted_date: row.posted_date ?? undefined,
+        closing_date: row.closing_date ?? null,
+        salary: row.salary ?? null,
         source: row.source ?? "unknown",
       };
     })

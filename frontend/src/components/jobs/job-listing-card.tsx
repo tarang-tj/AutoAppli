@@ -4,9 +4,56 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { apiPost } from "@/lib/api";
 import type { Job, JobSearchResult } from "@/types";
-import { Bookmark, ExternalLink, FileText, MapPin, Building2 } from "lucide-react";
+import {
+  Bookmark,
+  ExternalLink,
+  FileText,
+  MapPin,
+  Building2,
+  DollarSign,
+  CalendarClock,
+  Calendar,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
+const SOURCE_STYLES: Record<string, { bg: string; text: string }> = {
+  LinkedIn: { bg: "bg-blue-500/15", text: "text-blue-400" },
+  Indeed: { bg: "bg-purple-500/15", text: "text-purple-400" },
+  Handshake: { bg: "bg-orange-500/15", text: "text-orange-400" },
+};
+
+function formatDate(d?: string | null): string | null {
+  if (!d) return null;
+  try {
+    const date = new Date(d + "T00:00:00");
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch {
+    return d;
+  }
+}
+
+function isClosingSoon(d?: string | null): boolean {
+  if (!d) return false;
+  try {
+    const closing = new Date(d + "T23:59:59");
+    const now = new Date();
+    const diff = closing.getTime() - now.getTime();
+    return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000; // within 7 days
+  } catch {
+    return false;
+  }
+}
+
+function isPastDeadline(d?: string | null): boolean {
+  if (!d) return false;
+  try {
+    const closing = new Date(d + "T23:59:59");
+    return closing.getTime() < Date.now();
+  } catch {
+    return false;
+  }
+}
 
 export function JobListingCard({ job }: { job: JobSearchResult }) {
   const [saving, setSaving] = useState(false);
@@ -59,21 +106,33 @@ export function JobListingCard({ job }: { job: JobSearchResult }) {
     }
   };
 
+  const sourceStyle = SOURCE_STYLES[job.source] || { bg: "bg-zinc-800", text: "text-zinc-400" };
+  const postedFormatted = formatDate(job.posted_date);
+  const closingFormatted = formatDate(job.closing_date);
+  const closingSoon = isClosingSoon(job.closing_date);
+  const pastDeadline = isPastDeadline(job.closing_date);
+
   return (
     <Card className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors">
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-medium text-white">{job.title}</h3>
-            <div className="flex items-center gap-3 mt-1.5">
+            <h3 className="text-sm font-medium text-white leading-snug">{job.title}</h3>
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
               <span className="flex items-center gap-1 text-xs text-zinc-400">
-                <Building2 className="h-3 w-3" />
+                <Building2 className="h-3 w-3 shrink-0" />
                 {job.company}
               </span>
               <span className="flex items-center gap-1 text-xs text-zinc-400">
-                <MapPin className="h-3 w-3" />
+                <MapPin className="h-3 w-3 shrink-0" />
                 {job.location}
               </span>
+              {job.salary && (
+                <span className="flex items-center gap-1 text-xs text-emerald-400">
+                  <DollarSign className="h-3 w-3 shrink-0" />
+                  {job.salary}
+                </span>
+              )}
             </div>
             <p className="text-xs text-zinc-500 mt-2 line-clamp-2">{job.snippet}</p>
           </div>
@@ -110,17 +169,45 @@ export function JobListingCard({ job }: { job: JobSearchResult }) {
             </div>
             {(saving || importing) && (
               <span className="text-[10px] text-zinc-500">
-                {importing ? "Scraping…" : "Saving…"}
+                {importing ? "Scraping..." : "Saving..."}
               </span>
             )}
           </div>
         </div>
-        <div className="flex items-center justify-between mt-3">
-          <Badge variant="outline" className="text-[10px] border-zinc-700 text-zinc-500 capitalize">
-            {job.source}
-          </Badge>
-          {job.posted_date && (
-            <span className="text-[10px] text-zinc-600">{job.posted_date}</span>
+
+        {/* Footer: source, dates */}
+        <div className="flex items-center justify-between mt-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge
+              variant="outline"
+              className={`text-[10px] border-0 font-medium ${sourceStyle.bg} ${sourceStyle.text}`}
+            >
+              {job.source}
+            </Badge>
+            {postedFormatted && (
+              <span className="flex items-center gap-1 text-[10px] text-zinc-500">
+                <Calendar className="h-2.5 w-2.5" />
+                Posted {postedFormatted}
+              </span>
+            )}
+          </div>
+          {closingFormatted && (
+            <span
+              className={`flex items-center gap-1 text-[10px] font-medium ${
+                pastDeadline
+                  ? "text-red-400/70 line-through"
+                  : closingSoon
+                  ? "text-amber-400"
+                  : "text-zinc-500"
+              }`}
+            >
+              <CalendarClock className="h-2.5 w-2.5" />
+              {pastDeadline ? "Closed" : closingSoon ? "Closing soon:" : "Closes"}{" "}
+              {closingFormatted}
+            </span>
+          )}
+          {!job.closing_date && (
+            <span className="text-[10px] text-zinc-600 italic">Rolling admission</span>
           )}
         </div>
       </CardContent>

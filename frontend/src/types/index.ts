@@ -134,6 +134,8 @@ export interface JobSearchResult {
   url: string;
   snippet: string;
   posted_date?: string;
+  closing_date?: string | null;
+  salary?: string | null;
   source: string;
 }
 

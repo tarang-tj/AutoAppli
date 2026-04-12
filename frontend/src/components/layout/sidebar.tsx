@@ -2,13 +2,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, FileText, Send, Search, BarChart3, CalendarCheck, Bell, DollarSign, Users, Clock, Zap, Settings, Menu, X, FileStack, PenTool, FileDown } from "lucide-react";
+import { LayoutDashboard, FileText, Send, Search, BarChart3, CalendarCheck, Bell, DollarSign, Users, Clock, Zap, Settings, Menu, X, FileStack, PenTool, FileDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/resume", label: "Resume Builder", icon: FileText },
+  { href: "/resume-templates", label: "Resume Templates", icon: Download },
   { href: "/outreach", label: "Outreach", icon: Send },
   { href: "/jobs", label: "Job Search", icon: Search },
   { href: "/interviews", label: "Interview Prep", icon: CalendarCheck },
