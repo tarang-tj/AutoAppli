@@ -1,5 +1,6 @@
 "use client";
 import { useJobs } from "@/hooks/use-jobs";
+import { useMatchScores } from "@/hooks/use-match-scores";
 import { filterJobsByQuery } from "@/lib/filter-jobs";
 import { Job, JobStatus } from "@/types";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
@@ -27,6 +28,8 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
     deleteJob,
     patchJob,
   } = useJobs();
+
+  const { scores: matchScores } = useMatchScores();
 
   const visibleJobs = useMemo(
     () => filterJobsByQuery(jobs, searchQuery),
@@ -129,6 +132,7 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
                 label={col.label}
                 color={col.color}
                 jobs={colJobs}
+                matchScores={matchScores}
                 onRemoveJob={handleRemoveJob}
                 onSaveNotes={handleSaveNotes}
               />

@@ -8,8 +8,11 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from app.config import Settings, get_settings
 from app.deps.jobs_auth import get_jobs_user_id, jobs_use_supabase
 from app.models.schemas import (
+    ResumeEvalRequest,
+    ResumeEvalResponse,
     ResumeGenerateRequest,
     ResumeGenerateResponse,
+    ResumeGenerateWithEvalResponse,
     ResumeReviewRequest,
     ResumeReviewResponse,
     SavedGeneratedDocument,
@@ -17,6 +20,7 @@ from app.models.schemas import (
 from app.repositories import documents_supabase as documents_sb
 from app.repositories import resume_supabase as resume_sb
 from app.repositories.user_session_memory import resume_store
+from app.services.eval_service import evaluate_tailored_resume
 from app.services.resume_generator import generate_resume_review, generate_tailored_resume
 from app.services.resume_parser import extract_text_from_pdf
 
@@ -133,7 +137,7 @@ async def delete_generated_resume(
     return {"ok": True}
 
 
-@router.post("/resumes/generate", response_model=ResumeGenerateResponse)
+@router.post("/resumes/generate", response_model=ResumeGenerateWithEvalResponse)
 async def generate_resume(
     req: ResumeGenerateRequest,
     user_id: str | None = Depends(get_jobs_user_id),
@@ -156,7 +160,23 @@ async def generate_resume(
             instructions=req.instructions.strip() or None,
             include_pdf=req.include_pdf,
         )
-        out = ResumeGenerateResponse(**result)
+
+        # Run eval pipeline on the tailored output
+        tailored_content = result.get("content") or ""
+        eval_data = None
+        if tailored_content and resume_text:
+            try:
+                eval_result = evaluate_tailored_resume(
+                    original_resume=resume_text,
+                    tailored_resume=tailored_content,
+                    job_description=req.job_description,
+                )
+                eval_data = ResumeEvalResponse(**eval_result.to_dict())
+            except Exception:
+                pass  # Eval failure should not block resume generation
+
+        out = ResumeGenerateWithEvalResponse(**result, eval_result=eval_data)
+
         if _resume_db(settings, user_id):
             assert user_id is not None
             try:
@@ -165,13 +185,34 @@ async def generate_resume(
                     user_id,
                     resume_id=req.resume_id,
                     job_description=req.job_description,
-                    content=result.get("content") or "",
+                    content=tailored_content,
                 )
             except Exception:
                 pass
         return out
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/resumes/evaluate", response_model=ResumeEvalResponse)
+async def evaluate_resume(req: ResumeEvalRequest):
+    """
+    Standalone eval endpoint — score a tailored resume against the original
+    and job description without generating a new one.
+    """
+    if not req.tailored_resume_text.strip():
+        raise HTTPException(status_code=400, detail="tailored_resume_text is required")
+    if not req.original_resume_text.strip():
+        raise HTTPException(status_code=400, detail="original_resume_text is required")
+    if not req.job_description.strip():
+        raise HTTPException(status_code=400, detail="job_description is required")
+
+    result = evaluate_tailored_resume(
+        original_resume=req.original_resume_text,
+        tailored_resume=req.tailored_resume_text,
+        job_description=req.job_description,
+    )
+    return ResumeEvalResponse(**result.to_dict())
 
 
 @router.post("/resumes/review", response_model=ResumeReviewResponse)

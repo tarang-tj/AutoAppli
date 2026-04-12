@@ -147,5 +147,52 @@ class ThankYouResponse(BaseModel):
     saved_outreach_id: str | None = None
 
 
+class KeywordCoverageDetail(BaseModel):
+    score: int = Field(ge=0, le=100, default=0)
+    matched: list[str] = Field(default_factory=list)
+    missing: list[str] = Field(default_factory=list)
+    total_keywords: int = 0
+
+
+class HallucinationCheckDetail(BaseModel):
+    score: int = Field(ge=0, le=100, default=100)
+    hallucinated_skills: list[str] = Field(default_factory=list)
+    hallucinated_credentials: list[str] = Field(default_factory=list)
+
+
+class ChangeDeltaDetail(BaseModel):
+    score: int = Field(ge=0, le=100, default=0)
+    change_percent: float = 0.0
+    similarity_ratio: float = 0.0
+    verdict: str = ""
+    added_sentences: int = 0
+    removed_sentences: int = 0
+
+
+class ResumeEvalResponse(BaseModel):
+    overall_score: int = Field(ge=0, le=100, default=0)
+    keyword_coverage: KeywordCoverageDetail = Field(default_factory=KeywordCoverageDetail)
+    hallucination_check: HallucinationCheckDetail = Field(default_factory=HallucinationCheckDetail)
+    change_delta: ChangeDeltaDetail = Field(default_factory=ChangeDeltaDetail)
+
+
+class ResumeEvalRequest(BaseModel):
+    """Evaluate a tailored resume against original + JD."""
+    original_resume_text: str
+    tailored_resume_text: str
+    job_description: str
+
+
+class ResumeGenerateWithEvalResponse(BaseModel):
+    """Extended generate response that includes eval scores."""
+    id: str
+    doc_type: str = "tailored_resume"
+    content: str
+    storage_path: str = ""
+    download_url: str = ""
+    pdf_base64: str | None = None
+    eval_result: ResumeEvalResponse | None = None
+
+
 class HealthResponse(BaseModel):
     status: str = "ok"

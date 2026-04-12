@@ -27,6 +27,35 @@ export interface Resume {
   created_at: string;
 }
 
+export interface KeywordCoverage {
+  score: number;
+  matched: string[];
+  missing: string[];
+  total_keywords: number;
+}
+
+export interface HallucinationCheck {
+  score: number;
+  hallucinated_skills: string[];
+  hallucinated_credentials: string[];
+}
+
+export interface ChangeDelta {
+  score: number;
+  change_percent: number;
+  similarity_ratio: number;
+  verdict: string;
+  added_sentences: number;
+  removed_sentences: number;
+}
+
+export interface EvalResult {
+  overall_score: number;
+  keyword_coverage: KeywordCoverage;
+  hallucination_check: HallucinationCheck;
+  change_delta: ChangeDelta;
+}
+
 export interface GeneratedDocument {
   id: string;
   doc_type: "tailored_resume" | "cover_letter";
@@ -35,6 +64,8 @@ export interface GeneratedDocument {
   download_url: string;
   /** Base64-encoded PDF when the API generated one (`include_pdf: true`). */
   pdf_base64?: string | null;
+  /** Eval scores from the AI eval pipeline (present when generated via tailoring). */
+  eval_result?: EvalResult | null;
 }
 
 export interface ResumeReview {
@@ -114,4 +145,74 @@ export interface JobSearchHistoryItem {
   remote_only: boolean;
   result_count: number;
   created_at: string;
+}
+
+// ── Analytics Dashboard types ──────────────────────────────────────────
+
+export interface FunnelStage {
+  stage: string;
+  count: number;
+}
+
+export interface AnalyticsConversions {
+  bookmarked_to_applied: number;
+  applied_to_interviewing: number;
+  interviewing_to_offer: number;
+  rejection_rate: number;
+  ghost_rate: number;
+}
+
+export interface AnalyticsDurations {
+  bookmarked_to_applied: number | null;
+  applied_to_latest: number | null;
+  total_lifecycle: number | null;
+}
+
+export interface SourceBreakdown {
+  source: string;
+  count: number;
+}
+
+export interface WeeklyActivity {
+  week_start: string;
+  week_end: string;
+  jobs_added: number;
+}
+
+export interface TopCompany {
+  company: string;
+  count: number;
+}
+
+export interface AnalyticsSummary {
+  active_applications: number;
+  interviews_in_progress: number;
+  offers: number;
+  rejections: number;
+}
+
+// ── Match score types ──────────────────────────────────────────────
+
+export interface MatchScore {
+  score: number;
+  matched_keywords: string[];
+  missing_keywords: string[];
+  top_job_keywords: string[];
+}
+
+export interface MatchScoresResponse {
+  scores: Record<string, MatchScore>;
+}
+
+
+export interface AnalyticsData {
+  total_jobs: number;
+  funnel: FunnelStage[];
+  conversions: AnalyticsConversions;
+  avg_durations_days: AnalyticsDurations;
+  sources: SourceBreakdown[];
+  weekly_activity: WeeklyActivity[];
+  top_companies: TopCompany[];
+  response_rate: number;
+  summary: AnalyticsSummary;
 }

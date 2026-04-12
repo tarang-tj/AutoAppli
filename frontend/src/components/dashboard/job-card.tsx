@@ -1,5 +1,5 @@
 "use client";
-import type { Job, ThankYouResponse } from "@/types";
+import type { Job, ThankYouResponse, MatchScore } from "@/types";
 import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,11 +40,30 @@ import { toast } from "sonner";
 interface JobCardProps {
   job: Job;
   index: number;
+  matchScore?: MatchScore;
   onRemove?: () => void | Promise<void>;
   onSaveNotes?: (notes: string) => void | Promise<void>;
 }
 
-export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
+function MatchBadge({ score }: { score: number }) {
+  if (score <= 0) return null;
+  const color =
+    score >= 70
+      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+      : score >= 40
+        ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+        : "bg-zinc-500/20 text-zinc-400 border-zinc-500/30";
+  return (
+    <span
+      className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${color}`}
+      title={`${score}% resume match`}
+    >
+      {score}% fit
+    </span>
+  );
+}
+
+export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCardProps) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
@@ -249,12 +268,17 @@ export function JobCard({ job, index, onRemove, onSaveNotes }: JobCardProps) {
                 </p>
               ) : null}
               <div className="flex items-center justify-between mt-2 gap-2">
-                <Badge
-                  variant="outline"
-                  className="text-[10px] border-zinc-500 bg-zinc-950/50 text-zinc-200 font-medium"
-                >
-                  {job.source}
-                </Badge>
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] border-zinc-500 bg-zinc-950/50 text-zinc-200 font-medium"
+                  >
+                    {job.source}
+                  </Badge>
+                  {matchScore && matchScore.score > 0 && (
+                    <MatchBadge score={matchScore.score} />
+                  )}
+                </div>
                 <span
                   className="text-[10px] text-zinc-300 tabular-nums text-right leading-tight"
                   title={

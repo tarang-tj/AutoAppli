@@ -10,7 +10,8 @@ import {
 } from "@/lib/demo-data";
 import { consumeResumeHandoff, tailoringTextFromJob } from "@/lib/tracker-handoff";
 import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
-import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocument } from "@/types";
+import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocument, EvalResult } from "@/types";
+import { EvalScoreCard } from "@/components/resume/eval-score-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { FileStack, History, Info, Sparkles, Trash2, X } from "lucide-react";
@@ -335,8 +336,11 @@ function ResumeBuilderContent() {
             </Card>
           ) : null}
         </div>
-        <div>
+        <div className="space-y-6">
           <ResumePreview document={generated} />
+          {generated?.eval_result && (
+            <EvalScoreCard eval_result={generated.eval_result} />
+          )}
         </div>
       </div>
     </div>

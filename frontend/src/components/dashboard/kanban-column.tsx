@@ -1,5 +1,5 @@
 "use client";
-import { Job } from "@/types";
+import { Job, MatchScore } from "@/types";
 import { Droppable } from "@hello-pangea/dnd";
 import { JobCard } from "./job-card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ interface KanbanColumnProps {
   label: string;
   color: string;
   jobs: Job[];
+  matchScores?: Record<string, MatchScore>;
   onRemoveJob?: (jobId: string) => void | Promise<void>;
   onSaveNotes?: (jobId: string, notes: string) => void | Promise<void>;
 }
@@ -19,6 +20,7 @@ export function KanbanColumn({
   label,
   color,
   jobs,
+  matchScores,
   onRemoveJob,
   onSaveNotes,
 }: KanbanColumnProps) {
@@ -51,6 +53,7 @@ export function KanbanColumn({
                 key={job.id}
                 job={job}
                 index={index}
+                matchScore={matchScores?.[job.id]}
                 onRemove={onRemoveJob ? () => onRemoveJob(job.id) : undefined}
                 onSaveNotes={
                   onSaveNotes ? (notes) => onSaveNotes(job.id, notes) : undefined
