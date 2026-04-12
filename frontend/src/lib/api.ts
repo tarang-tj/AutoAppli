@@ -1,4 +1,5 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import * as sbJobs from "@/lib/supabase/jobs";
 import {
   getDemoJobs,
   setDemoJobs,
@@ -1124,8 +1125,22 @@ function handleDemoPut(path: string, body: unknown): unknown {
 }
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {
-  // ── No FastAPI backend: everything runs in demo mode ──
+  // ── No FastAPI backend: use Supabase directly for jobs, demo for the rest ──
   if (!API_URL) {
+    // Jobs → Supabase when configured, otherwise demo
+    if (isSupabaseConfigured()) {
+      if (isJobsListPath(path)) {
+        const status = path.includes("?status=")
+          ? new URLSearchParams(path.split("?")[1]).get("status") ?? undefined
+          : undefined;
+        return sortJobsKanbanOrder(await sbJobs.fetchJobs(status)) as T;
+      }
+      if (isJobsDetailPath(path)) {
+        const id = path.split("/").pop()!;
+        return (await sbJobs.fetchJob(id)) as T;
+      }
+    }
+
     if (path === "/profile") return getDemoProfile() as T;
     if (path === "/search/history" || path.startsWith("/search/history?")) return [] as T;
     if (path.startsWith("/search/runs/") && path.endsWith("/results")) {
@@ -1163,10 +1178,27 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
 }
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
-  // ── When there is no FastAPI backend (!API_URL), ALL post operations use
-  //    local AI routes (server-side Claude) with demo-mode fallback.
-  //    This block catches every possible failure and always returns *something*.
+  // ── When there is no FastAPI backend (!API_URL), route jobs to Supabase,
+  //    AI to local routes, and everything else to demo mode.
   if (!API_URL) {
+    // Jobs → Supabase when configured
+    if (isSupabaseConfigured() && path === "/jobs") {
+      const b = body as {
+        company?: string;
+        title?: string;
+        url?: string;
+        description?: string;
+        source?: string;
+      };
+      return (await sbJobs.createJob({
+        company: b.company ?? "",
+        title: b.title ?? "",
+        url: normalizeJobUrl(b.url) ?? undefined,
+        description: b.description,
+        source: b.source,
+      })) as T;
+    }
+
     // Try real AI first for routes that have a local AI handler
     if (AI_ROUTE_MAP[path]) {
       try {
@@ -1239,6 +1271,14 @@ export async function apiPut<T = unknown>(path: string, body: unknown): Promise<
     throw new Error(`Unsupported PUT ${path}`);
   }
   if (!API_URL) {
+    // Supabase reorder
+    if (isSupabaseConfigured()) {
+      const b = body as { moves?: Array<{ id: string; status: string; sort_order: number }> };
+      if (b.moves?.length) {
+        await sbJobs.reorderJobs(b.moves);
+      }
+      return { ok: true } as T;
+    }
     return handleDemoPut(path, body) as T;
   }
   return fetchBackend<T>(path, {
@@ -1261,6 +1301,10 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
   }
 
   if (path.startsWith("/jobs/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      return (await sbJobs.updateJob(id, body as Partial<Job>)) as T;
+    }
     return handleDemoPatch(path, body) as T;
   }
 
@@ -1343,6 +1387,11 @@ export async function apiDelete(path: string): Promise<void> {
   }
 
   if (path.startsWith("/jobs/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      await sbJobs.deleteJob(id);
+      return;
+    }
     handleDemoDelete(path);
     return;
   }
