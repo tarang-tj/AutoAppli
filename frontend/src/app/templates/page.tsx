@@ -140,18 +140,18 @@ function NewTemplateForm({ onCreated }: { onCreated: () => void }) {
 
           <div>
             <label className="text-xs text-zinc-400 block mb-1">
-              Content * (use {{"{{"}}placeholder{{"}}"}}) for variables)
+              {"Content * (use {{placeholder}} for variables)"}
             </label>
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Dear {{"{{"}}hiring_manager{{"}}"}}..."
+              placeholder={"Dear {{hiring_manager}}, I am writing to apply for the {{role}} position at {{company}}..."}
               rows={8}
               className="bg-zinc-800 border-zinc-700 text-sm"
               required
             />
             <p className="text-xs text-zinc-500 mt-1">
-              Use {{"{{"}}variable_name{{"}}"}} syntax for placeholders. Example: {{"{{"}}name{{"}}"}}, {{"{{"}}company{{"}}"}}, {{"{{"}}role{{"}}"}})
+              {"Use {{variable_name}} syntax for placeholders. Example: {{name}}, {{company}}, {{role}}"}
             </p>
           </div>
 
@@ -284,7 +284,7 @@ function TemplateCard({ template, onRefresh }: { template: DocTemplate; onRefres
                   <div className="flex flex-wrap gap-1">
                     {placeholders.map((p) => (
                       <span key={p} className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-zinc-800 text-zinc-300">
-                        {"{{"}{p}{{"}}"}
+                        {"{{" + p + "}}"}
                       </span>
                     ))}
                   </div>
@@ -320,7 +320,7 @@ function TemplateCard({ template, onRefresh }: { template: DocTemplate; onRefres
               <p className="text-xs text-zinc-400">Fill in variables to render</p>
               {placeholders.map((p) => (
                 <div key={p}>
-                  <label className="text-xs text-zinc-400 block mb-1">{{"{{"}{p}{{"}}"}}</label>
+                  <label className="text-xs text-zinc-400 block mb-1">{"{{" + p + "}}"}</label>
                   <Input
                     value={renderVars[p] || ""}
                     onChange={(e) => setRenderVars({ ...renderVars, [p]: e.target.value })}
