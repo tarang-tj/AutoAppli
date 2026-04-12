@@ -23,7 +23,175 @@ import type {
   GeneratedDocument,
   ResumeReview,
   UserProfile,
+  AnalyticsData,
+  MatchScore,
+  MatchScoresResponse,
 } from "@/types";
+
+function computeDemoAnalytics(jobs: Job[]): AnalyticsData {
+  const total = jobs.length;
+  const STATUS_ORDER = ["bookmarked", "applied", "interviewing", "offer", "rejected", "ghosted"];
+  const counts: Record<string, number> = {};
+  for (const s of STATUS_ORDER) counts[s] = 0;
+  for (const j of jobs) counts[j.status] = (counts[j.status] || 0) + 1;
+
+  const funnel = STATUS_ORDER.map((s) => ({ stage: s, count: counts[s] || 0 }));
+
+  const appliedTotal = jobs.filter((j) =>
+    ["applied", "interviewing", "offer", "rejected", "ghosted"].includes(j.status)
+  ).length;
+  const interviewingTotal = jobs.filter((j) =>
+    ["interviewing", "offer"].includes(j.status)
+  ).length;
+  const offerTotal = counts["offer"] || 0;
+  const rejectedTotal = counts["rejected"] || 0;
+  const ghostedTotal = counts["ghosted"] || 0;
+
+  const rate = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
+
+  const conversions = {
+    bookmarked_to_applied: rate(appliedTotal, total),
+    applied_to_interviewing: rate(interviewingTotal, appliedTotal),
+    interviewing_to_offer: rate(offerTotal, interviewingTotal),
+    rejection_rate: rate(rejectedTotal, appliedTotal),
+    ghost_rate: rate(ghostedTotal, appliedTotal),
+  };
+
+  const daysBetween = (a: string, b: string) =>
+    Math.round(Math.abs(new Date(b).getTime() - new Date(a).getTime()) / 86400000 * 10) / 10;
+
+  const bToA: number[] = [];
+  const aToL: number[] = [];
+  const lifecycle: number[] = [];
+  for (const j of jobs) {
+    if (j.applied_at && j.created_at) bToA.push(daysBetween(j.created_at, j.applied_at));
+    if (j.applied_at && j.updated_at && ["interviewing", "offer", "rejected", "ghosted"].includes(j.status))
+      aToL.push(daysBetween(j.applied_at, j.updated_at));
+    if (j.created_at && j.updated_at) lifecycle.push(daysBetween(j.created_at, j.updated_at));
+  }
+  const avg = (arr: number[]) => (arr.length ? Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10 : null);
+
+  const sourceCounts: Record<string, number> = {};
+  for (const j of jobs) sourceCounts[j.source] = (sourceCounts[j.source] || 0) + 1;
+  const sources = Object.entries(sourceCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([source, count]) => ({ source, count }));
+
+  const now = Date.now();
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+  const weeklyActivity = Array.from({ length: 8 }, (_, i) => {
+    const w = 7 - i;
+    const end = now - w * WEEK;
+    const start = end - WEEK;
+    const count = jobs.filter((j) => {
+      const t = new Date(j.created_at).getTime();
+      return t >= start && t < end;
+    }).length;
+    return {
+      week_start: new Date(start).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      week_end: new Date(end).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      jobs_added: count,
+    };
+  });
+
+  const companyCounts: Record<string, number> = {};
+  for (const j of jobs) if (j.company) companyCounts[j.company] = (companyCounts[j.company] || 0) + 1;
+  const topCompanies = Object.entries(companyCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([company, count]) => ({ company, count }));
+
+  const responded = jobs.filter((j) => ["interviewing", "offer", "rejected"].includes(j.status)).length;
+
+  return {
+    total_jobs: total,
+    funnel,
+    conversions,
+    avg_durations_days: {
+      bookmarked_to_applied: avg(bToA),
+      applied_to_latest: avg(aToL),
+      total_lifecycle: avg(lifecycle),
+    },
+    sources,
+    weekly_activity: weeklyActivity,
+    top_companies: topCompanies,
+    response_rate: rate(responded, appliedTotal),
+    summary: {
+      active_applications: appliedTotal - rejectedTotal - ghostedTotal,
+      interviews_in_progress: counts["interviewing"] || 0,
+      offers: offerTotal,
+      rejections: rejectedTotal,
+    },
+  };
+}
+
+const MATCH_SKILL_TERMS = new Set([
+  "python","java","javascript","typescript","react","angular","vue","node",
+  "express","django","flask","fastapi","sql","nosql","mongodb","postgresql",
+  "docker","kubernetes","aws","gcp","azure","terraform","git","linux",
+  "rest","graphql","kafka","spark","airflow","dbt","tableau","looker",
+  "excel","r","scala","go","rust","figma","jira","agile","scrum",
+  "analytics","machine","learning","tensorflow","pytorch","nlp","llm",
+  "data","pipeline","etl","warehouse","snowflake","bigquery","pandas",
+  "numpy","html","css","tailwind","nextjs","supabase","firebase",
+  "leadership","collaboration","strategy","operations","management","metrics",
+]);
+
+const MATCH_STOP_WORDS = new Set([
+  "the","a","an","and","or","but","in","on","at","to","for","of","with",
+  "by","from","is","are","was","were","be","been","have","has","had",
+  "do","does","did","will","would","could","should","may","might","can",
+  "this","that","these","those","it","its","i","we","you","they","he",
+  "she","my","your","our","their","what","which","who","where","when",
+  "how","not","no","if","then","than","so","as","up","out","about",
+  "into","over","after","before","between","under","above","such",
+  "each","every","all","any","both","few","more","most","other","some",
+  "very","just","also","too","only","own","same","new","well","now",
+  "even","way","part","able","like","year","years","work","working",
+  "experience","role","team","company","join","looking","ideal",
+  "candidate","including","using","across","etc","strong","highly",
+  "key","based","within",
+]);
+
+function computeDemoMatchScore(resumeText: string, jobDescription: string): MatchScore {
+  const tokenize = (t: string) => (t.toLowerCase().match(/[a-z][a-z0-9+#/.]+/g) || []);
+  const extract = (text: string) => {
+    const counts: Record<string, number> = {};
+    for (const t of tokenize(text)) {
+      if (MATCH_STOP_WORDS.has(t) || t.length < 2) continue;
+      counts[t] = (counts[t] || 0) + (MATCH_SKILL_TERMS.has(t) ? 3 : 1);
+    }
+    return counts;
+  };
+
+  if (!resumeText || !jobDescription) {
+    return { score: 0, matched_keywords: [], missing_keywords: [], top_job_keywords: [] };
+  }
+
+  const jdKw = extract(jobDescription);
+  const resumeKw = extract(resumeText);
+  const topJd = Object.entries(jdKw).sort((a, b) => b[1] - a[1]).slice(0, 30).map(([k]) => k);
+  const matched = topJd.filter((k) => k in resumeKw);
+  const missing = topJd.filter((k) => !(k in resumeKw));
+  const totalW = topJd.reduce((s, k) => s + (jdKw[k] || 0), 0);
+  const matchedW = matched.reduce((s, k) => s + (jdKw[k] || 0), 0);
+  const score = totalW > 0 ? Math.min(100, Math.max(0, Math.round((matchedW / totalW) * 120))) : 0;
+
+  return {
+    score,
+    matched_keywords: matched.slice(0, 15),
+    missing_keywords: missing.slice(0, 10),
+    top_job_keywords: topJd.slice(0, 20),
+  };
+}
+
+function computeDemoMatchScores(resumeText: string, jobs: Job[]): MatchScoresResponse {
+  const scores: Record<string, MatchScore> = {};
+  for (const job of jobs) {
+    scores[job.id] = computeDemoMatchScore(resumeText, job.description || "");
+  }
+  return { scores };
+}
 
 const MISSING_API_URL =
   "Set NEXT_PUBLIC_API_URL to your deployed API (e.g. https://your-api.onrender.com). No default URL is used.";
@@ -172,6 +340,9 @@ function handleDemoGet(path: string): unknown {
   }
   if (path === "/resumes/generated") {
     return getDemoGeneratedDocuments();
+  }
+  if (path === "/analytics") {
+    return computeDemoAnalytics(getDemoJobs());
   }
   throw new Error(`Demo mode does not support GET ${path}`);
 }
@@ -356,6 +527,10 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       saved_outreach_id: memId,
     };
   }
+  if (path === "/match/scores") {
+    const b = body as { resume_text?: string };
+    return computeDemoMatchScores(b.resume_text || "", getDemoJobs());
+  }
   if (path === "/search") {
     return {
       results: getDemoJobSearchResults(),
@@ -467,6 +642,13 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
         from_cache: true,
         persisted: false,
       } as T;
+    }
+    return fetchBackend<T>(path);
+  }
+
+  if (path === "/analytics") {
+    if (!API_URL) {
+      return handleDemoGet(path) as T;
     }
     return fetchBackend<T>(path);
   }
