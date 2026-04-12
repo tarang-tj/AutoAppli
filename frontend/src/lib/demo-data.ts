@@ -11,6 +11,8 @@ import type {
   Compensation,
   CRMContact,
   TimelineEvent,
+  DocTemplate,
+  AutomationRule,
 } from "@/types";
 
 // Demo state — updates persist for the browser session
@@ -798,4 +800,241 @@ export function removeDemoTimelineEvent(id: string): boolean {
   const before = demoTimelineEvents.length;
   demoTimelineEvents = demoTimelineEvents.filter((e) => e.id !== id);
   return demoTimelineEvents.length < before;
+}
+
+// ── Document templates demo data ────────────────────────────────
+
+let demoTemplates: DocTemplate[] = [
+  {
+    id: "tpl-tech-resume",
+    name: "Tech Resume Template",
+    template_type: "resume",
+    category: "tech",
+    is_default: true,
+    content: `{{name}}
+{{email}} | {{phone}}
+
+PROFESSIONAL SUMMARY
+Results-driven software engineer with expertise in building scalable systems and solving complex technical problems. Experience with {{skills}}.
+
+EXPERIENCE
+Senior Software Engineer at {{company}}
+- Led development of critical features impacting {{impact}}
+- Mentored junior developers and conducted code reviews
+- Improved system performance by {{improvement}}%
+
+TECHNICAL SKILLS
+Programming Languages: TypeScript, Python, Go
+Tools & Platforms: {{tools}}
+Databases: PostgreSQL, MongoDB, Redis
+
+EDUCATION
+Bachelor's Degree in {{education}}`,
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "tpl-finance-cover",
+    name: "Finance Cover Letter",
+    template_type: "cover_letter",
+    category: "finance",
+    is_default: false,
+    content: `Dear {{hiring_manager}},
+
+I am writing to express my strong interest in the {{role}} position at {{company}}. With {{years}} years of experience in financial analysis and {{expertise}}, I am confident I can contribute significantly to your team.
+
+In my current role at {{current_company}}, I have:
+- Managed portfolios worth {{portfolio_value}}
+- Reduced operational costs by {{savings}}%
+- Led {{team_size}}-person team achieving {{achievement}}
+
+I am particularly drawn to {{company}}'s {{reason}}, and I believe my background in {{skills}} positions me well to drive {{goal}}.
+
+I would welcome the opportunity to discuss how my experience can benefit your organization.
+
+Best regards,
+{{name}}
+{{phone}}
+{{email}}`,
+    created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "tpl-general-resume",
+    name: "General Application Resume",
+    template_type: "resume",
+    category: "general",
+    is_default: false,
+    content: `{{name}}
+{{location}} | {{phone}} | {{email}} | {{linkedin}}
+
+OBJECTIVE
+Seeking a {{role}} position where I can leverage {{key_skills}} to contribute to {{company}}'s growth.
+
+PROFESSIONAL EXPERIENCE
+{{title}} at {{current_company}} ({{start_year}} - Present)
+- {{achievement_1}}
+- {{achievement_2}}
+- {{achievement_3}}
+
+Previous Role at {{previous_company}} ({{years}})
+- {{past_achievement}}
+
+EDUCATION
+{{degree}} in {{field}}
+{{university}}, {{graduation_year}}
+
+SKILLS
+{{skills}}
+
+CERTIFICATIONS
+{{certifications}}`,
+    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+export function getDemoTemplates(): DocTemplate[] {
+  return [...demoTemplates];
+}
+
+export function pushDemoTemplate(tpl: DocTemplate): DocTemplate {
+  demoTemplates = [tpl, ...demoTemplates];
+  return tpl;
+}
+
+export function updateDemoTemplate(id: string, updates: Partial<DocTemplate>): DocTemplate | null {
+  const idx = demoTemplates.findIndex((t) => t.id === id);
+  if (idx < 0) return null;
+  const updated = { ...demoTemplates[idx], ...updates, updated_at: new Date().toISOString() };
+  demoTemplates[idx] = updated;
+  return updated;
+}
+
+export function removeDemoTemplate(id: string): boolean {
+  const before = demoTemplates.length;
+  demoTemplates = demoTemplates.filter((t) => t.id !== id);
+  return demoTemplates.length < before;
+}
+
+// ── Demo automation rules ────────────────────────────────────────
+
+let demoAutomationRules: AutomationRule[] = [
+  {
+    id: "rule-auto-apply",
+    name: "Auto-apply on submit",
+    trigger: "application_sent",
+    action: "move_to_status",
+    action_config: { target_status: "applied" },
+    is_active: true,
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "rule-auto-interviewing",
+    name: "Move to interviewing",
+    trigger: "interview_scheduled",
+    action: "move_to_status",
+    action_config: { target_status: "interviewing" },
+    is_active: true,
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "rule-ghost-14d",
+    name: "Ghost after 14 days",
+    trigger: "no_response_days",
+    action: "move_to_status",
+    action_config: { days: 14, target_status: "ghosted" },
+    is_active: true,
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+export function getDemoAutomationRules(): AutomationRule[] {
+  return demoAutomationRules;
+}
+
+export function pushDemoAutomationRule(rule: AutomationRule): AutomationRule {
+  demoAutomationRules = [rule, ...demoAutomationRules];
+  return rule;
+}
+
+export function updateDemoAutomationRule(id: string, updates: Partial<AutomationRule>): AutomationRule | null {
+  const idx = demoAutomationRules.findIndex((r) => r.id === id);
+  if (idx < 0) return null;
+  const updated = { ...demoAutomationRules[idx], ...updates, updated_at: new Date().toISOString() };
+  demoAutomationRules[idx] = updated;
+  return updated;
+}
+
+export function removeDemoAutomationRule(id: string): boolean {
+  const before = demoAutomationRules.length;
+  demoAutomationRules = demoAutomationRules.filter((r) => r.id !== id);
+  return demoAutomationRules.length < before;
+}
+
+export function evaluateDemoRules(): Array<{ rule_id: string; job_id: string; suggested_action: string; reason: string }> {
+  const suggestions: Array<{ rule_id: string; job_id: string; suggested_action: string; reason: string }> = [];
+  const now = new Date();
+
+  const activeRules = demoAutomationRules.filter((r) => r.is_active);
+
+  for (const rule of activeRules) {
+    const config = rule.action_config as Record<string, unknown>;
+
+    // application_sent trigger
+    if (rule.trigger === "application_sent") {
+      for (const job of demoJobs) {
+        if (job.status === "bookmarked" && job.applied_at) {
+          const target = config.target_status as string;
+          suggestions.push({
+            rule_id: rule.id,
+            job_id: job.id,
+            suggested_action: `Move to ${target}`,
+            reason: "Application has been sent",
+          });
+        }
+      }
+    }
+
+    // interview_scheduled trigger
+    if (rule.trigger === "interview_scheduled") {
+      const jobsWithInterviews = new Set(demoInterviewNotes.map((i) => i.job_id));
+      for (const job of demoJobs) {
+        if (job.status === "applied" && jobsWithInterviews.has(job.id)) {
+          const target = config.target_status as string;
+          suggestions.push({
+            rule_id: rule.id,
+            job_id: job.id,
+            suggested_action: `Move to ${target}`,
+            reason: "Interview scheduled for this job",
+          });
+        }
+      }
+    }
+
+    // no_response_days trigger
+    if (rule.trigger === "no_response_days") {
+      const daysThreshold = config.days as number;
+      const target = config.target_status as string;
+      for (const job of demoJobs) {
+        if (job.status === "applied" && job.applied_at) {
+          const appliedAt = new Date(job.applied_at);
+          const daysSince = Math.floor((now.getTime() - appliedAt.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysSince >= daysThreshold) {
+            suggestions.push({
+              rule_id: rule.id,
+              job_id: job.id,
+              suggested_action: `Move to ${target}`,
+              reason: `No response for ${daysSince} days`,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return suggestions;
 }

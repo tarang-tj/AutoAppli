@@ -343,3 +343,40 @@ export interface TimelineEvent {
   metadata?: Record<string, unknown>;
   created_at?: string;
 }
+
+// ── Document template types ─────────────────────────────────────
+export type TemplateType = "resume" | "cover_letter";
+export type TemplateCategory = "tech" | "finance" | "general" | "creative";
+
+export interface DocTemplate {
+  id: string;
+  name: string;
+  template_type: TemplateType;
+  content: string;
+  category: TemplateCategory;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Kanban automation types ─────────────────────────────────────
+export type AutomationTrigger = "application_sent" | "interview_scheduled" | "no_response_days" | "offer_received" | "manual";
+export type AutomationAction = "move_to_status" | "add_reminder" | "add_tag";
+
+export interface AutomationRule {
+  id: string;
+  name: string;
+  trigger: AutomationTrigger;
+  action: AutomationAction;
+  action_config: Record<string, unknown>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AutomationSuggestion {
+  rule_id: string;
+  job_id: string;
+  suggested_action: string;
+  reason: string;
+}

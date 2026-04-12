@@ -17,6 +17,8 @@ _compensations_by_user: dict[str, list[dict]] = {}
 _jobs_by_user: dict[str, dict[str, dict]] = {}
 _contacts_by_user: dict[str, list[dict]] = {}
 _timeline_by_user: dict[str, list[dict]] = {}
+_templates_by_user: dict[str, list[dict]] = {}
+_automation_rules_by_user: dict[str, list[dict]] = {}
 
 
 def resume_store(user_id: str | None) -> dict[str, dict]:
@@ -73,3 +75,17 @@ def timeline_events(user_id: str | None) -> list[dict]:
     if k not in _timeline_by_user:
         _timeline_by_user[k] = []
     return _timeline_by_user[k]
+
+
+def templates(user_id: str | None) -> list[dict]:
+    k = _key(user_id)
+    if k not in _templates_by_user:
+        _templates_by_user[k] = []
+    return _templates_by_user[k]
+
+
+def automation_rules(user_id: str | None) -> list[dict]:
+    k = _key(user_id)
+    if k not in _automation_rules_by_user:
+        _automation_rules_by_user[k] = []
+    return _automation_rules_by_user[k]

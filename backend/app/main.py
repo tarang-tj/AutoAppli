@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import analytics, auth, contacts, interview, jobs, match, notifications, outreach, profile, resume, salary, search, timeline
+from app.routers import analytics, automation, auth, contacts, interview, jobs, match, notifications, outreach, profile, resume, salary, search, templates, timeline
 
 settings = get_settings()
 
@@ -23,11 +23,13 @@ app.include_router(outreach.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(analytics.router, prefix="/api/v1")
+app.include_router(automation.router, prefix="/api/v1")
 app.include_router(match.router, prefix="/api/v1")
 app.include_router(interview.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
 app.include_router(salary.router, prefix="/api/v1")
 app.include_router(contacts.router, prefix="/api/v1")
+app.include_router(templates.router, prefix="/api/v1")
 app.include_router(timeline.router, prefix="/api/v1")
 
 

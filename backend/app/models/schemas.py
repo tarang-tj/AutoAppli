@@ -309,3 +309,42 @@ class TimelineEventCreate(BaseModel):
     title: str = ""
     description: str = ""
     occurred_at: str | None = None
+
+
+# ── Document templates ──────────────────────────────────────────
+class TemplateCreate(BaseModel):
+    name: str
+    template_type: str = "resume"
+    content: str = ""
+    category: str = "general"
+    is_default: bool = False
+
+
+class TemplateUpdate(BaseModel):
+    name: str | None = None
+    template_type: str | None = None
+    content: str | None = None
+    category: str | None = None
+    is_default: bool | None = None
+
+
+class TemplateRenderRequest(BaseModel):
+    variables: dict[str, str] = {}
+
+
+# ── Kanban automation ───────────────────────────────────────────
+
+class AutomationRuleCreate(BaseModel):
+    name: str = ""
+    trigger: str = "manual"
+    action: str = "move_to_status"
+    action_config: dict = {}
+    is_active: bool = True
+
+
+class AutomationRuleUpdate(BaseModel):
+    name: str | None = None
+    trigger: str | None = None
+    action: str | None = None
+    action_config: dict | None = None
+    is_active: bool | None = None

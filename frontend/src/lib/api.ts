@@ -31,6 +31,15 @@ import {
   getDemoTimelineEvents,
   pushDemoTimelineEvent,
   removeDemoTimelineEvent,
+  getDemoTemplates,
+  pushDemoTemplate,
+  updateDemoTemplate,
+  removeDemoTemplate,
+  getDemoAutomationRules,
+  pushDemoAutomationRule,
+  updateDemoAutomationRule,
+  removeDemoAutomationRule,
+  evaluateDemoRules,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { sortJobsKanbanOrder } from "@/lib/kanban-reorder";
@@ -50,6 +59,9 @@ import type {
   Compensation,
   CRMContact,
   TimelineEvent,
+  DocTemplate,
+  AutomationRule,
+  AutomationSuggestion,
 } from "@/types";
 
 function computeDemoAnalytics(jobs: Job[]): AnalyticsData {
@@ -392,6 +404,35 @@ function handleDemoGet(path: string): unknown {
     const jobId = new URLSearchParams(path.split("?")[1]).get("job_id");
     return getDemoContacts().filter((c) => c.job_id === jobId);
   }
+  if (path === "/templates") {
+    let templates = getDemoTemplates();
+    const params = new URLSearchParams(path.includes("?") ? path.split("?")[1] : "");
+    const templateType = params.get("template_type");
+    const category = params.get("category");
+    if (templateType) {
+      templates = templates.filter((t) => t.template_type === templateType);
+    }
+    if (category) {
+      templates = templates.filter((t) => t.category === category);
+    }
+    return templates;
+  }
+  if (path === "/automation/rules") {
+    return getDemoAutomationRules();
+  }
+  if (path.startsWith("/automation/stale")) {
+    const params = new URLSearchParams(path.includes("?") ? path.split("?")[1] : "");
+    const days = parseInt(params.get("days") || "14", 10);
+    const jobs = getDemoJobs();
+    const now = new Date();
+    const staleJobs = jobs.filter((job) => {
+      if (!job.updated_at) return false;
+      const updatedAt = new Date(job.updated_at);
+      const daysSince = Math.floor((now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
+      return daysSince >= days;
+    });
+    return { stale_jobs: staleJobs, days };
+  }
   if (path.startsWith("/timeline/")) {
     const jobId = path.split("/")[2];
     // Build demo timeline from existing data
@@ -704,6 +745,38 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     };
     return pushDemoContact(contact);
   }
+  if (path === "/templates") {
+    const b = body as Partial<DocTemplate> & { name: string };
+    const now = new Date().toISOString();
+    const template: DocTemplate = {
+      id: `tpl-${Date.now().toString(36)}`,
+      name: b.name,
+      template_type: b.template_type || "resume",
+      content: b.content || "",
+      category: b.category || "general",
+      is_default: b.is_default || false,
+      created_at: now,
+      updated_at: now,
+    };
+    return pushDemoTemplate(template);
+  }
+  {
+    const m = path.match(/^\/templates\/([^/]+)\/render$/);
+    if (m) {
+      const templateId = m[1];
+      const template = getDemoTemplates().find((t) => t.id === templateId);
+      if (!template) {
+        throw new Error("Template not found");
+      }
+      const b = body as { variables?: Record<string, string> };
+      const variables = b.variables || {};
+      const rendered_content = Object.entries(variables).reduce(
+        (content, [key, value]) => content.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value),
+        template.content
+      );
+      return { template_id: templateId, rendered_content };
+    }
+  }
   if (path === "/timeline") {
     const b = body as Partial<TimelineEvent> & { job_id: string };
     const now = new Date().toISOString();
@@ -789,6 +862,25 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     };
     return { prep: demoPrep };
   }
+  if (path === "/automation/rules") {
+    const b = body as Partial<AutomationRule> & { name: string };
+    const now = new Date().toISOString();
+    const rule: AutomationRule = {
+      id: `rule-${Date.now().toString(36)}`,
+      name: b.name || "New Rule",
+      trigger: (b.trigger as any) || "manual",
+      action: (b.action as any) || "move_to_status",
+      action_config: b.action_config || {},
+      is_active: b.is_active !== false,
+      created_at: now,
+      updated_at: now,
+    };
+    return pushDemoAutomationRule(rule);
+  }
+  if (path === "/automation/evaluate") {
+    const suggestions = evaluateDemoRules();
+    return { suggestions };
+  }
   throw new Error(`Demo mode does not support POST ${path}`);
 }
 
@@ -808,6 +900,11 @@ function handleDemoDelete(path: string): void {
     removeDemoContact(contactId);
     return;
   }
+  if (path.startsWith("/templates/")) {
+    const templateId = path.split("/")[2];
+    removeDemoTemplate(templateId);
+    return;
+  }
   if (path.startsWith("/timeline/")) {
     const evtId = path.split("/")[2];
     removeDemoTimelineEvent(evtId);
@@ -821,6 +918,11 @@ function handleDemoDelete(path: string): void {
   if (path.startsWith("/salary/")) {
     const compId = path.split("/")[2];
     removeDemoCompensation(compId);
+    return;
+  }
+  if (path.startsWith("/automation/rules/")) {
+    const ruleId = path.split("/")[3];
+    removeDemoAutomationRule(ruleId);
     return;
   }
   throw new Error(`Demo mode does not support DELETE ${path}`);
@@ -883,6 +985,13 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
     if (!result) throw new Error("Contact not found");
     return result;
   }
+  if (path.startsWith("/templates/")) {
+    const templateId = path.split("/")[2];
+    const b = body as Partial<DocTemplate>;
+    const result = updateDemoTemplate(templateId, b);
+    if (!result) throw new Error("Template not found");
+    return result;
+  }
   if (path.startsWith("/notifications/reminders/")) {
     const remId = path.split("/")[3];
     const b = body as Partial<Reminder>;
@@ -895,6 +1004,13 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
     const b = body as Partial<Compensation>;
     const result = updateDemoCompensation(compId, b);
     if (!result) throw new Error("Compensation entry not found");
+    return result;
+  }
+  if (path.startsWith("/automation/rules/")) {
+    const ruleId = path.split("/")[3];
+    const b = body as Partial<AutomationRule>;
+    const result = updateDemoAutomationRule(ruleId, b);
+    if (!result) throw new Error("Rule not found");
     return result;
   }
   throw new Error(`Demo mode does not support PATCH ${path}`);
