@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, FileText, Send, Search, BarChart3, CalendarCheck, Bell, DollarSign, Settings, Menu, X } from "lucide-react";
+import { LayoutDashboard, FileText, Send, Search, BarChart3, CalendarCheck, Bell, DollarSign, Users, Clock, Settings, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -12,8 +12,10 @@ const navItems = [
   { href: "/outreach", label: "Outreach", icon: Send },
   { href: "/jobs", label: "Job Search", icon: Search },
   { href: "/interviews", label: "Interview Prep", icon: CalendarCheck },
+  { href: "/contacts", label: "Contacts", icon: Users },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/salary", label: "Salary Tracker", icon: DollarSign },
+  { href: "/timeline", label: "Timeline", icon: Clock },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

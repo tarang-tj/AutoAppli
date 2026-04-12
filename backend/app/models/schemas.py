@@ -266,3 +266,46 @@ class CompensationUpdate(BaseModel):
     currency: str | None = None
     pay_period: str | None = None
     notes: str | None = None
+
+
+# ── Contacts CRM ─────────────────────────────────────────────────
+
+class ContactCreate(BaseModel):
+    job_id: str | None = None
+    name: str
+    role: str = ""
+    company: str = ""
+    email: str = ""
+    phone: str = ""
+    linkedin_url: str = ""
+    relationship: str = "recruiter"
+    notes: str = ""
+
+
+class ContactUpdate(BaseModel):
+    name: str | None = None
+    role: str | None = None
+    company: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    linkedin_url: str | None = None
+    relationship: str | None = None
+    notes: str | None = None
+    job_id: str | None = None
+    last_contacted_at: str | None = None
+
+
+class InteractionCreate(BaseModel):
+    interaction_type: str = "email"
+    summary: str = ""
+    occurred_at: str | None = None
+
+
+# ── Application timeline ─────────────────────────────────────────
+
+class TimelineEventCreate(BaseModel):
+    job_id: str
+    event_type: str = "note"
+    title: str = ""
+    description: str = ""
+    occurred_at: str | None = None

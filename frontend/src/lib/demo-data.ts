@@ -9,6 +9,8 @@ import type {
   InterviewNote,
   Reminder,
   Compensation,
+  CRMContact,
+  TimelineEvent,
 } from "@/types";
 
 // Demo state — updates persist for the browser session
@@ -676,4 +678,124 @@ export function removeDemoCompensation(id: string): boolean {
   const before = demoCompensations.length;
   demoCompensations = demoCompensations.filter((c) => c.id !== id);
   return demoCompensations.length < before;
+}
+
+// ── Contacts CRM demo data ───────────────────────────────────────
+
+let demoContacts: CRMContact[] = [
+  {
+    id: "contact-demo-1",
+    job_id: "job-6",
+    name: "Sarah Kim",
+    role: "Technical Recruiter",
+    company: "Databricks",
+    email: "sarah.kim@databricks.com",
+    phone: "",
+    linkedin_url: "https://linkedin.com/in/sarahkim",
+    relationship: "recruiter",
+    notes: "Very responsive, helped schedule second round quickly.",
+    last_contacted_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    interactions: [
+      {
+        id: "ix-demo-1",
+        contact_id: "contact-demo-1",
+        interaction_type: "email",
+        summary: "Initial outreach about the Senior Data Engineer role",
+        occurred_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: "ix-demo-2",
+        contact_id: "contact-demo-1",
+        interaction_type: "phone",
+        summary: "Phone screen — discussed role expectations and team structure",
+        occurred_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "contact-demo-2",
+    job_id: "job-8",
+    name: "Marcus Rivera",
+    role: "Hiring Manager, Host Growth",
+    company: "Airbnb",
+    email: "marcus.r@airbnb.com",
+    phone: "(555) 321-0987",
+    linkedin_url: "",
+    relationship: "hiring_manager",
+    notes: "Met during final round. Discussed team growth plans.",
+    last_contacted_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    interactions: [
+      {
+        id: "ix-demo-3",
+        contact_id: "contact-demo-2",
+        interaction_type: "meeting",
+        summary: "Final round interview — culture fit and team dynamics discussion",
+        occurred_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "contact-demo-3",
+    job_id: null,
+    name: "Priya Patel",
+    role: "Senior Engineer",
+    company: "Stripe",
+    email: "",
+    phone: "",
+    linkedin_url: "https://linkedin.com/in/priyapatel",
+    relationship: "referral",
+    notes: "College friend at Stripe. Offered to refer me for BI Engineer role.",
+    last_contacted_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+export function getDemoContacts(): CRMContact[] {
+  return [...demoContacts];
+}
+
+export function pushDemoContact(contact: CRMContact): CRMContact {
+  demoContacts = [contact, ...demoContacts];
+  return contact;
+}
+
+export function updateDemoContact(id: string, patch: Partial<CRMContact>): CRMContact | null {
+  const idx = demoContacts.findIndex((c) => c.id === id);
+  if (idx === -1) return null;
+  demoContacts[idx] = { ...demoContacts[idx], ...patch, updated_at: new Date().toISOString() };
+  return demoContacts[idx];
+}
+
+export function removeDemoContact(id: string): boolean {
+  const before = demoContacts.length;
+  demoContacts = demoContacts.filter((c) => c.id !== id);
+  return demoContacts.length < before;
+}
+
+// ── Timeline demo data ───────────────────────────────────────────
+// Timeline is auto-generated from jobs/interviews/etc, so we only need manual events
+
+let demoTimelineEvents: TimelineEvent[] = [];
+
+export function getDemoTimelineEvents(): TimelineEvent[] {
+  return [...demoTimelineEvents];
+}
+
+export function pushDemoTimelineEvent(evt: TimelineEvent): TimelineEvent {
+  demoTimelineEvents = [evt, ...demoTimelineEvents];
+  return evt;
+}
+
+export function removeDemoTimelineEvent(id: string): boolean {
+  const before = demoTimelineEvents.length;
+  demoTimelineEvents = demoTimelineEvents.filter((e) => e.id !== id);
+  return demoTimelineEvents.length < before;
 }

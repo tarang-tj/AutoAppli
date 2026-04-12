@@ -24,6 +24,13 @@ import {
   pushDemoCompensation,
   updateDemoCompensation,
   removeDemoCompensation,
+  getDemoContacts,
+  pushDemoContact,
+  updateDemoContact,
+  removeDemoContact,
+  getDemoTimelineEvents,
+  pushDemoTimelineEvent,
+  removeDemoTimelineEvent,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { sortJobsKanbanOrder } from "@/lib/kanban-reorder";
@@ -41,6 +48,8 @@ import type {
   InterviewPrepMaterial,
   Reminder,
   Compensation,
+  CRMContact,
+  TimelineEvent,
 } from "@/types";
 
 function computeDemoAnalytics(jobs: Job[]): AnalyticsData {
@@ -376,6 +385,79 @@ function handleDemoGet(path: string): unknown {
     const jobId = new URLSearchParams(path.split("?")[1]).get("job_id");
     return getDemoCompensations().filter((c) => c.job_id === jobId);
   }
+  if (path === "/contacts") {
+    return getDemoContacts();
+  }
+  if (path.startsWith("/contacts?job_id=")) {
+    const jobId = new URLSearchParams(path.split("?")[1]).get("job_id");
+    return getDemoContacts().filter((c) => c.job_id === jobId);
+  }
+  if (path.startsWith("/timeline/")) {
+    const jobId = path.split("/")[2];
+    // Build demo timeline from existing data
+    const jobs = getDemoJobs();
+    const job = jobs.find((j) => j.id === jobId);
+    if (!job) return [];
+    const interviews = getDemoInterviewNotes().filter((n) => n.job_id === jobId);
+    const contacts = getDemoContacts().filter((c) => c.job_id === jobId);
+    const events: TimelineEvent[] = [];
+    // Job created
+    events.push({
+      id: `evt-auto-created-${jobId}`,
+      job_id: jobId,
+      event_type: "status_change",
+      title: "Job bookmarked",
+      description: `Added ${job.title} at ${job.company} to tracker`,
+      occurred_at: job.created_at,
+    });
+    if (job.applied_at) {
+      events.push({
+        id: `evt-auto-applied-${jobId}`,
+        job_id: jobId,
+        event_type: "application_sent",
+        title: "Application submitted",
+        description: `Applied for ${job.title} at ${job.company}`,
+        occurred_at: job.applied_at,
+      });
+    }
+    if (["offer", "rejected", "ghosted", "interviewing"].includes(job.status)) {
+      const labels: Record<string, string> = { offer: "Offer received", rejected: "Application rejected", ghosted: "No response", interviewing: "Moved to interviewing" };
+      events.push({
+        id: `evt-auto-status-${jobId}`,
+        job_id: jobId,
+        event_type: job.status === "offer" ? "offer_received" : "status_change",
+        title: labels[job.status] || job.status,
+        description: job.notes || "",
+        occurred_at: job.updated_at,
+      });
+    }
+    for (const iv of interviews) {
+      events.push({
+        id: `evt-auto-iv-${iv.id}`,
+        job_id: jobId,
+        event_type: iv.status === "completed" ? "interview_completed" : "interview_scheduled",
+        title: iv.round_name,
+        description: iv.interviewer_name ? `with ${iv.interviewer_name}` : "",
+        occurred_at: iv.scheduled_at || iv.created_at,
+      });
+    }
+    for (const ct of contacts) {
+      events.push({
+        id: `evt-auto-ct-${ct.id}`,
+        job_id: jobId,
+        event_type: "contact_added",
+        title: `Contact: ${ct.name}`,
+        description: `${ct.role} — ${ct.relationship}`,
+        occurred_at: ct.created_at,
+      });
+    }
+    // Add manual events
+    for (const evt of getDemoTimelineEvents()) {
+      if (evt.job_id === jobId) events.push(evt);
+    }
+    events.sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime());
+    return events;
+  }
   if (path === "/salary/compare") {
     const entries = getDemoCompensations();
     if (!entries.length) return { entries: [], best_total_id: null, best_base_id: null, average_total: 0, count: 0 };
@@ -601,6 +683,41 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     };
     return pushDemoInterviewNote(note);
   }
+  if (path === "/contacts") {
+    const b = body as Partial<CRMContact> & { name: string };
+    const now = new Date().toISOString();
+    const contact: CRMContact = {
+      id: `contact-${Date.now().toString(36)}`,
+      job_id: b.job_id || null,
+      name: b.name,
+      role: b.role || "",
+      company: b.company || "",
+      email: b.email || "",
+      phone: b.phone || "",
+      linkedin_url: b.linkedin_url || "",
+      relationship: b.relationship || "recruiter",
+      notes: b.notes || "",
+      last_contacted_at: null,
+      interactions: [],
+      created_at: now,
+      updated_at: now,
+    };
+    return pushDemoContact(contact);
+  }
+  if (path === "/timeline") {
+    const b = body as Partial<TimelineEvent> & { job_id: string };
+    const now = new Date().toISOString();
+    const evt: TimelineEvent = {
+      id: `evt-${Date.now().toString(36)}`,
+      job_id: b.job_id,
+      event_type: b.event_type || "note",
+      title: b.title || "",
+      description: b.description || "",
+      occurred_at: b.occurred_at || now,
+      created_at: now,
+    };
+    return pushDemoTimelineEvent(evt);
+  }
   if (path === "/notifications/reminders") {
     const b = body as Partial<Reminder>;
     const now = new Date().toISOString();
@@ -686,6 +803,16 @@ function handleDemoDelete(path: string): void {
     removeDemoInterviewNote(noteId);
     return;
   }
+  if (path.startsWith("/contacts/")) {
+    const contactId = path.split("/")[2];
+    removeDemoContact(contactId);
+    return;
+  }
+  if (path.startsWith("/timeline/")) {
+    const evtId = path.split("/")[2];
+    removeDemoTimelineEvent(evtId);
+    return;
+  }
   if (path.startsWith("/notifications/reminders/")) {
     const remId = path.split("/")[3];
     removeDemoReminder(remId);
@@ -748,6 +875,13 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
     const updated = { ...notes[idx], ...b, updated_at: new Date().toISOString() };
     notes[idx] = updated;
     return updated;
+  }
+  if (path.startsWith("/contacts/")) {
+    const contactId = path.split("/")[2];
+    const b = body as Partial<CRMContact>;
+    const result = updateDemoContact(contactId, b);
+    if (!result) throw new Error("Contact not found");
+    return result;
   }
   if (path.startsWith("/notifications/reminders/")) {
     const remId = path.split("/")[3];
@@ -847,6 +981,20 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     return fetchBackend<T>(path);
   }
 
+  if (path === "/contacts" || path.startsWith("/contacts?")) {
+    if (!API_URL) {
+      return handleDemoGet(path) as T;
+    }
+    return fetchBackend<T>(path);
+  }
+
+  if (path.startsWith("/timeline/")) {
+    if (!API_URL) {
+      return handleDemoGet(path) as T;
+    }
+    return fetchBackend<T>(path);
+  }
+
   if ((isJobsListPath(path) || isJobsDetailPath(path)) && !API_URL) {
     return handleDemoGet(path) as T;
   }
@@ -895,6 +1043,14 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
   }
 
   if ((path === "/interviews" || path === "/interviews/prep") && !API_URL) {
+    return handleDemoPost(path, body) as T;
+  }
+
+  if (path === "/contacts" && !API_URL) {
+    return handleDemoPost(path, body) as T;
+  }
+
+  if (path === "/timeline" && !API_URL) {
     return handleDemoPost(path, body) as T;
   }
 
@@ -992,6 +1148,10 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
     return handleDemoPatch(path, body) as T;
   }
 
+  if (path.startsWith("/contacts/") && !API_URL) {
+    return handleDemoPatch(path, body) as T;
+  }
+
   if (path.startsWith("/notifications/reminders/") && !API_URL) {
     return handleDemoPatch(path, body) as T;
   }
@@ -1018,6 +1178,26 @@ export async function apiDelete(path: string): Promise<void> {
   }
 
   if (path.startsWith("/interviews/") && API_URL) {
+    await fetchBackend(path, { method: "DELETE" });
+    return;
+  }
+
+  if (path.startsWith("/contacts/") && !API_URL) {
+    handleDemoDelete(path);
+    return;
+  }
+
+  if (path.startsWith("/contacts/") && API_URL) {
+    await fetchBackend(path, { method: "DELETE" });
+    return;
+  }
+
+  if (path.startsWith("/timeline/") && !API_URL) {
+    handleDemoDelete(path);
+    return;
+  }
+
+  if (path.startsWith("/timeline/") && API_URL) {
     await fetchBackend(path, { method: "DELETE" });
     return;
   }

@@ -288,3 +288,58 @@ export interface CompensationComparison {
   average_total: number;
   count: number;
 }
+
+// ── Contacts CRM types ───────────────────────────────────────────
+
+export type ContactRelationship = "recruiter" | "hiring_manager" | "referral" | "peer" | "other";
+
+export interface ContactInteraction {
+  id: string;
+  contact_id: string;
+  interaction_type: string;
+  summary: string;
+  occurred_at: string;
+  created_at: string;
+}
+
+export interface CRMContact {
+  id: string;
+  job_id: string | null;
+  name: string;
+  role: string;
+  company: string;
+  email: string;
+  phone: string;
+  linkedin_url: string;
+  relationship: ContactRelationship;
+  notes: string;
+  last_contacted_at: string | null;
+  interactions?: ContactInteraction[];
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Application timeline types ───────────────────────────────────
+
+export type TimelineEventType =
+  | "status_change"
+  | "application_sent"
+  | "interview_scheduled"
+  | "interview_completed"
+  | "outreach_sent"
+  | "offer_received"
+  | "note"
+  | "document_generated"
+  | "contact_added"
+  | "custom";
+
+export interface TimelineEvent {
+  id: string;
+  job_id: string;
+  event_type: TimelineEventType;
+  title: string;
+  description: string;
+  occurred_at: string;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+}

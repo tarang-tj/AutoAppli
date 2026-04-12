@@ -15,6 +15,8 @@ _interviews_by_user: dict[str, list[dict]] = {}
 _reminders_by_user: dict[str, list[dict]] = {}
 _compensations_by_user: dict[str, list[dict]] = {}
 _jobs_by_user: dict[str, dict[str, dict]] = {}
+_contacts_by_user: dict[str, list[dict]] = {}
+_timeline_by_user: dict[str, list[dict]] = {}
 
 
 def resume_store(user_id: str | None) -> dict[str, dict]:
@@ -57,3 +59,17 @@ def job_store(user_id: str | None) -> dict[str, dict]:
     if k not in _jobs_by_user:
         _jobs_by_user[k] = {}
     return _jobs_by_user[k]
+
+
+def contacts(user_id: str | None) -> list[dict]:
+    k = _key(user_id)
+    if k not in _contacts_by_user:
+        _contacts_by_user[k] = []
+    return _contacts_by_user[k]
+
+
+def timeline_events(user_id: str | None) -> list[dict]:
+    k = _key(user_id)
+    if k not in _timeline_by_user:
+        _timeline_by_user[k] = []
+    return _timeline_by_user[k]
