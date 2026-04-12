@@ -6,6 +6,7 @@ import type {
   UserProfile,
   SavedTailoredDocument,
   GeneratedDocument,
+  InterviewNote,
 } from "@/types";
 
 // Demo state — updates persist for the browser session
@@ -477,4 +478,72 @@ export function pushDemoGeneratedDocument(
   };
   demoGeneratedDocuments = [row, ...demoGeneratedDocuments].slice(0, 50);
   return row;
+}
+
+// ── Interview notes demo data ─────────────────────────────────────
+
+let demoInterviewNotes: InterviewNote[] = [
+  {
+    id: "int-demo-1",
+    job_id: "job-4",
+    round_name: "Phone Screen",
+    scheduled_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    interviewer_name: "Sarah Chen",
+    notes: "30 min call with recruiter. Prepare elevator pitch and salary expectations.",
+    prep_material: {
+      company_overview: "Airbnb is a global travel platform connecting hosts and guests.",
+      role_insights: "Data Engineering at Airbnb involves building large-scale ETL pipelines and real-time data systems.",
+      talking_points: [
+        "Experience building data pipelines with Airflow and Spark",
+        "Reduced pipeline latency by 40% at previous role",
+      ],
+      likely_questions: [
+        "Tell me about yourself",
+        "Why are you interested in Airbnb?",
+        "Describe a challenging data pipeline you built",
+      ],
+      questions_to_ask: [
+        "What does the data stack look like?",
+        "How large is the data engineering team?",
+      ],
+      tips: [
+        "Research Airbnb's recent earnings and product launches",
+        "Prepare 2-3 STAR stories about data engineering projects",
+      ],
+    },
+    status: "upcoming",
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "int-demo-2",
+    job_id: "job-4",
+    round_name: "Technical Round",
+    scheduled_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    interviewer_name: "",
+    notes: "",
+    prep_material: null,
+    status: "upcoming",
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+export function getDemoInterviewNotes(): InterviewNote[] {
+  return demoInterviewNotes;
+}
+
+export function setDemoInterviewNotes(notes: InterviewNote[]): void {
+  demoInterviewNotes = notes;
+}
+
+export function pushDemoInterviewNote(note: InterviewNote): InterviewNote {
+  demoInterviewNotes = [note, ...demoInterviewNotes];
+  return note;
+}
+
+export function removeDemoInterviewNote(noteId: string): boolean {
+  const before = demoInterviewNotes.length;
+  demoInterviewNotes = demoInterviewNotes.filter((n) => n.id !== noteId);
+  return demoInterviewNotes.length < before;
 }

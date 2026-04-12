@@ -196,3 +196,30 @@ class ResumeGenerateWithEvalResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str = "ok"
+
+
+# ── Interview prep & notes ─────────────────────────────────────────
+
+class InterviewPrepRequest(BaseModel):
+    job_title: str
+    company: str
+    job_description: str = ""
+    resume_text: str = ""
+
+
+class InterviewNoteCreate(BaseModel):
+    job_id: str
+    round_name: str = "General"
+    scheduled_at: str | None = None
+    interviewer_name: str = ""
+    notes: str = ""
+    prep_material: dict | None = None
+
+
+class InterviewNoteUpdate(BaseModel):
+    round_name: str | None = None
+    scheduled_at: str | None = None
+    interviewer_name: str | None = None
+    notes: str | None = None
+    prep_material: dict | None = None
+    status: str | None = None

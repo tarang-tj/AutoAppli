@@ -11,6 +11,7 @@ def _key(user_id: str | None) -> str:
 
 _resumes_by_user: dict[str, dict[str, dict]] = {}
 _outreach_by_user: dict[str, list[dict]] = {}
+_interviews_by_user: dict[str, list[dict]] = {}
 
 
 def resume_store(user_id: str | None) -> dict[str, dict]:
@@ -25,3 +26,10 @@ def outreach_messages(user_id: str | None) -> list[dict]:
     if k not in _outreach_by_user:
         _outreach_by_user[k] = []
     return _outreach_by_user[k]
+
+
+def interview_notes(user_id: str | None) -> list[dict]:
+    k = _key(user_id)
+    if k not in _interviews_by_user:
+        _interviews_by_user[k] = []
+    return _interviews_by_user[k]

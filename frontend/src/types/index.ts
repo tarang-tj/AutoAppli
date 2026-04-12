@@ -205,6 +205,30 @@ export interface MatchScoresResponse {
 }
 
 
+// ── Interview prep types ──────────────────────────────────────────
+
+export interface InterviewPrepMaterial {
+  company_overview: string;
+  role_insights: string;
+  talking_points: string[];
+  likely_questions: string[];
+  questions_to_ask: string[];
+  tips: string[];
+}
+
+export interface InterviewNote {
+  id: string;
+  job_id: string;
+  round_name: string;
+  scheduled_at: string | null;
+  interviewer_name: string;
+  notes: string;
+  prep_material: InterviewPrepMaterial | null;
+  status: "upcoming" | "completed" | "cancelled";
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AnalyticsData {
   total_jobs: number;
   funnel: FunnelStage[];

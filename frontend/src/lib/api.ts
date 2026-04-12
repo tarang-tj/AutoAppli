@@ -13,6 +13,9 @@ import {
   removeDemoGeneratedDocument,
   pushDemoOutreachMessage,
   removeDemoOutreachMessage,
+  getDemoInterviewNotes,
+  pushDemoInterviewNote,
+  removeDemoInterviewNote,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { sortJobsKanbanOrder } from "@/lib/kanban-reorder";
@@ -26,6 +29,8 @@ import type {
   AnalyticsData,
   MatchScore,
   MatchScoresResponse,
+  InterviewNote,
+  InterviewPrepMaterial,
 } from "@/types";
 
 function computeDemoAnalytics(jobs: Job[]): AnalyticsData {
@@ -344,6 +349,13 @@ function handleDemoGet(path: string): unknown {
   if (path === "/analytics") {
     return computeDemoAnalytics(getDemoJobs());
   }
+  if (path === "/interviews") {
+    return getDemoInterviewNotes();
+  }
+  if (path.startsWith("/interviews?job_id=")) {
+    const jobId = new URLSearchParams(path.split("?")[1]).get("job_id");
+    return getDemoInterviewNotes().filter((n) => n.job_id === jobId);
+  }
   throw new Error(`Demo mode does not support GET ${path}`);
 }
 
@@ -538,6 +550,56 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       persisted: false,
     };
   }
+  if (path === "/interviews") {
+    const b = body as Partial<InterviewNote> & { job_id: string };
+    const now = new Date().toISOString();
+    const note: InterviewNote = {
+      id: `int-${Date.now().toString(36)}`,
+      job_id: b.job_id,
+      round_name: b.round_name || "General",
+      scheduled_at: b.scheduled_at || null,
+      interviewer_name: b.interviewer_name || "",
+      notes: b.notes || "",
+      prep_material: b.prep_material || null,
+      status: "upcoming",
+      created_at: now,
+      updated_at: now,
+    };
+    return pushDemoInterviewNote(note);
+  }
+  if (path === "/interviews/prep") {
+    const b = body as { job_title?: string; company?: string };
+    const demoPrep: InterviewPrepMaterial = {
+      company_overview: `${b?.company || "This company"} is a leading technology company known for innovation and strong engineering culture.`,
+      role_insights: `The ${b?.job_title || "role"} typically involves cross-functional collaboration, technical problem-solving, and delivering impact through data-driven decisions.`,
+      talking_points: [
+        "Highlight relevant project experience that aligns with the role",
+        "Discuss a time you solved a complex technical challenge",
+        "Show understanding of the company's product and market position",
+        "Demonstrate leadership through collaboration examples",
+      ],
+      likely_questions: [
+        "Tell me about yourself and your background",
+        "Why are you interested in this role at our company?",
+        "Describe a challenging project you led and the outcome",
+        "How do you handle disagreements with team members?",
+        "Where do you see yourself in 3-5 years?",
+        "What's your approach to learning new technologies?",
+      ],
+      questions_to_ask: [
+        "What does a typical day look like in this role?",
+        "How does the team measure success?",
+        "What are the biggest challenges facing the team right now?",
+        "What opportunities for growth and learning are available?",
+      ],
+      tips: [
+        "Research recent company news, product launches, and earnings",
+        "Prepare 3-4 STAR stories (Situation, Task, Action, Result)",
+        "Practice explaining your resume concisely in 2 minutes",
+      ],
+    };
+    return { prep: demoPrep };
+  }
   throw new Error(`Demo mode does not support POST ${path}`);
 }
 
@@ -545,6 +607,11 @@ function handleDemoDelete(path: string): void {
   if (path.startsWith("/jobs/")) {
     const jobId = path.split("/")[2];
     setDemoJobs(getDemoJobs().filter((j) => j.id !== jobId));
+    return;
+  }
+  if (path.startsWith("/interviews/")) {
+    const noteId = path.split("/")[2];
+    removeDemoInterviewNote(noteId);
     return;
   }
   throw new Error(`Demo mode does not support DELETE ${path}`);
@@ -589,6 +656,16 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
     jobs[jobIndex] = row;
     setDemoJobs(sortJobsKanbanOrder(jobs));
     return jobs[jobIndex];
+  }
+  if (path.startsWith("/interviews/")) {
+    const noteId = path.split("/")[2];
+    const notes = getDemoInterviewNotes();
+    const idx = notes.findIndex((n) => n.id === noteId);
+    if (idx === -1) throw new Error("Interview note not found");
+    const b = body as Partial<InterviewNote>;
+    const updated = { ...notes[idx], ...b, updated_at: new Date().toISOString() };
+    notes[idx] = updated;
+    return updated;
   }
   throw new Error(`Demo mode does not support PATCH ${path}`);
 }
@@ -653,6 +730,13 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     return fetchBackend<T>(path);
   }
 
+  if (path === "/interviews" || path.startsWith("/interviews?")) {
+    if (!API_URL) {
+      return handleDemoGet(path) as T;
+    }
+    return fetchBackend<T>(path);
+  }
+
   if ((isJobsListPath(path) || isJobsDetailPath(path)) && !API_URL) {
     return handleDemoGet(path) as T;
   }
@@ -697,6 +781,10 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
   }
 
   if (path === "/outreach/thank-you" && !API_URL) {
+    return handleDemoPost(path, body) as T;
+  }
+
+  if ((path === "/interviews" || path === "/interviews/prep") && !API_URL) {
     return handleDemoPost(path, body) as T;
   }
 
@@ -782,6 +870,10 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
     return handleDemoPatch(path, body) as T;
   }
 
+  if (path.startsWith("/interviews/") && !API_URL) {
+    return handleDemoPatch(path, body) as T;
+  }
+
   if (!isSupabaseConfigured()) {
     return handleDemoPatch(path, body) as T;
   }
@@ -794,6 +886,16 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
 }
 
 export async function apiDelete(path: string): Promise<void> {
+  if (path.startsWith("/interviews/") && !API_URL) {
+    handleDemoDelete(path);
+    return;
+  }
+
+  if (path.startsWith("/interviews/") && API_URL) {
+    await fetchBackend(path, { method: "DELETE" });
+    return;
+  }
+
   if (path.startsWith("/jobs/") && !API_URL) {
     handleDemoDelete(path);
     return;
