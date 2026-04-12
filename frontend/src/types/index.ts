@@ -380,3 +380,15 @@ export interface AutomationSuggestion {
   suggested_action: string;
   reason: string;
 }
+
+// ── AI Cover Letter types ─────────────────────────────────────────
+export type CoverLetterTone = "professional" | "enthusiastic" | "conversational" | "formal";
+
+export interface GeneratedCoverLetter {
+  id: string;
+  job_title: string;
+  company: string;
+  content: string;
+  tone: CoverLetterTone;
+  created_at: string;
+}

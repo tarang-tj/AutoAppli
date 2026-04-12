@@ -19,6 +19,7 @@ _contacts_by_user: dict[str, list[dict]] = {}
 _timeline_by_user: dict[str, list[dict]] = {}
 _templates_by_user: dict[str, list[dict]] = {}
 _automation_rules_by_user: dict[str, list[dict]] = {}
+_cover_letters_by_user: dict[str, list[dict]] = {}
 
 
 def resume_store(user_id: str | None) -> dict[str, dict]:
@@ -89,3 +90,10 @@ def automation_rules(user_id: str | None) -> list[dict]:
     if k not in _automation_rules_by_user:
         _automation_rules_by_user[k] = []
     return _automation_rules_by_user[k]
+
+
+def cover_letters(user_id: str | None) -> list[dict]:
+    k = _key(user_id)
+    if k not in _cover_letters_by_user:
+        _cover_letters_by_user[k] = []
+    return _cover_letters_by_user[k]

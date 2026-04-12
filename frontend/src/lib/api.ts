@@ -40,6 +40,11 @@ import {
   updateDemoAutomationRule,
   removeDemoAutomationRule,
   evaluateDemoRules,
+  getDemoCoverLetters,
+  pushDemoCoverLetter,
+  removeDemoCoverLetter,
+  generateDemoCoverLetter,
+  computeDemoExportReport,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { sortJobsKanbanOrder } from "@/lib/kanban-reorder";
@@ -48,6 +53,7 @@ import type {
   Resume,
   OutreachMessage,
   GeneratedDocument,
+  GeneratedCoverLetter,
   ResumeReview,
   UserProfile,
   AnalyticsData,
@@ -62,6 +68,7 @@ import type {
   DocTemplate,
   AutomationRule,
   AutomationSuggestion,
+  CoverLetterTone,
 } from "@/types";
 
 function computeDemoAnalytics(jobs: Job[]): AnalyticsData {
@@ -513,6 +520,12 @@ function handleDemoGet(path: string): unknown {
       count: entries.length,
     };
   }
+  if (path === "/export/report") {
+    return computeDemoExportReport(getDemoJobs());
+  }
+  if (path === "/cover-letter/history") {
+    return getDemoCoverLetters();
+  }
   throw new Error(`Demo mode does not support GET ${path}`);
 }
 
@@ -881,6 +894,23 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     const suggestions = evaluateDemoRules();
     return { suggestions };
   }
+  if (path === "/cover-letter/generate") {
+    const b = body as {
+      job_title?: string;
+      company?: string;
+      job_description?: string;
+      resume_text?: string;
+      tone?: CoverLetterTone;
+      instructions?: string;
+    };
+    const cl = generateDemoCoverLetter(
+      b.job_title || "",
+      b.company || "",
+      b.tone || "professional"
+    );
+    pushDemoCoverLetter(cl);
+    return cl;
+  }
   throw new Error(`Demo mode does not support POST ${path}`);
 }
 
@@ -923,6 +953,11 @@ function handleDemoDelete(path: string): void {
   if (path.startsWith("/automation/rules/")) {
     const ruleId = path.split("/")[3];
     removeDemoAutomationRule(ruleId);
+    return;
+  }
+  if (path.startsWith("/cover-letter/")) {
+    const clId = path.split("/")[2];
+    removeDemoCoverLetter(clId);
     return;
   }
   throw new Error(`Demo mode does not support DELETE ${path}`);
@@ -1175,6 +1210,10 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
   }
 
   if (path === "/salary" && !API_URL) {
+    return handleDemoPost(path, body) as T;
+  }
+
+  if (path === "/cover-letter/generate" && !API_URL) {
     return handleDemoPost(path, body) as T;
   }
 

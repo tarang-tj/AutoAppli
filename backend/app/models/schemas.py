@@ -348,3 +348,13 @@ class AutomationRuleUpdate(BaseModel):
     action: str | None = None
     action_config: dict | None = None
     is_active: bool | None = None
+
+
+# ── AI Cover Letter ────────────────────────────────────────────
+class CoverLetterRequest(BaseModel):
+    job_title: str = ""
+    company: str = ""
+    job_description: str = ""
+    resume_text: str = ""
+    tone: str = "professional"
+    instructions: str = ""

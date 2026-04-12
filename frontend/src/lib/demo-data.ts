@@ -6,6 +6,8 @@ import type {
   UserProfile,
   SavedTailoredDocument,
   GeneratedDocument,
+  GeneratedCoverLetter,
+  CoverLetterTone,
   InterviewNote,
   Reminder,
   Compensation,
@@ -1037,4 +1039,130 @@ export function evaluateDemoRules(): Array<{ rule_id: string; job_id: string; su
   }
 
   return suggestions;
+}
+
+// ── Export report demo data ──────────────────────────────────────
+
+export function computeDemoExportReport(jobs: Job[]) {
+  const total = jobs.length;
+
+  // Status breakdown
+  const byStatus: Record<string, number> = {};
+  const statusOrder = ["bookmarked", "applied", "interviewing", "offer", "rejected", "ghosted"];
+  for (const status of statusOrder) {
+    byStatus[status] = jobs.filter((j) => j.status === status).length;
+  }
+
+  // Source breakdown
+  const bySource: Record<string, number> = {};
+  for (const job of jobs) {
+    bySource[job.source] = (bySource[job.source] || 0) + 1;
+  }
+
+  // Company breakdown (top companies)
+  const byCompany: Record<string, number> = {};
+  for (const job of jobs) {
+    if (job.company) {
+      byCompany[job.company] = (byCompany[job.company] || 0) + 1;
+    }
+  }
+  const topCompanies = Object.entries(byCompany)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([company, count]) => ({ company, count }));
+
+  // Average days in pipeline
+  const durations: number[] = [];
+  for (const job of jobs) {
+    if (job.created_at && job.updated_at) {
+      const created = new Date(job.created_at).getTime();
+      const updated = new Date(job.updated_at).getTime();
+      const days = Math.abs(updated - created) / (1000 * 60 * 60 * 24);
+      durations.push(days);
+    }
+  }
+  const avgDays = durations.length ? Math.round((durations.reduce((a, b) => a + b, 0) / durations.length) * 10) / 10 : null;
+
+  // Weekly application rate (past 8 weeks)
+  const now = Date.now();
+  const WEEK = 7 * 24 * 60 * 60 * 1000;
+  const weeklyActivity: Record<string, number> = {};
+
+  for (let i = 0; i < 8; i++) {
+    const weekStart = now - (8 - i) * WEEK;
+    const weekEnd = weekStart + WEEK;
+    const count = jobs.filter((j) => {
+      const t = new Date(j.created_at).getTime();
+      return t >= weekStart && t < weekEnd;
+    }).length;
+    weeklyActivity[`Week ${i + 1}`] = count;
+  }
+
+  return {
+    total_jobs: total,
+    by_status: byStatus,
+    by_source: bySource,
+    by_company: byCompany,
+    top_companies: topCompanies,
+    avg_days_in_pipeline: avgDays,
+    weekly_application_rate: weeklyActivity,
+  };
+}
+
+// ── Cover Letter demo data ───────────────────────────────────────
+
+let demoCoverLetters: GeneratedCoverLetter[] = [];
+
+export function getDemoCoverLetters(): GeneratedCoverLetter[] {
+  return demoCoverLetters;
+}
+
+export function pushDemoCoverLetter(cl: GeneratedCoverLetter): GeneratedCoverLetter {
+  demoCoverLetters = [cl, ...demoCoverLetters];
+  return cl;
+}
+
+export function removeDemoCoverLetter(clId: string): void {
+  demoCoverLetters = demoCoverLetters.filter((cl) => cl.id !== clId);
+}
+
+export function generateDemoCoverLetter(
+  jobTitle: string,
+  company: string,
+  tone: CoverLetterTone
+): GeneratedCoverLetter {
+  const toneTemplates: Record<CoverLetterTone, { opening: string; body: string; closing: string }> = {
+    professional: {
+      opening: `I am writing to express my strong interest in the ${jobTitle || "position"} role at ${company || "your organization"}.`,
+      body: "With my extensive background and proven track record of success, I am confident in my ability to contribute meaningfully to your team. My experience has equipped me with the skills and expertise necessary to excel in this role.",
+      closing: "I would welcome the opportunity to discuss how my qualifications align with your needs. Thank you for considering my application.",
+    },
+    enthusiastic: {
+      opening: `I am thrilled to apply for the ${jobTitle || "opportunity"} position at ${company || "your company"}!`,
+      body: "I am genuinely passionate about this role and excited about the prospect of contributing to your team. My background has prepared me to make an immediate and meaningful impact. I am eager to bring my energy, skills, and dedication to this position.",
+      closing: "I would love the chance to discuss how I can contribute to your team's success. I look forward to hearing from you!",
+    },
+    conversational: {
+      opening: `I'd like to tell you about my interest in the ${jobTitle || "role"} at ${company || "your company"}.`,
+      body: "I think we'd be a great fit together. I've spent considerable time developing expertise in areas that directly relate to this position, and I'm genuinely excited about what I could bring to your team. I believe my background and your needs align really well.",
+      closing: "I'd appreciate the opportunity to discuss this further. Looking forward to connecting with you!",
+    },
+    formal: {
+      opening: `I hereby submit my application for the ${jobTitle || "position"} at ${company || "your esteemed organization"}.`,
+      body: "I possess the qualifications, experience, and professional acumen required for this role. Throughout my career, I have consistently demonstrated my ability to perform at the highest levels and deliver exceptional results. I am committed to applying my expertise to contribute to your organization's objectives.",
+      closing: "I would be honored to discuss my suitability for this position. Thank you for your consideration of my candidacy.",
+    },
+  };
+
+  const template = toneTemplates[tone];
+  const content = [template.opening, template.body, template.closing].join("\n\n");
+
+  return {
+    id: `cl-${Date.now().toString(36)}`,
+    job_title: jobTitle,
+    company: company,
+    content: content,
+    tone: tone,
+    created_at: new Date().toISOString(),
+  };
 }
