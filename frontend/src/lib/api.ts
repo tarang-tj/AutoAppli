@@ -268,6 +268,34 @@ export async function checkApiHealth(): Promise<boolean> {
 /** Alias: jobs use the same API base as resumes. */
 export const isJobsApiConfigured = isResumeApiConfigured;
 
+// ── Local AI route mapping (Next.js API routes → /api/ai/*) ──────────
+// Maps backend API paths to local Next.js API routes that call Claude directly.
+// These are used when NEXT_PUBLIC_AI_ENABLED=true (set on Vercel alongside ANTHROPIC_API_KEY).
+const AI_ENABLED = process.env.NEXT_PUBLIC_AI_ENABLED === "true";
+
+const AI_ROUTE_MAP: Record<string, string> = {
+  "/resumes/generate": "/api/ai/tailor-resume",
+  "/resumes/review": "/api/ai/review-resume",
+  "/outreach/generate": "/api/ai/outreach",
+  "/outreach/thank-you": "/api/ai/thank-you",
+  "/interviews/prep": "/api/ai/interview-prep",
+  "/cover-letter/generate": "/api/ai/cover-letter",
+};
+
+/** Call a local Next.js AI API route. */
+async function callLocalAI<T>(route: string, body?: unknown): Promise<T> {
+  const res = await fetch(route, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "AI request failed" }));
+    throw new Error(err.error || `AI route returned ${res.status}`);
+  }
+  return res.json();
+}
+
 function isJobsListPath(path: string): boolean {
   return path === "/jobs" || path.startsWith("/jobs?");
 }
@@ -1185,6 +1213,12 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
 }
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
+  // ── Route AI paths through local Next.js API routes when AI is enabled ──
+  const aiRoute = AI_ROUTE_MAP[path];
+  if (aiRoute && AI_ENABLED && !API_URL) {
+    return callLocalAI<T>(aiRoute, body);
+  }
+
   if (path === "/jobs" && !API_URL) {
     return handleDemoPost(path, body) as T;
   }
