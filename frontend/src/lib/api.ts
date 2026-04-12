@@ -1,5 +1,6 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import * as sbJobs from "@/lib/supabase/jobs";
+import * as sbSearch from "@/lib/supabase/search";
 import {
   getDemoJobs,
   setDemoJobs,
@@ -1142,9 +1143,22 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     }
 
     if (path === "/profile") return getDemoProfile() as T;
-    if (path === "/search/history" || path.startsWith("/search/history?")) return [] as T;
-    if (path.startsWith("/search/runs/") && path.endsWith("/results")) {
-      return { results: [], search_id: null, from_cache: true, persisted: false } as T;
+
+    // Search → Supabase when configured
+    if (isSupabaseConfigured()) {
+      if (path === "/search/history" || path.startsWith("/search/history?")) {
+        const limitParam = path.includes("?") ? new URLSearchParams(path.split("?")[1]).get("limit") : null;
+        return (await sbSearch.fetchSearchHistory(limitParam ? parseInt(limitParam, 10) : 12)) as T;
+      }
+      if (path.startsWith("/search/runs/") && path.endsWith("/results")) {
+        const searchId = path.split("/")[3];
+        return (await sbSearch.fetchSearchResults(searchId)) as T;
+      }
+    } else {
+      if (path === "/search/history" || path.startsWith("/search/history?")) return [] as T;
+      if (path.startsWith("/search/runs/") && path.endsWith("/results")) {
+        return { results: [], search_id: null, from_cache: true, persisted: false } as T;
+      }
     }
     if (path === "/resumes") return getDemoResumes() as T;
     if (path === "/resumes/generated") return getDemoGeneratedDocuments() as T;
@@ -1196,6 +1210,24 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
         url: normalizeJobUrl(b.url) ?? undefined,
         description: b.description,
         source: b.source,
+      })) as T;
+    }
+
+    // Search → Supabase when configured
+    if (isSupabaseConfigured() && path === "/search") {
+      const b = body as {
+        query?: string;
+        location?: string;
+        remote_only?: boolean;
+        page?: number;
+        per_page?: number;
+      };
+      return (await sbSearch.searchListings({
+        query: b.query ?? "",
+        location: b.location,
+        remote_only: b.remote_only,
+        page: b.page,
+        per_page: b.per_page,
       })) as T;
     }
 
