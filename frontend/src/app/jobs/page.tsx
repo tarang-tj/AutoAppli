@@ -21,7 +21,7 @@ export default function JobsPage() {
       return;
     }
     try {
-      const raw = await apiGet<unknown>("/search/history?limit=12");
+      const raw = await apiGet<unknown>("/search/history?limit=5");
       setHistory(normalizeJobSearchHistory(raw));
     } catch {
       setHistory([]);

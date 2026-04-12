@@ -2,13 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { apiGet } from "@/lib/api";
+
 import { useJobs } from "@/hooks/use-jobs";
 import type { Job } from "@/types";
 import { Download, FileDown, BarChart3, Building2, Globe } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
 
 type ExportReport = {
   total_jobs: number;
@@ -22,11 +21,10 @@ type ExportReport = {
 
 export default function ExportPage() {
   const { jobs } = useJobs();
-  const { data: report } = useSWR<ExportReport>("/export/report", () => apiGet<ExportReport>("/export/report"));
   const [exporting, setExporting] = useState(false);
 
   const displayReport = useMemo(() => {
-    return report || (jobs.length > 0 ? computeClientReport(jobs) : null);
+    return jobs.length > 0 ? computeClientReport(jobs) : null);
   }, [report, jobs]);
 
   const handleExportCsv = async () => {
