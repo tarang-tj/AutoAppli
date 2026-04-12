@@ -20,13 +20,21 @@ import { normalizeJobUrl } from "@/lib/job-url";
 import { cn } from "@/lib/utils";
 import {
   Building2,
+  Calendar,
+  Clock,
   Copy,
+  DollarSign,
   ExternalLink,
+  Flag,
   Heart,
+  Laptop,
   Loader2,
+  MapPin,
   Send,
   Sparkles,
+  Star,
   StickyNote,
+  Tag,
   Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -59,6 +67,35 @@ function MatchBadge({ score }: { score: number }) {
       title={`${score}% resume match`}
     >
       {score}% fit
+    </span>
+  );
+}
+
+const REMOTE_LABELS: Record<string, { label: string; cls: string }> = {
+  remote: { label: "Remote", cls: "text-emerald-400 bg-emerald-500/15 border-emerald-500/25" },
+  hybrid: { label: "Hybrid", cls: "text-amber-400 bg-amber-500/15 border-amber-500/25" },
+  onsite: { label: "Onsite", cls: "text-sky-400 bg-sky-500/15 border-sky-500/25" },
+};
+
+function formatSalary(min?: number | null, max?: number | null, currency = "USD"): string | null {
+  if (!min && !max) return null;
+  const fmt = (n: number) => {
+    if (n >= 1000) return `${Math.round(n / 1000)}k`;
+    return String(n);
+  };
+  const sym = currency === "USD" ? "$" : currency === "EUR" ? "\u20AC" : currency === "GBP" ? "\u00A3" : `${currency} `;
+  if (min && max) return `${sym}${fmt(min)}\u2013${sym}${fmt(max)}`;
+  if (min) return `${sym}${fmt(min)}+`;
+  return `up to ${sym}${fmt(max!)}`;
+}
+
+function PriorityStars({ count }: { count: number }) {
+  if (!count || count <= 0) return null;
+  return (
+    <span className="inline-flex items-center gap-px" title={`Priority ${count}/5`}>
+      {Array.from({ length: count }, (_, i) => (
+        <Star key={i} className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+      ))}
     </span>
   );
 }
@@ -105,6 +142,15 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
   });
   const linkHref = normalizeJobUrl(job.url);
   const hasNotes = Boolean(job.notes?.trim());
+  const salaryStr = formatSalary(job.salary_min, job.salary_max, job.salary_currency);
+  const remoteInfo = job.remote_type && job.remote_type !== "unknown" ? REMOTE_LABELS[job.remote_type] : null;
+  const deadlineDate = job.deadline ? new Date(job.deadline) : null;
+  const deadlineStr = deadlineDate
+    ? deadlineDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    : null;
+  const deadlineUrgent = deadlineDate
+    ? deadlineDate.getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000
+    : false;
 
   const handleConfirmRemove = async () => {
     if (!onRemove) return;
@@ -262,8 +308,65 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
                   ) : null}
                 </div>
               </div>
+              {/* ── Rich-field badges row ─────────────── */}
+              {(salaryStr || job.location || remoteInfo || job.priority) ? (
+                <div className="flex flex-wrap items-center gap-1 mt-2">
+                  {job.priority ? <PriorityStars count={job.priority} /> : null}
+                  {salaryStr ? (
+                    <span className="inline-flex items-center gap-0.5 rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-px text-[10px] font-semibold text-emerald-400 tabular-nums">
+                      <DollarSign className="h-2.5 w-2.5" />{salaryStr}
+                    </span>
+                  ) : null}
+                  {job.location ? (
+                    <span className="inline-flex items-center gap-0.5 rounded border border-zinc-600 bg-zinc-800/60 px-1.5 py-px text-[10px] text-zinc-300">
+                      <MapPin className="h-2.5 w-2.5" />{job.location}
+                    </span>
+                  ) : null}
+                  {remoteInfo ? (
+                    <span className={cn("inline-flex items-center gap-0.5 rounded border px-1.5 py-px text-[10px] font-medium", remoteInfo.cls)}>
+                      <Laptop className="h-2.5 w-2.5" />{remoteInfo.label}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {/* ── Skills / tags row ─────────────── */}
+              {(job.skills?.length || job.tags?.length) ? (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {(job.skills ?? []).slice(0, 3).map((s) => (
+                    <span key={s} className="rounded bg-violet-500/15 border border-violet-500/25 px-1.5 py-px text-[9px] font-medium text-violet-300">
+                      {s}
+                    </span>
+                  ))}
+                  {(job.skills?.length ?? 0) > 3 ? (
+                    <span className="text-[9px] text-zinc-500">+{job.skills!.length - 3}</span>
+                  ) : null}
+                  {(job.tags ?? []).slice(0, 2).map((t) => (
+                    <span key={t} className="inline-flex items-center gap-0.5 rounded bg-blue-500/15 border border-blue-500/25 px-1.5 py-px text-[9px] font-medium text-blue-300">
+                      <Tag className="h-2 w-2" />{t}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* ── Next step / deadline ──────────── */}
+              {(job.next_step || deadlineStr) ? (
+                <div className="flex items-center gap-2 mt-1.5 text-[10px]">
+                  {job.next_step ? (
+                    <span className="inline-flex items-center gap-0.5 text-sky-400 truncate max-w-[60%]">
+                      <Flag className="h-2.5 w-2.5 shrink-0" />{job.next_step}
+                    </span>
+                  ) : null}
+                  {deadlineStr ? (
+                    <span className={cn("inline-flex items-center gap-0.5 ml-auto", deadlineUrgent ? "text-red-400" : "text-zinc-400")}>
+                      <Clock className="h-2.5 w-2.5" />{deadlineStr}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+
               {hasNotes ? (
-                <p className="text-[11px] text-zinc-200 mt-2 line-clamp-3 border-l-2 border-amber-400/70 pl-2 leading-snug">
+                <p className="text-[11px] text-zinc-200 mt-2 line-clamp-2 border-l-2 border-amber-400/70 pl-2 leading-snug">
                   {job.notes}
                 </p>
               ) : null}

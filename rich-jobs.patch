@@ -1,0 +1,1201 @@
+diff --git a/frontend/src/app/analytics/page.tsx b/frontend/src/app/analytics/page.tsx
+index 04d44a7..88f785d 100644
+--- a/frontend/src/app/analytics/page.tsx
++++ b/frontend/src/app/analytics/page.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import type { AnalyticsData, AnalyticsConversions, AnalyticsDurations, Job } from "@/types";
++import type { AnalyticsData, AnalyticsConversions, AnalyticsDurations, Job, RemoteType, JobType } from "@/types";
+ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+ import { useJobs } from "@/hooks/use-jobs";
+ import {
+@@ -13,6 +13,10 @@ import {
+   ThumbsUp,
+   ThumbsDown,
+   Activity,
++  DollarSign,
++  Laptop,
++  MapPin,
++  Sparkles,
+ } from "lucide-react";
+ import { useMemo } from "react";
+ 
+@@ -556,7 +560,7 @@ export default function AnalyticsPage() {
+ 
+       {/* Top Companies */}
+       {top_companies.length > 0 && (
+-        <Card className="bg-zinc-900 border-zinc-800">
++        <Card className="bg-zinc-900 border-zinc-800 mb-6">
+           <CardHeader>
+             <CardTitle className="text-white text-lg">Top Companies</CardTitle>
+           </CardHeader>
+@@ -575,6 +579,272 @@ export default function AnalyticsPage() {
+           </CardContent>
+         </Card>
+       )}
++
++      {/* ── Rich field analytics ──────────────────────────────────── */}
++      <RichFieldAnalytics jobs={jobs} />
+     </div>
+   );
+ }
++
++// ── Rich field analytics component ─────────────────────────────────
++
++const REMOTE_COLOURS: Record<string, string> = {
++  remote: "#10b981",
++  hybrid: "#f59e0b",
++  onsite: "#3b82f6",
++  unknown: "#6b7280",
++};
++
++const JOB_TYPE_COLOURS: Record<string, string> = {
++  full_time: "#3b82f6",
++  part_time: "#8b5cf6",
++  contract: "#f59e0b",
++  internship: "#10b981",
++  freelance: "#ef4444",
++};
++
++function RichFieldAnalytics({ jobs }: { jobs: Job[] }) {
++  const stats = useMemo(() => {
++    // Salary stats
++    const withSalary = jobs.filter((j) => j.salary_min || j.salary_max);
++    let avgSalaryMin = 0;
++    let avgSalaryMax = 0;
++    let salaryCount = 0;
++    for (const j of withSalary) {
++      if (j.salary_min) { avgSalaryMin += j.salary_min; salaryCount++; }
++      if (j.salary_max) { avgSalaryMax += j.salary_max; }
++    }
++    avgSalaryMin = salaryCount > 0 ? Math.round(avgSalaryMin / salaryCount) : 0;
++    avgSalaryMax = withSalary.length > 0 ? Math.round(avgSalaryMax / withSalary.length) : 0;
++
++    // Remote type breakdown
++    const remoteMap: Record<string, number> = {};
++    for (const j of jobs) {
++      const rt = j.remote_type || "unknown";
++      remoteMap[rt] = (remoteMap[rt] || 0) + 1;
++    }
++    const remoteBreakdown = Object.entries(remoteMap)
++      .sort((a, b) => b[1] - a[1])
++      .map(([label, value]) => ({ label, value }));
++
++    // Job type breakdown
++    const jtMap: Record<string, number> = {};
++    for (const j of jobs) {
++      const jt = j.job_type || "full_time";
++      jtMap[jt] = (jtMap[jt] || 0) + 1;
++    }
++    const jobTypeBreakdown = Object.entries(jtMap)
++      .sort((a, b) => b[1] - a[1])
++      .map(([label, value]) => ({ label, value }));
++
++    // Top skills
++    const skillMap: Record<string, number> = {};
++    for (const j of jobs) {
++      for (const s of j.skills ?? []) {
++        skillMap[s] = (skillMap[s] || 0) + 1;
++      }
++    }
++    const topSkills = Object.entries(skillMap)
++      .sort((a, b) => b[1] - a[1])
++      .slice(0, 12)
++      .map(([skill, count]) => ({ skill, count }));
++
++    // Top locations
++    const locMap: Record<string, number> = {};
++    for (const j of jobs) {
++      if (j.location) {
++        locMap[j.location] = (locMap[j.location] || 0) + 1;
++      }
++    }
++    const topLocations = Object.entries(locMap)
++      .sort((a, b) => b[1] - a[1])
++      .slice(0, 8)
++      .map(([loc, count]) => ({ loc, count }));
++
++    // Priority distribution
++    const priorityMap: Record<number, number> = {};
++    for (const j of jobs) {
++      const p = j.priority ?? 0;
++      if (p > 0) priorityMap[p] = (priorityMap[p] || 0) + 1;
++    }
++
++    // Tag cloud
++    const tagMap: Record<string, number> = {};
++    for (const j of jobs) {
++      for (const t of j.tags ?? []) {
++        tagMap[t] = (tagMap[t] || 0) + 1;
++      }
++    }
++    const topTags = Object.entries(tagMap)
++      .sort((a, b) => b[1] - a[1])
++      .slice(0, 10)
++      .map(([tag, count]) => ({ tag, count }));
++
++    return {
++      withSalary, avgSalaryMin, avgSalaryMax,
++      remoteBreakdown, jobTypeBreakdown,
++      topSkills, topLocations, priorityMap, topTags,
++    };
++  }, [jobs]);
++
++  const hasRichData =
++    stats.withSalary.length > 0 ||
++    stats.topSkills.length > 0 ||
++    stats.topLocations.length > 0 ||
++    stats.topTags.length > 0 ||
++    stats.remoteBreakdown.some((r) => r.label !== "unknown");
++
++  if (!hasRichData) return null;
++
++  return (
++    <>
++      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
++        {/* Salary Insights */}
++        {stats.withSalary.length > 0 && (
++          <Card className="bg-zinc-900 border-zinc-800">
++            <CardHeader>
++              <CardTitle className="text-white text-lg flex items-center gap-2">
++                <DollarSign className="h-5 w-5 text-emerald-400" aria-hidden />
++                Salary Overview
++              </CardTitle>
++            </CardHeader>
++            <CardContent>
++              <div className="grid grid-cols-3 gap-4 text-center mb-4">
++                <div>
++                  <p className="text-2xl font-bold text-white tabular-nums">
++                    {stats.withSalary.length}
++                  </p>
++                  <p className="text-xs text-zinc-500">With salary data</p>
++                </div>
++                <div>
++                  <p className="text-2xl font-bold text-emerald-400 tabular-nums">
++                    ${Math.round(stats.avgSalaryMin / 1000)}k
++                  </p>
++                  <p className="text-xs text-zinc-500">Avg min</p>
++                </div>
++                <div>
++                  <p className="text-2xl font-bold text-emerald-400 tabular-nums">
++                    ${Math.round(stats.avgSalaryMax / 1000)}k
++                  </p>
++                  <p className="text-xs text-zinc-500">Avg max</p>
++                </div>
++              </div>
++              <div className="space-y-2">
++                {stats.withSalary.slice(0, 5).map((j) => (
++                  <div key={j.id} className="flex justify-between items-center text-sm">
++                    <span className="text-zinc-300 truncate max-w-[60%]">{j.company} — {j.title}</span>
++                    <span className="text-emerald-400 tabular-nums font-medium">
++                      {j.salary_min ? `$${Math.round(j.salary_min / 1000)}k` : ""}
++                      {j.salary_min && j.salary_max ? "–" : ""}
++                      {j.salary_max ? `$${Math.round(j.salary_max / 1000)}k` : ""}
++                    </span>
++                  </div>
++                ))}
++              </div>
++            </CardContent>
++          </Card>
++        )}
++
++        {/* Remote Type Breakdown */}
++        {stats.remoteBreakdown.some((r) => r.label !== "unknown") && (
++          <Card className="bg-zinc-900 border-zinc-800">
++            <CardHeader>
++              <CardTitle className="text-white text-lg flex items-center gap-2">
++                <Laptop className="h-5 w-5 text-sky-400" aria-hidden />
++                Work Model Breakdown
++              </CardTitle>
++            </CardHeader>
++            <CardContent>
++              <HBar items={stats.remoteBreakdown} colourMap={REMOTE_COLOURS} />
++              <div className="border-t border-zinc-800 mt-4 pt-4">
++                <HBar items={stats.jobTypeBreakdown.map((i) => ({ ...i, label: i.label.replace(/_/g, " ") }))} colourMap={JOB_TYPE_COLOURS} />
++              </div>
++            </CardContent>
++          </Card>
++        )}
++      </div>
++
++      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
++        {/* Top Skills */}
++        {stats.topSkills.length > 0 && (
++          <Card className="bg-zinc-900 border-zinc-800">
++            <CardHeader>
++              <CardTitle className="text-white text-lg flex items-center gap-2">
++                <Sparkles className="h-5 w-5 text-violet-400" aria-hidden />
++                Top Skills Tracked
++              </CardTitle>
++            </CardHeader>
++            <CardContent>
++              <div className="flex flex-wrap gap-2">
++                {stats.topSkills.map((s) => (
++                  <span
++                    key={s.skill}
++                    className="inline-flex items-center gap-1.5 rounded-lg bg-violet-500/15 border border-violet-500/25 px-3 py-1.5 text-sm text-violet-200"
++                  >
++                    {s.skill}
++                    <span className="text-xs text-violet-400/70 tabular-nums">{s.count}</span>
++                  </span>
++                ))}
++              </div>
++            </CardContent>
++          </Card>
++        )}
++
++        {/* Top Locations */}
++        {stats.topLocations.length > 0 && (
++          <Card className="bg-zinc-900 border-zinc-800">
++            <CardHeader>
++              <CardTitle className="text-white text-lg flex items-center gap-2">
++                <MapPin className="h-5 w-5 text-rose-400" aria-hidden />
++                Locations
++              </CardTitle>
++            </CardHeader>
++            <CardContent>
++              <div className="space-y-3">
++                {stats.topLocations.map((l) => {
++                  const pct = Math.max((l.count / jobs.length) * 100, 4);
++                  return (
++                    <div key={l.loc} className="space-y-1">
++                      <div className="flex justify-between text-sm">
++                        <span className="text-zinc-300">{l.loc}</span>
++                        <span className="text-zinc-400 font-medium tabular-nums">{l.count}</span>
++                      </div>
++                      <div className="h-3 rounded-full bg-zinc-800 overflow-hidden">
++                        <div
++                          className="h-full rounded-full bg-rose-500/80 transition-all duration-500"
++                          style={{ width: `${pct}%` }}
++                        />
++                      </div>
++                    </div>
++                  );
++                })}
++              </div>
++            </CardContent>
++          </Card>
++        )}
++      </div>
++
++      {/* Tags Cloud */}
++      {stats.topTags.length > 0 && (
++        <Card className="bg-zinc-900 border-zinc-800 mb-6">
++          <CardHeader>
++            <CardTitle className="text-white text-lg">Your Tags</CardTitle>
++          </CardHeader>
++          <CardContent>
++            <div className="flex flex-wrap gap-2">
++              {stats.topTags.map((t) => (
++                <span
++                  key={t.tag}
++                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500/15 border border-blue-500/25 px-3 py-1.5 text-sm text-blue-200"
++                >
++                  #{t.tag}
++                  <span className="text-xs text-blue-400/70 tabular-nums">{t.count}</span>
++                </span>
++              ))}
++            </div>
++          </CardContent>
++        </Card>
++      )}
++    </>
++  );
++}
+diff --git a/frontend/src/app/dashboard/page.tsx b/frontend/src/app/dashboard/page.tsx
+index 0f9b67c..85e6dc6 100644
+--- a/frontend/src/app/dashboard/page.tsx
++++ b/frontend/src/app/dashboard/page.tsx
+@@ -14,7 +14,7 @@ import { filterJobsByQuery } from "@/lib/filter-jobs";
+ import { normalizeJobUrl } from "@/lib/job-url";
+ import { useJobs } from "@/hooks/use-jobs";
+ import type { Job } from "@/types";
+-import { Download, LayoutGrid, ListFilter, Plus, Search, Send, Sparkles } from "lucide-react";
++import { ChevronDown, ChevronUp, Download, LayoutGrid, ListFilter, Plus, Search, Send, Sparkles } from "lucide-react";
+ import Link from "next/link";
+ import { useMemo, useState } from "react";
+ import { toast } from "sonner";
+@@ -25,6 +25,11 @@ export default function DashboardPage() {
+   const [open, setOpen] = useState(false);
+   const [creating, setCreating] = useState(false);
+   const [boardSearch, setBoardSearch] = useState("");
++  const [showAdvanced, setShowAdvanced] = useState(false);
++  const [skillInput, setSkillInput] = useState("");
++  const [skills, setSkills] = useState<string[]>([]);
++  const [tagInput, setTagInput] = useState("");
++  const [tags, setTags] = useState<string[]>([]);
+ 
+   const filteredJobs = useMemo(
+     () => filterJobsByQuery(jobs, boardSearch),
+@@ -36,6 +41,8 @@ export default function DashboardPage() {
+     setCreating(true);
+     const form = new FormData(e.currentTarget);
+     const rawUrl = String(form.get("url") ?? "").trim();
++    const salMinRaw = String(form.get("salary_min") ?? "").trim();
++    const salMaxRaw = String(form.get("salary_max") ?? "").trim();
+     try {
+       const res = await apiPost<Job>("/jobs", {
+         company: form.get("company"),
+@@ -43,6 +50,22 @@ export default function DashboardPage() {
+         url: normalizeJobUrl(rawUrl),
+         description: (form.get("description") as string) || undefined,
+         fetch_full_description: form.get("fetch_full_description") === "on",
++        // Rich fields
++        salary_min: salMinRaw ? Number(salMinRaw) : undefined,
++        salary_max: salMaxRaw ? Number(salMaxRaw) : undefined,
++        salary_currency: (form.get("salary_currency") as string) || "USD",
++        location: (form.get("location") as string) || undefined,
++        remote_type: (form.get("remote_type") as string) || undefined,
++        job_type: (form.get("job_type") as string) || undefined,
++        experience_level: (form.get("experience_level") as string) || undefined,
++        skills: skills.length > 0 ? skills : undefined,
++        priority: Number(form.get("priority") || 0) || undefined,
++        department: (form.get("department") as string) || undefined,
++        application_email: (form.get("application_email") as string) || undefined,
++        company_website: (form.get("company_website") as string) || undefined,
++        recruiter_name: (form.get("recruiter_name") as string) || undefined,
++        deadline: (form.get("deadline") as string) || undefined,
++        tags: tags.length > 0 ? tags : undefined,
+       });
+       if (res.duplicate) {
+         toast.info("Already on your board");
+@@ -50,6 +73,11 @@ export default function DashboardPage() {
+         toast.success("Job added to tracker");
+       }
+       setOpen(false);
++      setShowAdvanced(false);
++      setSkills([]);
++      setTags([]);
++      setSkillInput("");
++      setTagInput("");
+       (e.target as HTMLFormElement).reset();
+       mutate();
+     } catch (err: unknown) {
+@@ -112,7 +140,7 @@ export default function DashboardPage() {
+               <DialogHeader>
+                 <DialogTitle className="text-white">Add New Job</DialogTitle>
+               </DialogHeader>
+-              <form onSubmit={handleCreate} className="space-y-4">
++              <form onSubmit={handleCreate} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+                 <div className="space-y-2">
+                   <Label className="text-zinc-200">Company *</Label>
+                   <Input name="company" required className="bg-zinc-800 border-zinc-700 text-white" />
+@@ -131,14 +159,171 @@ export default function DashboardPage() {
+                     placeholder="e.g. careers.acme.com/roles/123 or https://…"
+                     className="bg-zinc-800 border-zinc-700 text-white"
+                   />
+-                  <p className="text-xs text-zinc-400">
+-                    https:// is added automatically when omitted.
+-                  </p>
++                  <p className="text-xs text-zinc-400">https:// is added automatically when omitted.</p>
++                </div>
++                <div className="grid grid-cols-2 gap-3">
++                  <div className="space-y-2">
++                    <Label className="text-zinc-200">Location</Label>
++                    <Input name="location" placeholder="San Francisco, CA" className="bg-zinc-800 border-zinc-700 text-white" />
++                  </div>
++                  <div className="space-y-2">
++                    <Label className="text-zinc-200">Work model</Label>
++                    <select name="remote_type" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
++                      <option value="">Not specified</option>
++                      <option value="remote">Remote</option>
++                      <option value="hybrid">Hybrid</option>
++                      <option value="onsite">Onsite</option>
++                    </select>
++                  </div>
++                </div>
++                <div className="grid grid-cols-2 gap-3">
++                  <div className="space-y-2">
++                    <Label className="text-zinc-200">Salary min</Label>
++                    <Input name="salary_min" type="number" placeholder="80000" className="bg-zinc-800 border-zinc-700 text-white" />
++                  </div>
++                  <div className="space-y-2">
++                    <Label className="text-zinc-200">Salary max</Label>
++                    <Input name="salary_max" type="number" placeholder="120000" className="bg-zinc-800 border-zinc-700 text-white" />
++                  </div>
++                </div>
++                <div className="grid grid-cols-2 gap-3">
++                  <div className="space-y-2">
++                    <Label className="text-zinc-200">Job type</Label>
++                    <select name="job_type" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
++                      <option value="full_time">Full-time</option>
++                      <option value="part_time">Part-time</option>
++                      <option value="contract">Contract</option>
++                      <option value="internship">Internship</option>
++                      <option value="freelance">Freelance</option>
++                    </select>
++                  </div>
++                  <div className="space-y-2">
++                    <Label className="text-zinc-200">Level</Label>
++                    <select name="experience_level" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
++                      <option value="intern">Intern</option>
++                      <option value="entry">Entry</option>
++                      <option value="mid">Mid-level</option>
++                      <option value="senior">Senior</option>
++                      <option value="lead">Lead</option>
++                      <option value="director">Director</option>
++                      <option value="vp">VP</option>
++                      <option value="c_level">C-level</option>
++                    </select>
++                  </div>
++                </div>
++                <div className="space-y-2">
++                  <Label className="text-zinc-200">Skills</Label>
++                  <div className="flex gap-2">
++                    <Input
++                      value={skillInput}
++                      onChange={(e) => setSkillInput(e.target.value)}
++                      placeholder="Type a skill and press Enter"
++                      className="bg-zinc-800 border-zinc-700 text-white flex-1"
++                      onKeyDown={(e) => {
++                        if (e.key === "Enter") {
++                          e.preventDefault();
++                          const v = skillInput.trim();
++                          if (v && !skills.includes(v)) setSkills([...skills, v]);
++                          setSkillInput("");
++                        }
++                      }}
++                    />
++                  </div>
++                  {skills.length > 0 && (
++                    <div className="flex flex-wrap gap-1 mt-1">
++                      {skills.map((s) => (
++                        <span key={s} className="inline-flex items-center gap-1 rounded bg-violet-500/20 border border-violet-500/30 px-2 py-0.5 text-xs text-violet-200">
++                          {s}
++                          <button type="button" className="text-violet-400 hover:text-white" onClick={() => setSkills(skills.filter((x) => x !== s))}>&times;</button>
++                        </span>
++                      ))}
++                    </div>
++                  )}
++                </div>
++                <div className="space-y-2">
++                  <Label className="text-zinc-200">Priority</Label>
++                  <select name="priority" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
++                    <option value="0">None</option>
++                    <option value="1">1 star</option>
++                    <option value="2">2 stars</option>
++                    <option value="3">3 stars</option>
++                    <option value="4">4 stars</option>
++                    <option value="5">5 stars</option>
++                  </select>
+                 </div>
+                 <div className="space-y-2">
+                   <Label className="text-zinc-200">Job Description</Label>
+-                  <Textarea name="description" rows={4} className="bg-zinc-800 border-zinc-700 text-white" />
++                  <Textarea name="description" rows={3} className="bg-zinc-800 border-zinc-700 text-white" />
+                 </div>
++
++                {/* ── Advanced fields toggle ─────────── */}
++                <button
++                  type="button"
++                  className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
++                  onClick={() => setShowAdvanced(!showAdvanced)}
++                >
++                  {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
++                  {showAdvanced ? "Hide" : "Show"} advanced fields
++                </button>
++
++                {showAdvanced && (
++                  <div className="space-y-4 border-t border-zinc-700/50 pt-4">
++                    <div className="grid grid-cols-2 gap-3">
++                      <div className="space-y-2">
++                        <Label className="text-zinc-200">Department</Label>
++                        <Input name="department" placeholder="Engineering" className="bg-zinc-800 border-zinc-700 text-white" />
++                      </div>
++                      <div className="space-y-2">
++                        <Label className="text-zinc-200">Deadline</Label>
++                        <Input name="deadline" type="date" className="bg-zinc-800 border-zinc-700 text-white" />
++                      </div>
++                    </div>
++                    <div className="grid grid-cols-2 gap-3">
++                      <div className="space-y-2">
++                        <Label className="text-zinc-200">Recruiter name</Label>
++                        <Input name="recruiter_name" placeholder="Jane Smith" className="bg-zinc-800 border-zinc-700 text-white" />
++                      </div>
++                      <div className="space-y-2">
++                        <Label className="text-zinc-200">Application email</Label>
++                        <Input name="application_email" type="email" placeholder="jobs@company.com" className="bg-zinc-800 border-zinc-700 text-white" />
++                      </div>
++                    </div>
++                    <div className="space-y-2">
++                      <Label className="text-zinc-200">Company website</Label>
++                      <Input name="company_website" placeholder="https://company.com" className="bg-zinc-800 border-zinc-700 text-white" />
++                    </div>
++                    <div className="space-y-2">
++                      <Label className="text-zinc-200">Tags</Label>
++                      <div className="flex gap-2">
++                        <Input
++                          value={tagInput}
++                          onChange={(e) => setTagInput(e.target.value)}
++                          placeholder="e.g. dream_job, referral, FAANG"
++                          className="bg-zinc-800 border-zinc-700 text-white flex-1"
++                          onKeyDown={(e) => {
++                            if (e.key === "Enter") {
++                              e.preventDefault();
++                              const v = tagInput.trim();
++                              if (v && !tags.includes(v)) setTags([...tags, v]);
++                              setTagInput("");
++                            }
++                          }}
++                        />
++                      </div>
++                      {tags.length > 0 && (
++                        <div className="flex flex-wrap gap-1 mt-1">
++                          {tags.map((t) => (
++                            <span key={t} className="inline-flex items-center gap-1 rounded bg-blue-500/20 border border-blue-500/30 px-2 py-0.5 text-xs text-blue-200">
++                              {t}
++                              <button type="button" className="text-blue-400 hover:text-white" onClick={() => setTags(tags.filter((x) => x !== t))}>&times;</button>
++                            </span>
++                          ))}
++                        </div>
++                      )}
++                    </div>
++                  </div>
++                )}
++
+                 <label className="flex items-start gap-2 text-sm text-zinc-200 cursor-pointer">
+                   <input
+                     type="checkbox"
+diff --git a/frontend/src/components/dashboard/job-card.tsx b/frontend/src/components/dashboard/job-card.tsx
+index 1f5986a..1c8ff02 100644
+--- a/frontend/src/components/dashboard/job-card.tsx
++++ b/frontend/src/components/dashboard/job-card.tsx
+@@ -20,13 +20,21 @@ import { normalizeJobUrl } from "@/lib/job-url";
+ import { cn } from "@/lib/utils";
+ import {
+   Building2,
++  Calendar,
++  Clock,
+   Copy,
++  DollarSign,
+   ExternalLink,
++  Flag,
+   Heart,
++  Laptop,
+   Loader2,
++  MapPin,
+   Send,
+   Sparkles,
++  Star,
+   StickyNote,
++  Tag,
+   Trash2,
+ } from "lucide-react";
+ import { useRouter } from "next/navigation";
+@@ -63,6 +71,35 @@ function MatchBadge({ score }: { score: number }) {
+   );
+ }
+ 
++const REMOTE_LABELS: Record<string, { label: string; cls: string }> = {
++  remote: { label: "Remote", cls: "text-emerald-400 bg-emerald-500/15 border-emerald-500/25" },
++  hybrid: { label: "Hybrid", cls: "text-amber-400 bg-amber-500/15 border-amber-500/25" },
++  onsite: { label: "Onsite", cls: "text-sky-400 bg-sky-500/15 border-sky-500/25" },
++};
++
++function formatSalary(min?: number | null, max?: number | null, currency = "USD"): string | null {
++  if (!min && !max) return null;
++  const fmt = (n: number) => {
++    if (n >= 1000) return `${Math.round(n / 1000)}k`;
++    return String(n);
++  };
++  const sym = currency === "USD" ? "$" : currency === "EUR" ? "\u20AC" : currency === "GBP" ? "\u00A3" : `${currency} `;
++  if (min && max) return `${sym}${fmt(min)}\u2013${sym}${fmt(max)}`;
++  if (min) return `${sym}${fmt(min)}+`;
++  return `up to ${sym}${fmt(max!)}`;
++}
++
++function PriorityStars({ count }: { count: number }) {
++  if (!count || count <= 0) return null;
++  return (
++    <span className="inline-flex items-center gap-px" title={`Priority ${count}/5`}>
++      {Array.from({ length: count }, (_, i) => (
++        <Star key={i} className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
++      ))}
++    </span>
++  );
++}
++
+ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCardProps) {
+   const router = useRouter();
+   const [confirmOpen, setConfirmOpen] = useState(false);
+@@ -105,6 +142,15 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
+   });
+   const linkHref = normalizeJobUrl(job.url);
+   const hasNotes = Boolean(job.notes?.trim());
++  const salaryStr = formatSalary(job.salary_min, job.salary_max, job.salary_currency);
++  const remoteInfo = job.remote_type && job.remote_type !== "unknown" ? REMOTE_LABELS[job.remote_type] : null;
++  const deadlineDate = job.deadline ? new Date(job.deadline) : null;
++  const deadlineStr = deadlineDate
++    ? deadlineDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
++    : null;
++  const deadlineUrgent = deadlineDate
++    ? deadlineDate.getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000
++    : false;
+ 
+   const handleConfirmRemove = async () => {
+     if (!onRemove) return;
+@@ -262,8 +308,65 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
+                   ) : null}
+                 </div>
+               </div>
++              {/* ── Rich-field badges row ─────────────── */}
++              {(salaryStr || job.location || remoteInfo || job.priority) ? (
++                <div className="flex flex-wrap items-center gap-1 mt-2">
++                  {job.priority ? <PriorityStars count={job.priority} /> : null}
++                  {salaryStr ? (
++                    <span className="inline-flex items-center gap-0.5 rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-px text-[10px] font-semibold text-emerald-400 tabular-nums">
++                      <DollarSign className="h-2.5 w-2.5" />{salaryStr}
++                    </span>
++                  ) : null}
++                  {job.location ? (
++                    <span className="inline-flex items-center gap-0.5 rounded border border-zinc-600 bg-zinc-800/60 px-1.5 py-px text-[10px] text-zinc-300">
++                      <MapPin className="h-2.5 w-2.5" />{job.location}
++                    </span>
++                  ) : null}
++                  {remoteInfo ? (
++                    <span className={cn("inline-flex items-center gap-0.5 rounded border px-1.5 py-px text-[10px] font-medium", remoteInfo.cls)}>
++                      <Laptop className="h-2.5 w-2.5" />{remoteInfo.label}
++                    </span>
++                  ) : null}
++                </div>
++              ) : null}
++
++              {/* ── Skills / tags row ─────────────── */}
++              {(job.skills?.length || job.tags?.length) ? (
++                <div className="flex flex-wrap gap-1 mt-1.5">
++                  {(job.skills ?? []).slice(0, 3).map((s) => (
++                    <span key={s} className="rounded bg-violet-500/15 border border-violet-500/25 px-1.5 py-px text-[9px] font-medium text-violet-300">
++                      {s}
++                    </span>
++                  ))}
++                  {(job.skills?.length ?? 0) > 3 ? (
++                    <span className="text-[9px] text-zinc-500">+{job.skills!.length - 3}</span>
++                  ) : null}
++                  {(job.tags ?? []).slice(0, 2).map((t) => (
++                    <span key={t} className="inline-flex items-center gap-0.5 rounded bg-blue-500/15 border border-blue-500/25 px-1.5 py-px text-[9px] font-medium text-blue-300">
++                      <Tag className="h-2 w-2" />{t}
++                    </span>
++                  ))}
++                </div>
++              ) : null}
++
++              {/* ── Next step / deadline ──────────── */}
++              {(job.next_step || deadlineStr) ? (
++                <div className="flex items-center gap-2 mt-1.5 text-[10px]">
++                  {job.next_step ? (
++                    <span className="inline-flex items-center gap-0.5 text-sky-400 truncate max-w-[60%]">
++                      <Flag className="h-2.5 w-2.5 shrink-0" />{job.next_step}
++                    </span>
++                  ) : null}
++                  {deadlineStr ? (
++                    <span className={cn("inline-flex items-center gap-0.5 ml-auto", deadlineUrgent ? "text-red-400" : "text-zinc-400")}>
++                      <Clock className="h-2.5 w-2.5" />{deadlineStr}
++                    </span>
++                  ) : null}
++                </div>
++              ) : null}
++
+               {hasNotes ? (
+-                <p className="text-[11px] text-zinc-200 mt-2 line-clamp-3 border-l-2 border-amber-400/70 pl-2 leading-snug">
++                <p className="text-[11px] text-zinc-200 mt-2 line-clamp-2 border-l-2 border-amber-400/70 pl-2 leading-snug">
+                   {job.notes}
+                 </p>
+               ) : null}
+diff --git a/frontend/src/lib/api.ts b/frontend/src/lib/api.ts
+index 182318f..ec1e8e0 100644
+--- a/frontend/src/lib/api.ts
++++ b/frontend/src/lib/api.ts
+@@ -609,6 +609,7 @@ function handleDemoPost(path: string, body?: unknown): unknown {
+     const maxOrd = bookmarked.length
+       ? Math.max(...bookmarked.map((j) => j.sort_order ?? 0))
+       : -1;
++    const r = body as Record<string, unknown>;
+     const newJob: Job = {
+       id: `job-${Date.now()}`,
+       company: b.company ?? "",
+@@ -620,6 +621,22 @@ function handleDemoPost(path: string, body?: unknown): unknown {
+       source: b.source ?? "manual",
+       created_at: new Date().toISOString(),
+       updated_at: new Date().toISOString(),
++      // Rich fields
++      salary_min: r.salary_min as number | undefined,
++      salary_max: r.salary_max as number | undefined,
++      salary_currency: (r.salary_currency as string) || "USD",
++      location: r.location as string | undefined,
++      remote_type: (r.remote_type as Job["remote_type"]) || "unknown",
++      job_type: (r.job_type as Job["job_type"]) || "full_time",
++      experience_level: (r.experience_level as Job["experience_level"]) || "mid",
++      skills: (r.skills as string[]) || [],
++      priority: (r.priority as number) || 0,
++      department: r.department as string | undefined,
++      application_email: r.application_email as string | undefined,
++      company_website: r.company_website as string | undefined,
++      recruiter_name: r.recruiter_name as string | undefined,
++      deadline: r.deadline as string | undefined,
++      tags: (r.tags as string[]) || [],
+     };
+     jobs.push(newJob);
+     setDemoJobs(sortJobsKanbanOrder(jobs));
+@@ -1197,19 +1214,33 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
+   if (!API_URL) {
+     // Jobs → Supabase when configured
+     if (isSupabaseConfigured() && path === "/jobs") {
+-      const b = body as {
+-        company?: string;
+-        title?: string;
+-        url?: string;
+-        description?: string;
+-        source?: string;
+-      };
++      const b = body as Record<string, unknown>;
+       return (await sbJobs.createJob({
+-        company: b.company ?? "",
+-        title: b.title ?? "",
+-        url: normalizeJobUrl(b.url) ?? undefined,
+-        description: b.description,
+-        source: b.source,
++        company: (b.company as string) ?? "",
++        title: (b.title as string) ?? "",
++        url: normalizeJobUrl(b.url as string | undefined) ?? undefined,
++        description: b.description as string | undefined,
++        source: b.source as string | undefined,
++        // Rich fields — pass through anything the form sends
++        salary_min: b.salary_min as number | undefined,
++        salary_max: b.salary_max as number | undefined,
++        salary_currency: b.salary_currency as string | undefined,
++        location: b.location as string | undefined,
++        remote_type: b.remote_type as "remote" | "hybrid" | "onsite" | "unknown" | undefined,
++        job_type: b.job_type as "full_time" | "part_time" | "contract" | "internship" | "freelance" | undefined,
++        experience_level: b.experience_level as "intern" | "entry" | "mid" | "senior" | "lead" | "director" | "vp" | "c_level" | undefined,
++        skills: b.skills as string[] | undefined,
++        company_logo_url: b.company_logo_url as string | undefined,
++        deadline: b.deadline as string | undefined,
++        priority: b.priority as number | undefined,
++        application_email: b.application_email as string | undefined,
++        company_website: b.company_website as string | undefined,
++        department: b.department as string | undefined,
++        recruiter_name: b.recruiter_name as string | undefined,
++        recruiter_email: b.recruiter_email as string | undefined,
++        referral_source: b.referral_source as string | undefined,
++        excitement: b.excitement as number | undefined,
++        tags: b.tags as string[] | undefined,
+       })) as T;
+     }
+ 
+diff --git a/frontend/src/lib/demo-data.ts b/frontend/src/lib/demo-data.ts
+index f448d7a..7e3ec32 100644
+--- a/frontend/src/lib/demo-data.ts
++++ b/frontend/src/lib/demo-data.ts
+@@ -30,6 +30,19 @@ let demoJobs: Job[] = [
+     sort_order: 0,
+     source: "linkedin",
+     notes: "Great company culture, interested in their podcast analytics team",
++    salary_min: 130000,
++    salary_max: 170000,
++    salary_currency: "USD",
++    location: "New York, NY",
++    remote_type: "hybrid" as const,
++    job_type: "full_time" as const,
++    experience_level: "senior" as const,
++    skills: ["Python", "SQL", "Tableau", "dbt"],
++    priority: 4,
++    tags: ["dream_job", "FAANG"],
++    department: "Data & Insights",
++    next_step: "Finish cover letter",
++    next_step_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+     created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+     updated_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+   },
+@@ -42,6 +55,16 @@ let demoJobs: Job[] = [
+     status: "bookmarked",
+     sort_order: 1,
+     source: "indeed",
++    salary_min: 150000,
++    salary_max: 195000,
++    salary_currency: "USD",
++    location: "San Francisco, CA",
++    remote_type: "hybrid" as const,
++    job_type: "full_time" as const,
++    experience_level: "mid" as const,
++    skills: ["SQL", "Python", "Looker", "Airflow"],
++    priority: 3,
++    tags: ["fintech"],
+     created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+     updated_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+   },
+@@ -56,6 +79,15 @@ let demoJobs: Job[] = [
+     source: "company-website",
+     applied_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+     notes: "Applied through Angelist, strong fit for the role",
++    salary_min: 120000,
++    salary_max: 155000,
++    location: "San Francisco, CA",
++    remote_type: "onsite" as const,
++    job_type: "full_time" as const,
++    experience_level: "mid" as const,
++    skills: ["Product Ops", "SQL", "Jira", "Confluence"],
++    priority: 3,
++    tags: ["referral"],
+     created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+     updated_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+   },
+@@ -69,6 +101,17 @@ let demoJobs: Job[] = [
+     sort_order: 1,
+     source: "linkedin",
+     applied_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
++    salary_min: 140000,
++    salary_max: 180000,
++    location: "San Francisco, CA",
++    remote_type: "remote" as const,
++    job_type: "full_time" as const,
++    experience_level: "senior" as const,
++    skills: ["dbt", "SQL", "Python", "BigQuery", "Looker"],
++    priority: 5,
++    tags: ["dream_job"],
++    deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
++    next_step: "Follow up with recruiter",
+     created_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+     updated_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+   },
+@@ -83,6 +126,17 @@ let demoJobs: Job[] = [
+     source: "linkedin",
+     applied_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+     notes: "Applied via LinkedIn, waiting to hear back",
++    salary_min: 125000,
++    salary_max: 160000,
++    location: "San Francisco, CA",
++    remote_type: "hybrid" as const,
++    job_type: "full_time" as const,
++    experience_level: "mid" as const,
++    skills: ["Operations", "SQL", "Python", "Data Analysis"],
++    priority: 5,
++    tags: ["AI", "dream_job"],
++    department: "Operations",
++    referral_source: "LinkedIn",
+     created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+     updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+   },
+@@ -97,6 +151,18 @@ let demoJobs: Job[] = [
+     source: "company-website",
+     applied_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+     notes: "First round interview completed. Second round scheduled for next week.",
++    salary_min: 160000,
++    salary_max: 210000,
++    location: "San Francisco, CA",
++    remote_type: "remote" as const,
++    job_type: "full_time" as const,
++    experience_level: "senior" as const,
++    skills: ["Spark", "Python", "Terraform", "AWS", "Kafka"],
++    priority: 5,
++    tags: ["top_pick", "big_data"],
++    recruiter_name: "Sarah Chen",
++    next_step: "Technical interview round 2",
++    next_step_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+     created_at: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
+     updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+   },
+@@ -111,6 +177,15 @@ let demoJobs: Job[] = [
+     source: "linkedin",
+     applied_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+     notes: "Take-home project submitted. Waiting for feedback from hiring team.",
++    salary_min: 135000,
++    salary_max: 175000,
++    location: "Cambridge, MA",
++    remote_type: "hybrid" as const,
++    job_type: "full_time" as const,
++    experience_level: "mid" as const,
++    skills: ["Product Management", "SQL", "Analytics", "A/B Testing"],
++    priority: 3,
++    department: "Product",
+     created_at: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000).toISOString(),
+     updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+   },
+@@ -125,6 +200,17 @@ let demoJobs: Job[] = [
+     source: "linkedin",
+     applied_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+     notes: "Offer received! Negotiating salary. Decision deadline next Friday.",
++    salary_min: 145000,
++    salary_max: 185000,
++    location: "San Francisco, CA",
++    remote_type: "remote" as const,
++    job_type: "full_time" as const,
++    experience_level: "mid" as const,
++    skills: ["SQL", "Python", "Tableau", "Growth Analytics"],
++    priority: 4,
++    tags: ["FAANG", "offer_received"],
++    deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
++    next_step: "Negotiate equity package",
+     created_at: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000).toISOString(),
+     updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+   },
+diff --git a/frontend/src/lib/export-jobs-csv.ts b/frontend/src/lib/export-jobs-csv.ts
+index 06c9927..5fd1b29 100644
+--- a/frontend/src/lib/export-jobs-csv.ts
++++ b/frontend/src/lib/export-jobs-csv.ts
+@@ -13,6 +13,22 @@ export function jobsToCsv(jobs: Job[]): string {
+     "status",
+     "source",
+     "url",
++    "location",
++    "remote_type",
++    "job_type",
++    "experience_level",
++    "salary_min",
++    "salary_max",
++    "salary_currency",
++    "priority",
++    "skills",
++    "tags",
++    "department",
++    "deadline",
++    "recruiter_name",
++    "application_email",
++    "next_step",
++    "next_step_date",
+     "notes",
+     "created_at",
+     "updated_at",
+@@ -26,6 +42,22 @@ export function jobsToCsv(jobs: Job[]): string {
+         csvCell(j.status),
+         csvCell(j.source),
+         csvCell(j.url),
++        csvCell(j.location),
++        csvCell(j.remote_type),
++        csvCell(j.job_type),
++        csvCell(j.experience_level),
++        csvCell(j.salary_min != null ? String(j.salary_min) : ""),
++        csvCell(j.salary_max != null ? String(j.salary_max) : ""),
++        csvCell(j.salary_currency),
++        csvCell(j.priority != null ? String(j.priority) : ""),
++        csvCell((j.skills ?? []).join("; ")),
++        csvCell((j.tags ?? []).join("; ")),
++        csvCell(j.department),
++        csvCell(j.deadline),
++        csvCell(j.recruiter_name),
++        csvCell(j.application_email),
++        csvCell(j.next_step),
++        csvCell(j.next_step_date),
+         csvCell(j.notes),
+         csvCell(j.created_at),
+         csvCell(j.updated_at),
+diff --git a/frontend/src/lib/supabase/jobs.ts b/frontend/src/lib/supabase/jobs.ts
+index 64050fd..43cf781 100644
+--- a/frontend/src/lib/supabase/jobs.ts
++++ b/frontend/src/lib/supabase/jobs.ts
+@@ -4,7 +4,7 @@
+  * so no server-side API route is needed.
+  */
+ import { createClient } from "./client";
+-import type { Job, JobStatus } from "@/types";
++import type { Job, JobStatus, RemoteType, JobType, ExperienceLevel } from "@/types";
+ 
+ // ── Helpers ──
+ 
+@@ -50,21 +50,46 @@ export async function fetchJob(id: string): Promise<Job> {
+ 
+ // ── CREATE ──
+ 
+-export async function createJob(input: {
++export interface CreateJobInput {
+   company: string;
+   title: string;
+   url?: string;
+   description?: string;
+   source?: string;
+   status?: JobStatus;
+-}): Promise<Job> {
++  // Rich fields
++  salary_min?: number | null;
++  salary_max?: number | null;
++  salary_currency?: string;
++  location?: string | null;
++  remote_type?: RemoteType;
++  job_type?: JobType;
++  experience_level?: ExperienceLevel;
++  skills?: string[];
++  company_logo_url?: string | null;
++  deadline?: string | null;
++  priority?: number;
++  application_email?: string | null;
++  company_website?: string | null;
++  department?: string | null;
++  recruiter_name?: string | null;
++  recruiter_email?: string | null;
++  referral_source?: string | null;
++  excitement?: number;
++  fit_score?: number;
++  next_step?: string | null;
++  next_step_date?: string | null;
++  tags?: string[];
++}
++
++export async function createJob(input: CreateJobInput): Promise<Job> {
+   const userId = await requireUserId();
+ 
+   // Check for duplicate URL
+   if (input.url) {
+     const { data: existing } = await supabase()
+       .from("jobs")
+-      .select("id, company, title, url, status, source, sort_order, created_at, updated_at")
++      .select("*")
+       .eq("url", input.url)
+       .maybeSingle();
+ 
+@@ -96,6 +121,29 @@ export async function createJob(input: {
+       status: targetStatus,
+       source: input.source ?? "manual",
+       sort_order: nextOrder,
++      // Rich fields
++      salary_min: input.salary_min ?? null,
++      salary_max: input.salary_max ?? null,
++      salary_currency: input.salary_currency ?? "USD",
++      location: input.location ?? null,
++      remote_type: input.remote_type ?? "unknown",
++      job_type: input.job_type ?? "full_time",
++      experience_level: input.experience_level ?? "mid",
++      skills: input.skills ?? [],
++      company_logo_url: input.company_logo_url ?? null,
++      deadline: input.deadline ?? null,
++      priority: input.priority ?? 0,
++      application_email: input.application_email ?? null,
++      company_website: input.company_website ?? null,
++      department: input.department ?? null,
++      recruiter_name: input.recruiter_name ?? null,
++      recruiter_email: input.recruiter_email ?? null,
++      referral_source: input.referral_source ?? null,
++      excitement: input.excitement ?? 0,
++      fit_score: input.fit_score ?? 0,
++      next_step: input.next_step ?? null,
++      next_step_date: input.next_step_date ?? null,
++      tags: input.tags ?? [],
+     })
+     .select()
+     .single();
+@@ -108,7 +156,7 @@ export async function createJob(input: {
+ 
+ export async function updateJob(
+   id: string,
+-  updates: Partial<Pick<Job, "company" | "title" | "url" | "description" | "status" | "sort_order" | "notes" | "applied_at">>
++  updates: Partial<Omit<Job, "id" | "created_at" | "duplicate">>
+ ): Promise<Job> {
+   const { data, error } = await supabase()
+     .from("jobs")
+diff --git a/frontend/src/types/index.ts b/frontend/src/types/index.ts
+index 615ebf9..8b0f85f 100644
+--- a/frontend/src/types/index.ts
++++ b/frontend/src/types/index.ts
+@@ -1,4 +1,7 @@
+ export type JobStatus = "bookmarked" | "applied" | "interviewing" | "offer" | "rejected" | "ghosted";
++export type RemoteType = "remote" | "hybrid" | "onsite" | "unknown";
++export type JobType = "full_time" | "part_time" | "contract" | "internship" | "freelance";
++export type ExperienceLevel = "intern" | "entry" | "mid" | "senior" | "lead" | "director" | "vp" | "c_level";
+ 
+ export interface Job {
+   id: string;
+@@ -16,6 +19,33 @@ export interface Job {
+   updated_at: string;
+   /** Present on POST /jobs when this URL was already on the user’s board. */
+   duplicate?: boolean;
++
++  // ── Rich fields ────────────────────────────────────────────
++  salary_min?: number | null;
++  salary_max?: number | null;
++  salary_currency?: string;
++  location?: string | null;
++  remote_type?: RemoteType;
++  job_type?: JobType;
++  experience_level?: ExperienceLevel;
++  skills?: string[];
++  company_logo_url?: string | null;
++  deadline?: string | null;
++  /** 0 = unrated, 1-5 star priority */
++  priority?: number;
++  application_email?: string | null;
++  company_website?: string | null;
++  department?: string | null;
++  recruiter_name?: string | null;
++  recruiter_email?: string | null;
++  referral_source?: string | null;
++  /** 0 = unrated, 1-5 excitement level */
++  excitement?: number;
++  /** 0-100 self-assessed fit score */
++  fit_score?: number;
++  next_step?: string | null;
++  next_step_date?: string | null;
++  tags?: string[];
+ }
+ 
+ export interface Resume {
+diff --git a/supabase/migrations/20260412180000_rich_job_fields.sql b/supabase/migrations/20260412180000_rich_job_fields.sql
+new file mode 100644
+index 0000000..59acf34
+--- /dev/null
++++ b/supabase/migrations/20260412180000_rich_job_fields.sql
+@@ -0,0 +1,66 @@
++-- ============================================================
++-- Migration: Rich Job Fields
++-- Adds salary, location, remote type, job type, experience
++-- level, skills, priority, deadline, company logo, and
++-- application email to the jobs table.
++-- ============================================================
++
++-- ── New columns ──────────────────────────────────────────────
++
++alter table public.jobs
++  add column if not exists salary_min      integer,
++  add column if not exists salary_max      integer,
++  add column if not exists salary_currency text not null default 'USD',
++  add column if not exists location        text,
++  add column if not exists remote_type     text not null default 'unknown'
++    check (remote_type in ('remote', 'hybrid', 'onsite', 'unknown')),
++  add column if not exists job_type        text not null default 'full_time'
++    check (job_type in ('full_time', 'part_time', 'contract', 'internship', 'freelance')),
++  add column if not exists experience_level text not null default 'mid'
++    check (experience_level in ('intern', 'entry', 'mid', 'senior', 'lead', 'director', 'vp', 'c_level')),
++  add column if not exists skills          text[] not null default '{}',
++  add column if not exists company_logo_url text,
++  add column if not exists deadline        timestamptz,
++  add column if not exists priority        integer not null default 0
++    check (priority between 0 and 5),
++  add column if not exists application_email text,
++  add column if not exists company_website  text,
++  add column if not exists department       text,
++  add column if not exists recruiter_name   text,
++  add column if not exists recruiter_email  text,
++  add column if not exists referral_source  text,
++  add column if not exists excitement       integer not null default 0
++    check (excitement between 0 and 5),
++  add column if not exists fit_score        integer not null default 0
++    check (fit_score between 0 and 100),
++  add column if not exists next_step        text,
++  add column if not exists next_step_date   timestamptz,
++  add column if not exists tags             text[] not null default '{}';
++
++-- ── Indexes for common queries ───────────────────────────────
++
++create index if not exists idx_jobs_remote_type     on public.jobs (remote_type);
++create index if not exists idx_jobs_job_type        on public.jobs (job_type);
++create index if not exists idx_jobs_experience      on public.jobs (experience_level);
++create index if not exists idx_jobs_priority        on public.jobs (priority);
++create index if not exists idx_jobs_deadline        on public.jobs (deadline);
++create index if not exists idx_jobs_salary_range    on public.jobs (salary_min, salary_max);
++create index if not exists idx_jobs_location        on public.jobs (location);
++create index if not exists idx_jobs_skills          on public.jobs using gin (skills);
++create index if not exists idx_jobs_tags            on public.jobs using gin (tags);
++
++-- ── Comment the table for clarity ────────────────────────────
++
++comment on column public.jobs.salary_min       is 'Minimum annual salary (in salary_currency)';
++comment on column public.jobs.salary_max       is 'Maximum annual salary (in salary_currency)';
++comment on column public.jobs.salary_currency  is 'ISO 4217 currency code (default USD)';
++comment on column public.jobs.remote_type      is 'remote | hybrid | onsite | unknown';
++comment on column public.jobs.job_type         is 'full_time | part_time | contract | internship | freelance';
++comment on column public.jobs.experience_level is 'intern | entry | mid | senior | lead | director | vp | c_level';
++comment on column public.jobs.skills           is 'Array of skill tags, e.g. {Python, SQL, React}';
++comment on column public.jobs.priority         is '0 = no priority, 1-5 star rating';
++comment on column public.jobs.excitement       is '0 = unrated, 1-5 how excited you are';
++comment on column public.jobs.fit_score        is '0-100 self-assessed fit score';
++comment on column public.jobs.tags             is 'User-defined tags, e.g. {dream_job, referral, FAANG}';
++comment on column public.jobs.next_step        is 'Next action item for this application';
++comment on column public.jobs.next_step_date   is 'When the next step is due';

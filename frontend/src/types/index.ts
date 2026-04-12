@@ -1,4 +1,7 @@
 export type JobStatus = "bookmarked" | "applied" | "interviewing" | "offer" | "rejected" | "ghosted";
+export type RemoteType = "remote" | "hybrid" | "onsite" | "unknown";
+export type JobType = "full_time" | "part_time" | "contract" | "internship" | "freelance";
+export type ExperienceLevel = "intern" | "entry" | "mid" | "senior" | "lead" | "director" | "vp" | "c_level";
 
 export interface Job {
   id: string;
@@ -16,6 +19,33 @@ export interface Job {
   updated_at: string;
   /** Present on POST /jobs when this URL was already on the user’s board. */
   duplicate?: boolean;
+
+  // ── Rich fields ────────────────────────────────────────────
+  salary_min?: number | null;
+  salary_max?: number | null;
+  salary_currency?: string;
+  location?: string | null;
+  remote_type?: RemoteType;
+  job_type?: JobType;
+  experience_level?: ExperienceLevel;
+  skills?: string[];
+  company_logo_url?: string | null;
+  deadline?: string | null;
+  /** 0 = unrated, 1-5 star priority */
+  priority?: number;
+  application_email?: string | null;
+  company_website?: string | null;
+  department?: string | null;
+  recruiter_name?: string | null;
+  recruiter_email?: string | null;
+  referral_source?: string | null;
+  /** 0 = unrated, 1-5 excitement level */
+  excitement?: number;
+  /** 0-100 self-assessed fit score */
+  fit_score?: number;
+  next_step?: string | null;
+  next_step_date?: string | null;
+  tags?: string[];
 }
 
 export interface Resume {

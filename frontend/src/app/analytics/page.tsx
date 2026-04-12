@@ -1,6 +1,6 @@
 "use client";
 
-import type { AnalyticsData, AnalyticsConversions, AnalyticsDurations, Job } from "@/types";
+import type { AnalyticsData, AnalyticsConversions, AnalyticsDurations, Job, RemoteType, JobType } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useJobs } from "@/hooks/use-jobs";
 import {
@@ -13,6 +13,10 @@ import {
   ThumbsUp,
   ThumbsDown,
   Activity,
+  DollarSign,
+  Laptop,
+  MapPin,
+  Sparkles,
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -556,7 +560,7 @@ export default function AnalyticsPage() {
 
       {/* Top Companies */}
       {top_companies.length > 0 && (
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-zinc-900 border-zinc-800 mb-6">
           <CardHeader>
             <CardTitle className="text-white text-lg">Top Companies</CardTitle>
           </CardHeader>
@@ -575,6 +579,272 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── Rich field analytics ──────────────────────────────────── */}
+      <RichFieldAnalytics jobs={jobs} />
     </div>
+  );
+}
+
+// ── Rich field analytics component ─────────────────────────────────
+
+const REMOTE_COLOURS: Record<string, string> = {
+  remote: "#10b981",
+  hybrid: "#f59e0b",
+  onsite: "#3b82f6",
+  unknown: "#6b7280",
+};
+
+const JOB_TYPE_COLOURS: Record<string, string> = {
+  full_time: "#3b82f6",
+  part_time: "#8b5cf6",
+  contract: "#f59e0b",
+  internship: "#10b981",
+  freelance: "#ef4444",
+};
+
+function RichFieldAnalytics({ jobs }: { jobs: Job[] }) {
+  const stats = useMemo(() => {
+    // Salary stats
+    const withSalary = jobs.filter((j) => j.salary_min || j.salary_max);
+    let avgSalaryMin = 0;
+    let avgSalaryMax = 0;
+    let salaryCount = 0;
+    for (const j of withSalary) {
+      if (j.salary_min) { avgSalaryMin += j.salary_min; salaryCount++; }
+      if (j.salary_max) { avgSalaryMax += j.salary_max; }
+    }
+    avgSalaryMin = salaryCount > 0 ? Math.round(avgSalaryMin / salaryCount) : 0;
+    avgSalaryMax = withSalary.length > 0 ? Math.round(avgSalaryMax / withSalary.length) : 0;
+
+    // Remote type breakdown
+    const remoteMap: Record<string, number> = {};
+    for (const j of jobs) {
+      const rt = j.remote_type || "unknown";
+      remoteMap[rt] = (remoteMap[rt] || 0) + 1;
+    }
+    const remoteBreakdown = Object.entries(remoteMap)
+      .sort((a, b) => b[1] - a[1])
+      .map(([label, value]) => ({ label, value }));
+
+    // Job type breakdown
+    const jtMap: Record<string, number> = {};
+    for (const j of jobs) {
+      const jt = j.job_type || "full_time";
+      jtMap[jt] = (jtMap[jt] || 0) + 1;
+    }
+    const jobTypeBreakdown = Object.entries(jtMap)
+      .sort((a, b) => b[1] - a[1])
+      .map(([label, value]) => ({ label, value }));
+
+    // Top skills
+    const skillMap: Record<string, number> = {};
+    for (const j of jobs) {
+      for (const s of j.skills ?? []) {
+        skillMap[s] = (skillMap[s] || 0) + 1;
+      }
+    }
+    const topSkills = Object.entries(skillMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([skill, count]) => ({ skill, count }));
+
+    // Top locations
+    const locMap: Record<string, number> = {};
+    for (const j of jobs) {
+      if (j.location) {
+        locMap[j.location] = (locMap[j.location] || 0) + 1;
+      }
+    }
+    const topLocations = Object.entries(locMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([loc, count]) => ({ loc, count }));
+
+    // Priority distribution
+    const priorityMap: Record<number, number> = {};
+    for (const j of jobs) {
+      const p = j.priority ?? 0;
+      if (p > 0) priorityMap[p] = (priorityMap[p] || 0) + 1;
+    }
+
+    // Tag cloud
+    const tagMap: Record<string, number> = {};
+    for (const j of jobs) {
+      for (const t of j.tags ?? []) {
+        tagMap[t] = (tagMap[t] || 0) + 1;
+      }
+    }
+    const topTags = Object.entries(tagMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([tag, count]) => ({ tag, count }));
+
+    return {
+      withSalary, avgSalaryMin, avgSalaryMax,
+      remoteBreakdown, jobTypeBreakdown,
+      topSkills, topLocations, priorityMap, topTags,
+    };
+  }, [jobs]);
+
+  const hasRichData =
+    stats.withSalary.length > 0 ||
+    stats.topSkills.length > 0 ||
+    stats.topLocations.length > 0 ||
+    stats.topTags.length > 0 ||
+    stats.remoteBreakdown.some((r) => r.label !== "unknown");
+
+  if (!hasRichData) return null;
+
+  return (
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Salary Insights */}
+        {stats.withSalary.length > 0 && (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white text-lg flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-emerald-400" aria-hidden />
+                Salary Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4 text-center mb-4">
+                <div>
+                  <p className="text-2xl font-bold text-white tabular-nums">
+                    {stats.withSalary.length}
+                  </p>
+                  <p className="text-xs text-zinc-500">With salary data</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-emerald-400 tabular-nums">
+                    ${Math.round(stats.avgSalaryMin / 1000)}k
+                  </p>
+                  <p className="text-xs text-zinc-500">Avg min</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-emerald-400 tabular-nums">
+                    ${Math.round(stats.avgSalaryMax / 1000)}k
+                  </p>
+                  <p className="text-xs text-zinc-500">Avg max</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {stats.withSalary.slice(0, 5).map((j) => (
+                  <div key={j.id} className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-300 truncate max-w-[60%]">{j.company} — {j.title}</span>
+                    <span className="text-emerald-400 tabular-nums font-medium">
+                      {j.salary_min ? `$${Math.round(j.salary_min / 1000)}k` : ""}
+                      {j.salary_min && j.salary_max ? "–" : ""}
+                      {j.salary_max ? `$${Math.round(j.salary_max / 1000)}k` : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Remote Type Breakdown */}
+        {stats.remoteBreakdown.some((r) => r.label !== "unknown") && (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white text-lg flex items-center gap-2">
+                <Laptop className="h-5 w-5 text-sky-400" aria-hidden />
+                Work Model Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <HBar items={stats.remoteBreakdown} colourMap={REMOTE_COLOURS} />
+              <div className="border-t border-zinc-800 mt-4 pt-4">
+                <HBar items={stats.jobTypeBreakdown.map((i) => ({ ...i, label: i.label.replace(/_/g, " ") }))} colourMap={JOB_TYPE_COLOURS} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Top Skills */}
+        {stats.topSkills.length > 0 && (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white text-lg flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-violet-400" aria-hidden />
+                Top Skills Tracked
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {stats.topSkills.map((s) => (
+                  <span
+                    key={s.skill}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-violet-500/15 border border-violet-500/25 px-3 py-1.5 text-sm text-violet-200"
+                  >
+                    {s.skill}
+                    <span className="text-xs text-violet-400/70 tabular-nums">{s.count}</span>
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Top Locations */}
+        {stats.topLocations.length > 0 && (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white text-lg flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-rose-400" aria-hidden />
+                Locations
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.topLocations.map((l) => {
+                  const pct = Math.max((l.count / jobs.length) * 100, 4);
+                  return (
+                    <div key={l.loc} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-zinc-300">{l.loc}</span>
+                        <span className="text-zinc-400 font-medium tabular-nums">{l.count}</span>
+                      </div>
+                      <div className="h-3 rounded-full bg-zinc-800 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-rose-500/80 transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Tags Cloud */}
+      {stats.topTags.length > 0 && (
+        <Card className="bg-zinc-900 border-zinc-800 mb-6">
+          <CardHeader>
+            <CardTitle className="text-white text-lg">Your Tags</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {stats.topTags.map((t) => (
+                <span
+                  key={t.tag}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500/15 border border-blue-500/25 px-3 py-1.5 text-sm text-blue-200"
+                >
+                  #{t.tag}
+                  <span className="text-xs text-blue-400/70 tabular-nums">{t.count}</span>
+                </span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </>
   );
 }

@@ -14,7 +14,7 @@ import { filterJobsByQuery } from "@/lib/filter-jobs";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { useJobs } from "@/hooks/use-jobs";
 import type { Job } from "@/types";
-import { Download, LayoutGrid, ListFilter, Plus, Search, Send, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronUp, Download, LayoutGrid, ListFilter, Plus, Search, Send, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -25,6 +25,11 @@ export default function DashboardPage() {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [boardSearch, setBoardSearch] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [skillInput, setSkillInput] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
 
   const filteredJobs = useMemo(
     () => filterJobsByQuery(jobs, boardSearch),
@@ -36,6 +41,8 @@ export default function DashboardPage() {
     setCreating(true);
     const form = new FormData(e.currentTarget);
     const rawUrl = String(form.get("url") ?? "").trim();
+    const salMinRaw = String(form.get("salary_min") ?? "").trim();
+    const salMaxRaw = String(form.get("salary_max") ?? "").trim();
     try {
       const res = await apiPost<Job>("/jobs", {
         company: form.get("company"),
@@ -43,6 +50,22 @@ export default function DashboardPage() {
         url: normalizeJobUrl(rawUrl),
         description: (form.get("description") as string) || undefined,
         fetch_full_description: form.get("fetch_full_description") === "on",
+        // Rich fields
+        salary_min: salMinRaw ? Number(salMinRaw) : undefined,
+        salary_max: salMaxRaw ? Number(salMaxRaw) : undefined,
+        salary_currency: (form.get("salary_currency") as string) || "USD",
+        location: (form.get("location") as string) || undefined,
+        remote_type: (form.get("remote_type") as string) || undefined,
+        job_type: (form.get("job_type") as string) || undefined,
+        experience_level: (form.get("experience_level") as string) || undefined,
+        skills: skills.length > 0 ? skills : undefined,
+        priority: Number(form.get("priority") || 0) || undefined,
+        department: (form.get("department") as string) || undefined,
+        application_email: (form.get("application_email") as string) || undefined,
+        company_website: (form.get("company_website") as string) || undefined,
+        recruiter_name: (form.get("recruiter_name") as string) || undefined,
+        deadline: (form.get("deadline") as string) || undefined,
+        tags: tags.length > 0 ? tags : undefined,
       });
       if (res.duplicate) {
         toast.info("Already on your board");
@@ -50,6 +73,11 @@ export default function DashboardPage() {
         toast.success("Job added to tracker");
       }
       setOpen(false);
+      setShowAdvanced(false);
+      setSkills([]);
+      setTags([]);
+      setSkillInput("");
+      setTagInput("");
       (e.target as HTMLFormElement).reset();
       mutate();
     } catch (err: unknown) {
@@ -112,7 +140,7 @@ export default function DashboardPage() {
               <DialogHeader>
                 <DialogTitle className="text-white">Add New Job</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleCreate} className="space-y-4">
+              <form onSubmit={handleCreate} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
                 <div className="space-y-2">
                   <Label className="text-zinc-200">Company *</Label>
                   <Input name="company" required className="bg-zinc-800 border-zinc-700 text-white" />
@@ -131,14 +159,171 @@ export default function DashboardPage() {
                     placeholder="e.g. careers.acme.com/roles/123 or https://…"
                     className="bg-zinc-800 border-zinc-700 text-white"
                   />
-                  <p className="text-xs text-zinc-400">
-                    https:// is added automatically when omitted.
-                  </p>
+                  <p className="text-xs text-zinc-400">https:// is added automatically when omitted.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-zinc-200">Location</Label>
+                    <Input name="location" placeholder="San Francisco, CA" className="bg-zinc-800 border-zinc-700 text-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-zinc-200">Work model</Label>
+                    <select name="remote_type" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
+                      <option value="">Not specified</option>
+                      <option value="remote">Remote</option>
+                      <option value="hybrid">Hybrid</option>
+                      <option value="onsite">Onsite</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-zinc-200">Salary min</Label>
+                    <Input name="salary_min" type="number" placeholder="80000" className="bg-zinc-800 border-zinc-700 text-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-zinc-200">Salary max</Label>
+                    <Input name="salary_max" type="number" placeholder="120000" className="bg-zinc-800 border-zinc-700 text-white" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-zinc-200">Job type</Label>
+                    <select name="job_type" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
+                      <option value="full_time">Full-time</option>
+                      <option value="part_time">Part-time</option>
+                      <option value="contract">Contract</option>
+                      <option value="internship">Internship</option>
+                      <option value="freelance">Freelance</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-zinc-200">Level</Label>
+                    <select name="experience_level" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
+                      <option value="intern">Intern</option>
+                      <option value="entry">Entry</option>
+                      <option value="mid">Mid-level</option>
+                      <option value="senior">Senior</option>
+                      <option value="lead">Lead</option>
+                      <option value="director">Director</option>
+                      <option value="vp">VP</option>
+                      <option value="c_level">C-level</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-zinc-200">Skills</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      placeholder="Type a skill and press Enter"
+                      className="bg-zinc-800 border-zinc-700 text-white flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const v = skillInput.trim();
+                          if (v && !skills.includes(v)) setSkills([...skills, v]);
+                          setSkillInput("");
+                        }
+                      }}
+                    />
+                  </div>
+                  {skills.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {skills.map((s) => (
+                        <span key={s} className="inline-flex items-center gap-1 rounded bg-violet-500/20 border border-violet-500/30 px-2 py-0.5 text-xs text-violet-200">
+                          {s}
+                          <button type="button" className="text-violet-400 hover:text-white" onClick={() => setSkills(skills.filter((x) => x !== s))}>&times;</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-zinc-200">Priority</Label>
+                  <select name="priority" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
+                    <option value="0">None</option>
+                    <option value="1">1 star</option>
+                    <option value="2">2 stars</option>
+                    <option value="3">3 stars</option>
+                    <option value="4">4 stars</option>
+                    <option value="5">5 stars</option>
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-200">Job Description</Label>
-                  <Textarea name="description" rows={4} className="bg-zinc-800 border-zinc-700 text-white" />
+                  <Textarea name="description" rows={3} className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
+
+                {/* ── Advanced fields toggle ─────────── */}
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                >
+                  {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  {showAdvanced ? "Hide" : "Show"} advanced fields
+                </button>
+
+                {showAdvanced && (
+                  <div className="space-y-4 border-t border-zinc-700/50 pt-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-zinc-200">Department</Label>
+                        <Input name="department" placeholder="Engineering" className="bg-zinc-800 border-zinc-700 text-white" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-zinc-200">Deadline</Label>
+                        <Input name="deadline" type="date" className="bg-zinc-800 border-zinc-700 text-white" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-zinc-200">Recruiter name</Label>
+                        <Input name="recruiter_name" placeholder="Jane Smith" className="bg-zinc-800 border-zinc-700 text-white" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-zinc-200">Application email</Label>
+                        <Input name="application_email" type="email" placeholder="jobs@company.com" className="bg-zinc-800 border-zinc-700 text-white" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-zinc-200">Company website</Label>
+                      <Input name="company_website" placeholder="https://company.com" className="bg-zinc-800 border-zinc-700 text-white" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-zinc-200">Tags</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          placeholder="e.g. dream_job, referral, FAANG"
+                          className="bg-zinc-800 border-zinc-700 text-white flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const v = tagInput.trim();
+                              if (v && !tags.includes(v)) setTags([...tags, v]);
+                              setTagInput("");
+                            }
+                          }}
+                        />
+                      </div>
+                      {tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {tags.map((t) => (
+                            <span key={t} className="inline-flex items-center gap-1 rounded bg-blue-500/20 border border-blue-500/30 px-2 py-0.5 text-xs text-blue-200">
+                              {t}
+                              <button type="button" className="text-blue-400 hover:text-white" onClick={() => setTags(tags.filter((x) => x !== t))}>&times;</button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <label className="flex items-start gap-2 text-sm text-zinc-200 cursor-pointer">
                   <input
                     type="checkbox"

@@ -609,6 +609,7 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     const maxOrd = bookmarked.length
       ? Math.max(...bookmarked.map((j) => j.sort_order ?? 0))
       : -1;
+    const r = body as Record<string, unknown>;
     const newJob: Job = {
       id: `job-${Date.now()}`,
       company: b.company ?? "",
@@ -620,6 +621,22 @@ function handleDemoPost(path: string, body?: unknown): unknown {
       source: b.source ?? "manual",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      // Rich fields
+      salary_min: r.salary_min as number | undefined,
+      salary_max: r.salary_max as number | undefined,
+      salary_currency: (r.salary_currency as string) || "USD",
+      location: r.location as string | undefined,
+      remote_type: (r.remote_type as Job["remote_type"]) || "unknown",
+      job_type: (r.job_type as Job["job_type"]) || "full_time",
+      experience_level: (r.experience_level as Job["experience_level"]) || "mid",
+      skills: (r.skills as string[]) || [],
+      priority: (r.priority as number) || 0,
+      department: r.department as string | undefined,
+      application_email: r.application_email as string | undefined,
+      company_website: r.company_website as string | undefined,
+      recruiter_name: r.recruiter_name as string | undefined,
+      deadline: r.deadline as string | undefined,
+      tags: (r.tags as string[]) || [],
     };
     jobs.push(newJob);
     setDemoJobs(sortJobsKanbanOrder(jobs));
@@ -1197,19 +1214,33 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
   if (!API_URL) {
     // Jobs → Supabase when configured
     if (isSupabaseConfigured() && path === "/jobs") {
-      const b = body as {
-        company?: string;
-        title?: string;
-        url?: string;
-        description?: string;
-        source?: string;
-      };
+      const b = body as Record<string, unknown>;
       return (await sbJobs.createJob({
-        company: b.company ?? "",
-        title: b.title ?? "",
-        url: normalizeJobUrl(b.url) ?? undefined,
-        description: b.description,
-        source: b.source,
+        company: (b.company as string) ?? "",
+        title: (b.title as string) ?? "",
+        url: normalizeJobUrl(b.url as string | undefined) ?? undefined,
+        description: b.description as string | undefined,
+        source: b.source as string | undefined,
+        // Rich fields — pass through anything the form sends
+        salary_min: b.salary_min as number | undefined,
+        salary_max: b.salary_max as number | undefined,
+        salary_currency: b.salary_currency as string | undefined,
+        location: b.location as string | undefined,
+        remote_type: b.remote_type as "remote" | "hybrid" | "onsite" | "unknown" | undefined,
+        job_type: b.job_type as "full_time" | "part_time" | "contract" | "internship" | "freelance" | undefined,
+        experience_level: b.experience_level as "intern" | "entry" | "mid" | "senior" | "lead" | "director" | "vp" | "c_level" | undefined,
+        skills: b.skills as string[] | undefined,
+        company_logo_url: b.company_logo_url as string | undefined,
+        deadline: b.deadline as string | undefined,
+        priority: b.priority as number | undefined,
+        application_email: b.application_email as string | undefined,
+        company_website: b.company_website as string | undefined,
+        department: b.department as string | undefined,
+        recruiter_name: b.recruiter_name as string | undefined,
+        recruiter_email: b.recruiter_email as string | undefined,
+        referral_source: b.referral_source as string | undefined,
+        excitement: b.excitement as number | undefined,
+        tags: b.tags as string[] | undefined,
       })) as T;
     }
 
