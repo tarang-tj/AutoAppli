@@ -7,6 +7,8 @@ import type {
   SavedTailoredDocument,
   GeneratedDocument,
   InterviewNote,
+  Reminder,
+  Compensation,
 } from "@/types";
 
 // Demo state — updates persist for the browser session
@@ -546,4 +548,132 @@ export function removeDemoInterviewNote(noteId: string): boolean {
   const before = demoInterviewNotes.length;
   demoInterviewNotes = demoInterviewNotes.filter((n) => n.id !== noteId);
   return demoInterviewNotes.length < before;
+}
+
+// ── Reminders demo data ──────────────────────────────────────────
+
+let demoReminders: Reminder[] = [
+  {
+    id: "rem-demo-1",
+    job_id: "job-5",
+    reminder_type: "follow_up_application",
+    title: "Follow up with Anthropic",
+    message: "It's been over a week since you applied for Operations Analyst at Anthropic. Consider sending a polite follow-up email.",
+    due_at: new Date().toISOString(),
+    is_read: false,
+    is_dismissed: false,
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "rem-demo-2",
+    job_id: "job-8",
+    reminder_type: "offer_deadline",
+    title: "Offer deadline — Airbnb",
+    message: "You have a pending offer for Business Analyst at Airbnb. Don't forget to respond before the deadline!",
+    due_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    is_read: false,
+    is_dismissed: false,
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "rem-demo-3",
+    job_id: "job-6",
+    reminder_type: "interview_upcoming",
+    title: "Technical Round — coming up soon",
+    message: "Your second round interview at Databricks is coming up. Review your prep material!",
+    due_at: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+    is_read: false,
+    is_dismissed: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
+export function getDemoReminders(): Reminder[] {
+  return demoReminders.filter((r) => !r.is_dismissed);
+}
+
+export function pushDemoReminder(rem: Reminder): Reminder {
+  demoReminders = [rem, ...demoReminders];
+  return rem;
+}
+
+export function updateDemoReminder(id: string, patch: Partial<Reminder>): Reminder | null {
+  const idx = demoReminders.findIndex((r) => r.id === id);
+  if (idx === -1) return null;
+  demoReminders[idx] = { ...demoReminders[idx], ...patch, updated_at: new Date().toISOString() };
+  return demoReminders[idx];
+}
+
+export function removeDemoReminder(id: string): boolean {
+  const before = demoReminders.length;
+  demoReminders = demoReminders.filter((r) => r.id !== id);
+  return demoReminders.length < before;
+}
+
+// ── Compensation demo data ───────────────────────────────────────
+
+let demoCompensations: Compensation[] = [
+  {
+    id: "comp-demo-1",
+    job_id: "job-8",
+    base_salary: 135000,
+    bonus: 15000,
+    equity_value: 40000,
+    signing_bonus: 10000,
+    benefits_value: 8000,
+    total_compensation: 208000,
+    currency: "USD",
+    pay_period: "annual",
+    notes: "Offer from Airbnb — strong total comp, good equity vesting schedule",
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "comp-demo-2",
+    job_id: "job-6",
+    base_salary: 155000,
+    bonus: 20000,
+    equity_value: 60000,
+    signing_bonus: 15000,
+    benefits_value: 10000,
+    total_compensation: 260000,
+    currency: "USD",
+    pay_period: "annual",
+    notes: "Expected offer from Databricks — higher base and equity",
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+export function getDemoCompensations(): Compensation[] {
+  return [...demoCompensations];
+}
+
+export function pushDemoCompensation(comp: Compensation): Compensation {
+  demoCompensations = [comp, ...demoCompensations];
+  return comp;
+}
+
+export function updateDemoCompensation(id: string, patch: Partial<Compensation>): Compensation | null {
+  const idx = demoCompensations.findIndex((c) => c.id === id);
+  if (idx === -1) return null;
+  const updated = { ...demoCompensations[idx], ...patch, updated_at: new Date().toISOString() };
+  // Recalculate total
+  updated.total_compensation =
+    (updated.base_salary || 0) +
+    (updated.bonus || 0) +
+    (updated.equity_value || 0) +
+    (updated.signing_bonus || 0) +
+    (updated.benefits_value || 0);
+  demoCompensations[idx] = updated;
+  return updated;
+}
+
+export function removeDemoCompensation(id: string): boolean {
+  const before = demoCompensations.length;
+  demoCompensations = demoCompensations.filter((c) => c.id !== id);
+  return demoCompensations.length < before;
 }

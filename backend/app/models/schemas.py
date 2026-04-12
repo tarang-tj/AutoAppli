@@ -223,3 +223,46 @@ class InterviewNoteUpdate(BaseModel):
     notes: str | None = None
     prep_material: dict | None = None
     status: str | None = None
+
+
+# ── Notifications & reminders ─────────────────────────────────────
+
+class ReminderCreate(BaseModel):
+    job_id: str | None = None
+    reminder_type: str = "custom"
+    title: str = ""
+    message: str = ""
+    due_at: str | None = None
+
+
+class ReminderUpdate(BaseModel):
+    title: str | None = None
+    message: str | None = None
+    due_at: str | None = None
+    is_read: bool | None = None
+    is_dismissed: bool | None = None
+
+
+# ── Salary & compensation ─────────────────────────────────────────
+
+class CompensationCreate(BaseModel):
+    job_id: str | None = None
+    base_salary: float = 0
+    bonus: float = 0
+    equity_value: float = 0
+    signing_bonus: float = 0
+    benefits_value: float = 0
+    currency: str = "USD"
+    pay_period: str = "annual"
+    notes: str = ""
+
+
+class CompensationUpdate(BaseModel):
+    base_salary: float | None = None
+    bonus: float | None = None
+    equity_value: float | None = None
+    signing_bonus: float | None = None
+    benefits_value: float | None = None
+    currency: str | None = None
+    pay_period: str | None = None
+    notes: str | None = None

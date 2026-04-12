@@ -16,6 +16,14 @@ import {
   getDemoInterviewNotes,
   pushDemoInterviewNote,
   removeDemoInterviewNote,
+  getDemoReminders,
+  pushDemoReminder,
+  updateDemoReminder,
+  removeDemoReminder,
+  getDemoCompensations,
+  pushDemoCompensation,
+  updateDemoCompensation,
+  removeDemoCompensation,
 } from "@/lib/demo-data";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { sortJobsKanbanOrder } from "@/lib/kanban-reorder";
@@ -31,6 +39,8 @@ import type {
   MatchScoresResponse,
   InterviewNote,
   InterviewPrepMaterial,
+  Reminder,
+  Compensation,
 } from "@/types";
 
 function computeDemoAnalytics(jobs: Job[]): AnalyticsData {
@@ -356,6 +366,30 @@ function handleDemoGet(path: string): unknown {
     const jobId = new URLSearchParams(path.split("?")[1]).get("job_id");
     return getDemoInterviewNotes().filter((n) => n.job_id === jobId);
   }
+  if (path === "/notifications/reminders" || path.startsWith("/notifications/reminders?")) {
+    return getDemoReminders();
+  }
+  if (path === "/salary") {
+    return getDemoCompensations();
+  }
+  if (path.startsWith("/salary?job_id=")) {
+    const jobId = new URLSearchParams(path.split("?")[1]).get("job_id");
+    return getDemoCompensations().filter((c) => c.job_id === jobId);
+  }
+  if (path === "/salary/compare") {
+    const entries = getDemoCompensations();
+    if (!entries.length) return { entries: [], best_total_id: null, best_base_id: null, average_total: 0, count: 0 };
+    const best_total = entries.reduce((a, b) => (a.total_compensation > b.total_compensation ? a : b));
+    const best_base = entries.reduce((a, b) => (a.base_salary > b.base_salary ? a : b));
+    const avg = entries.reduce((s, e) => s + e.total_compensation, 0) / entries.length;
+    return {
+      entries: [...entries].sort((a, b) => b.total_compensation - a.total_compensation),
+      best_total_id: best_total.id,
+      best_base_id: best_base.id,
+      average_total: Math.round(avg * 100) / 100,
+      count: entries.length,
+    };
+  }
   throw new Error(`Demo mode does not support GET ${path}`);
 }
 
@@ -567,6 +601,44 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     };
     return pushDemoInterviewNote(note);
   }
+  if (path === "/notifications/reminders") {
+    const b = body as Partial<Reminder>;
+    const now = new Date().toISOString();
+    const rem: Reminder = {
+      id: `rem-${Date.now().toString(36)}`,
+      job_id: b.job_id || null,
+      reminder_type: b.reminder_type || "custom",
+      title: b.title || "Reminder",
+      message: b.message || "",
+      due_at: b.due_at || null,
+      is_read: false,
+      is_dismissed: false,
+      created_at: now,
+      updated_at: now,
+    };
+    return pushDemoReminder(rem);
+  }
+  if (path === "/salary") {
+    const b = body as Partial<Compensation>;
+    const now = new Date().toISOString();
+    const total = (b.base_salary || 0) + (b.bonus || 0) + (b.equity_value || 0) + (b.signing_bonus || 0) + (b.benefits_value || 0);
+    const comp: Compensation = {
+      id: `comp-${Date.now().toString(36)}`,
+      job_id: b.job_id || null,
+      base_salary: b.base_salary || 0,
+      bonus: b.bonus || 0,
+      equity_value: b.equity_value || 0,
+      signing_bonus: b.signing_bonus || 0,
+      benefits_value: b.benefits_value || 0,
+      total_compensation: total,
+      currency: b.currency || "USD",
+      pay_period: b.pay_period || "annual",
+      notes: b.notes || "",
+      created_at: now,
+      updated_at: now,
+    };
+    return pushDemoCompensation(comp);
+  }
   if (path === "/interviews/prep") {
     const b = body as { job_title?: string; company?: string };
     const demoPrep: InterviewPrepMaterial = {
@@ -612,6 +684,16 @@ function handleDemoDelete(path: string): void {
   if (path.startsWith("/interviews/")) {
     const noteId = path.split("/")[2];
     removeDemoInterviewNote(noteId);
+    return;
+  }
+  if (path.startsWith("/notifications/reminders/")) {
+    const remId = path.split("/")[3];
+    removeDemoReminder(remId);
+    return;
+  }
+  if (path.startsWith("/salary/")) {
+    const compId = path.split("/")[2];
+    removeDemoCompensation(compId);
     return;
   }
   throw new Error(`Demo mode does not support DELETE ${path}`);
@@ -666,6 +748,20 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
     const updated = { ...notes[idx], ...b, updated_at: new Date().toISOString() };
     notes[idx] = updated;
     return updated;
+  }
+  if (path.startsWith("/notifications/reminders/")) {
+    const remId = path.split("/")[3];
+    const b = body as Partial<Reminder>;
+    const result = updateDemoReminder(remId, b);
+    if (!result) throw new Error("Reminder not found");
+    return result;
+  }
+  if (path.startsWith("/salary/")) {
+    const compId = path.split("/")[2];
+    const b = body as Partial<Compensation>;
+    const result = updateDemoCompensation(compId, b);
+    if (!result) throw new Error("Compensation entry not found");
+    return result;
   }
   throw new Error(`Demo mode does not support PATCH ${path}`);
 }
@@ -737,6 +833,20 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     return fetchBackend<T>(path);
   }
 
+  if (path === "/notifications/reminders" || path.startsWith("/notifications/reminders?")) {
+    if (!API_URL) {
+      return handleDemoGet(path) as T;
+    }
+    return fetchBackend<T>(path);
+  }
+
+  if (path === "/salary" || path.startsWith("/salary?") || path === "/salary/compare") {
+    if (!API_URL) {
+      return handleDemoGet(path) as T;
+    }
+    return fetchBackend<T>(path);
+  }
+
   if ((isJobsListPath(path) || isJobsDetailPath(path)) && !API_URL) {
     return handleDemoGet(path) as T;
   }
@@ -785,6 +895,14 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
   }
 
   if ((path === "/interviews" || path === "/interviews/prep") && !API_URL) {
+    return handleDemoPost(path, body) as T;
+  }
+
+  if (path === "/notifications/reminders" && !API_URL) {
+    return handleDemoPost(path, body) as T;
+  }
+
+  if (path === "/salary" && !API_URL) {
     return handleDemoPost(path, body) as T;
   }
 
@@ -874,6 +992,14 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
     return handleDemoPatch(path, body) as T;
   }
 
+  if (path.startsWith("/notifications/reminders/") && !API_URL) {
+    return handleDemoPatch(path, body) as T;
+  }
+
+  if (path.startsWith("/salary/") && !API_URL) {
+    return handleDemoPatch(path, body) as T;
+  }
+
   if (!isSupabaseConfigured()) {
     return handleDemoPatch(path, body) as T;
   }
@@ -892,6 +1018,26 @@ export async function apiDelete(path: string): Promise<void> {
   }
 
   if (path.startsWith("/interviews/") && API_URL) {
+    await fetchBackend(path, { method: "DELETE" });
+    return;
+  }
+
+  if (path.startsWith("/notifications/reminders/") && !API_URL) {
+    handleDemoDelete(path);
+    return;
+  }
+
+  if (path.startsWith("/notifications/reminders/") && API_URL) {
+    await fetchBackend(path, { method: "DELETE" });
+    return;
+  }
+
+  if (path.startsWith("/salary/") && path !== "/salary/compare" && !API_URL) {
+    handleDemoDelete(path);
+    return;
+  }
+
+  if (path.startsWith("/salary/") && path !== "/salary/compare" && API_URL) {
     await fetchBackend(path, { method: "DELETE" });
     return;
   }

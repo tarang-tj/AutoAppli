@@ -240,3 +240,51 @@ export interface AnalyticsData {
   response_rate: number;
   summary: AnalyticsSummary;
 }
+
+// ── Notification & reminder types ────────────────────────────────
+
+export type ReminderType =
+  | "interview_upcoming"
+  | "follow_up_application"
+  | "follow_up_interview"
+  | "offer_deadline"
+  | "custom";
+
+export interface Reminder {
+  id: string;
+  job_id: string | null;
+  reminder_type: ReminderType;
+  title: string;
+  message: string;
+  due_at: string | null;
+  is_read: boolean;
+  is_dismissed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Salary & compensation types ──────────────────────────────────
+
+export interface Compensation {
+  id: string;
+  job_id: string | null;
+  base_salary: number;
+  bonus: number;
+  equity_value: number;
+  signing_bonus: number;
+  benefits_value: number;
+  total_compensation: number;
+  currency: string;
+  pay_period: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CompensationComparison {
+  entries: Compensation[];
+  best_total_id: string | null;
+  best_base_id: string | null;
+  average_total: number;
+  count: number;
+}

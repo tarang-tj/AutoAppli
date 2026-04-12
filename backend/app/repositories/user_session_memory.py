@@ -12,6 +12,9 @@ def _key(user_id: str | None) -> str:
 _resumes_by_user: dict[str, dict[str, dict]] = {}
 _outreach_by_user: dict[str, list[dict]] = {}
 _interviews_by_user: dict[str, list[dict]] = {}
+_reminders_by_user: dict[str, list[dict]] = {}
+_compensations_by_user: dict[str, list[dict]] = {}
+_jobs_by_user: dict[str, dict[str, dict]] = {}
 
 
 def resume_store(user_id: str | None) -> dict[str, dict]:
@@ -33,3 +36,24 @@ def interview_notes(user_id: str | None) -> list[dict]:
     if k not in _interviews_by_user:
         _interviews_by_user[k] = []
     return _interviews_by_user[k]
+
+
+def reminders(user_id: str | None) -> list[dict]:
+    k = _key(user_id)
+    if k not in _reminders_by_user:
+        _reminders_by_user[k] = []
+    return _reminders_by_user[k]
+
+
+def compensations(user_id: str | None) -> list[dict]:
+    k = _key(user_id)
+    if k not in _compensations_by_user:
+        _compensations_by_user[k] = []
+    return _compensations_by_user[k]
+
+
+def job_store(user_id: str | None) -> dict[str, dict]:
+    k = _key(user_id)
+    if k not in _jobs_by_user:
+        _jobs_by_user[k] = {}
+    return _jobs_by_user[k]
