@@ -63,7 +63,7 @@ function RuleCard({
   onDelete: (id: string) => void;
 }) {
   const triggerInfo = TRIGGER_CONFIG[rule.trigger] || TRIGGER_CONFIG.manual;
-  const triggerIcon = triggerInfo.icon;
+  const TriggerIcon = triggerInfo.icon;
   const actionInfo = ACTION_CONFIG[rule.action] || { label: "Unknown" };
   const config = rule.action_config as Record<string, unknown>;
 
@@ -78,7 +78,7 @@ function RuleCard({
                 className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: `${triggerInfo.color}20` }}
               >
-                <triggerIcon className="h-4 w-4" style={{ color: triggerInfo.color }} />
+                <TriggerIcon className="h-4 w-4" style={{ color: triggerInfo.color }} />
               </div>
               <div className="text-sm text-zinc-400">
                 <span className="font-medium text-white">{triggerInfo.label}</span>

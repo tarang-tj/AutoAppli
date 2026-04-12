@@ -13,7 +13,7 @@ import {
   Trash2,
   Mail,
   Phone,
-  Linkedin,
+  ExternalLink,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -197,7 +197,7 @@ function ContactCard({ contact, job, onRefresh }: { contact: CRMContact; job?: J
               )}
               {contact.linkedin_url && (
                 <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-zinc-300">
-                  <Linkedin className="h-3 w-3" /> LinkedIn
+                  <ExternalLink className="h-3 w-3" /> LinkedIn
                 </a>
               )}
               {lastContact && (
