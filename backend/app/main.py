@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import auth, jobs, outreach, profile, resume, search
+from app.routers import analytics, auth, jobs, outreach, profile, resume, search
 
 settings = get_settings()
 
@@ -22,6 +22,7 @@ app.include_router(resume.router, prefix="/api/v1")
 app.include_router(outreach.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
+app.include_router(analytics.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health")
