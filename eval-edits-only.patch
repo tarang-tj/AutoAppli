@@ -1,0 +1,228 @@
+diff --git a/backend/app/models/schemas.py b/backend/app/models/schemas.py
+index bd093d6..d33dc24 100644
+--- a/backend/app/models/schemas.py
++++ b/backend/app/models/schemas.py
+@@ -147,5 +147,52 @@ class ThankYouResponse(BaseModel):
+     saved_outreach_id: str | None = None
+ 
+ 
++class KeywordCoverageDetail(BaseModel):
++    score: int = Field(ge=0, le=100, default=0)
++    matched: list[str] = Field(default_factory=list)
++    missing: list[str] = Field(default_factory=list)
++    total_keywords: int = 0
++
++
++class HallucinationCheckDetail(BaseModel):
++    score: int = Field(ge=0, le=100, default=100)
++    hallucinated_skills: list[str] = Field(default_factory=list)
++    hallucinated_credentials: list[str] = Field(default_factory=list)
++
++
++class ChangeDeltaDetail(BaseModel):
++    score: int = Field(ge=0, le=100, default=0)
++    change_percent: float = 0.0
++    similarity_ratio: float = 0.0
++    verdict: str = ""
++    added_sentences: int = 0
++    removed_sentences: int = 0
++
++
++class ResumeEvalResponse(BaseModel):
++    overall_score: int = Field(ge=0, le=100, default=0)
++    keyword_coverage: KeywordCoverageDetail = Field(default_factory=KeywordCoverageDetail)
++    hallucination_check: HallucinationCheckDetail = Field(default_factory=HallucinationCheckDetail)
++    change_delta: ChangeDeltaDetail = Field(default_factory=ChangeDeltaDetail)
++
++
++class ResumeEvalRequest(BaseModel):
++    """Evaluate a tailored resume against original + JD."""
++    original_resume_text: str
++    tailored_resume_text: str
++    job_description: str
++
++
++class ResumeGenerateWithEvalResponse(BaseModel):
++    """Extended generate response that includes eval scores."""
++    id: str
++    doc_type: str = "tailored_resume"
++    content: str
++    storage_path: str = ""
++    download_url: str = ""
++    pdf_base64: str | None = None
++    eval_result: ResumeEvalResponse | None = None
++
++
+ class HealthResponse(BaseModel):
+     status: str = "ok"
+diff --git a/backend/app/routers/resume.py b/backend/app/routers/resume.py
+index 6fd3b3a..be20c2d 100644
+--- a/backend/app/routers/resume.py
++++ b/backend/app/routers/resume.py
+@@ -8,8 +8,11 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+ from app.config import Settings, get_settings
+ from app.deps.jobs_auth import get_jobs_user_id, jobs_use_supabase
+ from app.models.schemas import (
++    ResumeEvalRequest,
++    ResumeEvalResponse,
+     ResumeGenerateRequest,
+     ResumeGenerateResponse,
++    ResumeGenerateWithEvalResponse,
+     ResumeReviewRequest,
+     ResumeReviewResponse,
+     SavedGeneratedDocument,
+@@ -17,6 +20,7 @@ from app.models.schemas import (
+ from app.repositories import documents_supabase as documents_sb
+ from app.repositories import resume_supabase as resume_sb
+ from app.repositories.user_session_memory import resume_store
++from app.services.eval_service import evaluate_tailored_resume
+ from app.services.resume_generator import generate_resume_review, generate_tailored_resume
+ from app.services.resume_parser import extract_text_from_pdf
+ 
+@@ -133,7 +137,7 @@ async def delete_generated_resume(
+     return {"ok": True}
+ 
+ 
+-@router.post("/resumes/generate", response_model=ResumeGenerateResponse)
++@router.post("/resumes/generate", response_model=ResumeGenerateWithEvalResponse)
+ async def generate_resume(
+     req: ResumeGenerateRequest,
+     user_id: str | None = Depends(get_jobs_user_id),
+@@ -156,7 +160,23 @@ async def generate_resume(
+             instructions=req.instructions.strip() or None,
+             include_pdf=req.include_pdf,
+         )
+-        out = ResumeGenerateResponse(**result)
++
++        # Run eval pipeline on the tailored output
++        tailored_content = result.get("content") or ""
++        eval_data = None
++        if tailored_content and resume_text:
++            try:
++                eval_result = evaluate_tailored_resume(
++                    original_resume=resume_text,
++                    tailored_resume=tailored_content,
++                    job_description=req.job_description,
++                )
++                eval_data = ResumeEvalResponse(**eval_result.to_dict())
++            except Exception:
++                pass  # Eval failure should not block resume generation
++
++        out = ResumeGenerateWithEvalResponse(**result, eval_result=eval_data)
++
+         if _resume_db(settings, user_id):
+             assert user_id is not None
+             try:
+@@ -165,7 +185,7 @@ async def generate_resume(
+                     user_id,
+                     resume_id=req.resume_id,
+                     job_description=req.job_description,
+-                    content=result.get("content") or "",
++                    content=tailored_content,
+                 )
+             except Exception:
+                 pass
+@@ -174,6 +194,27 @@ async def generate_resume(
+         raise HTTPException(status_code=500, detail=str(exc))
+ 
+ 
++@router.post("/resumes/evaluate", response_model=ResumeEvalResponse)
++async def evaluate_resume(req: ResumeEvalRequest):
++    """
++    Standalone eval endpoint — score a tailored resume against the original
++    and job description without generating a new one.
++    """
++    if not req.tailored_resume_text.strip():
++        raise HTTPException(status_code=400, detail="tailored_resume_text is required")
++    if not req.original_resume_text.strip():
++        raise HTTPException(status_code=400, detail="original_resume_text is required")
++    if not req.job_description.strip():
++        raise HTTPException(status_code=400, detail="job_description is required")
++
++    result = evaluate_tailored_resume(
++        original_resume=req.original_resume_text,
++        tailored_resume=req.tailored_resume_text,
++        job_description=req.job_description,
++    )
++    return ResumeEvalResponse(**result.to_dict())
++
++
+ @router.post("/resumes/review", response_model=ResumeReviewResponse)
+ async def review_resume(
+     req: ResumeReviewRequest,
+diff --git a/frontend/src/app/resume/page.tsx b/frontend/src/app/resume/page.tsx
+index 3f08ea8..c98c31c 100644
+--- a/frontend/src/app/resume/page.tsx
++++ b/frontend/src/app/resume/page.tsx
+@@ -10,7 +10,8 @@ import {
+ } from "@/lib/demo-data";
+ import { consumeResumeHandoff, tailoringTextFromJob } from "@/lib/tracker-handoff";
+ import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
+-import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocument } from "@/types";
++import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocument, EvalResult } from "@/types";
++import { EvalScoreCard } from "@/components/resume/eval-score-card";
+ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+ import { Textarea } from "@/components/ui/textarea";
+ import { FileStack, History, Info, Sparkles, Trash2, X } from "lucide-react";
+@@ -335,8 +336,11 @@ function ResumeBuilderContent() {
+             </Card>
+           ) : null}
+         </div>
+-        <div>
++        <div className="space-y-6">
+           <ResumePreview document={generated} />
++          {generated?.eval_result && (
++            <EvalScoreCard eval_result={generated.eval_result} />
++          )}
+         </div>
+       </div>
+     </div>
+diff --git a/frontend/src/types/index.ts b/frontend/src/types/index.ts
+index 0c53d13..fb6ba79 100644
+--- a/frontend/src/types/index.ts
++++ b/frontend/src/types/index.ts
+@@ -27,6 +27,35 @@ export interface Resume {
+   created_at: string;
+ }
+ 
++export interface KeywordCoverage {
++  score: number;
++  matched: string[];
++  missing: string[];
++  total_keywords: number;
++}
++
++export interface HallucinationCheck {
++  score: number;
++  hallucinated_skills: string[];
++  hallucinated_credentials: string[];
++}
++
++export interface ChangeDelta {
++  score: number;
++  change_percent: number;
++  similarity_ratio: number;
++  verdict: string;
++  added_sentences: number;
++  removed_sentences: number;
++}
++
++export interface EvalResult {
++  overall_score: number;
++  keyword_coverage: KeywordCoverage;
++  hallucination_check: HallucinationCheck;
++  change_delta: ChangeDelta;
++}
++
+ export interface GeneratedDocument {
+   id: string;
+   doc_type: "tailored_resume" | "cover_letter";
+@@ -35,6 +64,8 @@ export interface GeneratedDocument {
+   download_url: string;
+   /** Base64-encoded PDF when the API generated one (`include_pdf: true`). */
+   pdf_base64?: string | null;
++  /** Eval scores from the AI eval pipeline (present when generated via tailoring). */
++  eval_result?: EvalResult | null;
+ }
+ 
+ export interface ResumeReview {

@@ -1,0 +1,25 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Validate locally: https://render.com/docs/infrastructure-as-code#validate-a-blueprint-file
+#
+# If the dashboard shows "0 services" or "there was an issue":
+# - plan: free is NOT allowed for private GitHub repos. Make the repo public OR set plan to starter (paid).
+# - Ensure the Render GitHub app can access this repository (repo Settings → Integrations / reconnect Render).
+
+version: "1"
+
+services:
+  - type: web
+    name: autoappli-api
+    runtime: docker
+    branch: main
+    region: oregon
+    # Free tier: public repo only. Use `plan: starter` if the repo stays private (paid).
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
