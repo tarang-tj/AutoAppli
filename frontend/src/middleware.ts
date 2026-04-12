@@ -8,6 +8,7 @@ const PUBLIC_PATH_PREFIXES = [
   "/auth",
   "/privacy",
   "/terms",
+  "/api",       // API routes must never be auth-gated
 ] as const;
 
 function isPublicPath(pathname: string): boolean {

@@ -281,16 +281,22 @@ const AI_ROUTE_MAP: Record<string, string> = {
   "/cover-letter/generate": "/api/ai/cover-letter",
 };
 
-/** Call a local Next.js AI API route. Falls back to null on failure so callers can use demo mode. */
+/** Call a local Next.js AI API route. Throws on any failure. */
 async function callLocalAI<T>(route: string, body?: unknown): Promise<T> {
   const res = await fetch(route, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
+    redirect: "error",          // fail fast if middleware redirects (e.g. to /login)
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "AI request failed" }));
     throw new Error(err.error || `AI route returned ${res.status}`);
+  }
+  // Guard against non-JSON responses (e.g. HTML from redirect/error page)
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) {
+    throw new Error("AI route returned non-JSON response");
   }
   return res.json();
 }
@@ -301,7 +307,11 @@ async function tryLocalAI<T>(path: string, body?: unknown): Promise<T | null> {
   if (!route) return null;
   try {
     return await callLocalAI<T>(route, body);
-  } catch {
+  } catch (e) {
+    if (typeof window !== "undefined") {
+      // eslint-disable-next-line no-console
+      console.warn("[AutoAppli] AI route failed, using demo mode:", route, e);
+    }
     return null;
   }
 }
@@ -1116,102 +1126,34 @@ function handleDemoPut(path: string, body: unknown): unknown {
 }
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {
-  if (path === "/profile") {
-    if (!API_URL) {
-      return getDemoProfile() as T;
+  // ── No FastAPI backend: everything runs in demo mode ──
+  if (!API_URL) {
+    if (path === "/profile") return getDemoProfile() as T;
+    if (path === "/search/history" || path.startsWith("/search/history?")) return [] as T;
+    if (path.startsWith("/search/runs/") && path.endsWith("/results")) {
+      return { results: [], search_id: null, from_cache: true, persisted: false } as T;
     }
-    return fetchBackend<T>(path);
-  }
-
-  if (path === "/search/history" || path.startsWith("/search/history?")) {
-    if (!API_URL) {
-      return [] as T;
-    }
-    return fetchBackend<T>(path);
-  }
-
-  if (path.startsWith("/search/runs/") && path.endsWith("/results")) {
-    if (!API_URL) {
-      return {
-        results: [],
-        search_id: null,
-        from_cache: true,
-        persisted: false,
-      } as T;
-    }
-    return fetchBackend<T>(path);
-  }
-
-  if (path === "/analytics") {
-    if (!API_URL) {
-      return handleDemoGet(path) as T;
-    }
-    return fetchBackend<T>(path);
-  }
-
-  if (path === "/interviews" || path.startsWith("/interviews?")) {
-    if (!API_URL) {
-      return handleDemoGet(path) as T;
-    }
-    return fetchBackend<T>(path);
-  }
-
-  if (path === "/notifications/reminders" || path.startsWith("/notifications/reminders?")) {
-    if (!API_URL) {
-      return handleDemoGet(path) as T;
-    }
-    return fetchBackend<T>(path);
-  }
-
-  if (path === "/salary" || path.startsWith("/salary?") || path === "/salary/compare") {
-    if (!API_URL) {
-      return handleDemoGet(path) as T;
-    }
-    return fetchBackend<T>(path);
-  }
-
-  if (path === "/contacts" || path.startsWith("/contacts?")) {
-    if (!API_URL) {
-      return handleDemoGet(path) as T;
-    }
-    return fetchBackend<T>(path);
-  }
-
-  if (path.startsWith("/timeline/")) {
-    if (!API_URL) {
-      return handleDemoGet(path) as T;
-    }
-    return fetchBackend<T>(path);
-  }
-
-  if ((isJobsListPath(path) || isJobsDetailPath(path)) && !API_URL) {
+    if (path === "/resumes") return getDemoResumes() as T;
+    if (path === "/resumes/generated") return getDemoGeneratedDocuments() as T;
+    // All other paths fall through to the generic demo handler
     return handleDemoGet(path) as T;
   }
 
+  // ── FastAPI backend IS configured ──
+
+  if (path === "/profile") return fetchBackend<T>(path);
+
+  if (path === "/search/history" || path.startsWith("/search/history?")) return fetchBackend<T>(path);
+
+  if (path.startsWith("/search/runs/") && path.endsWith("/results")) return fetchBackend<T>(path);
+
   if (resumePathUsesBackend(path)) {
-    if (!API_URL) {
-      if (path === "/resumes") {
-        return getDemoResumes() as T;
-      }
-      if (path === "/resumes/generated") {
-        return getDemoGeneratedDocuments() as T;
-      }
-      throw new Error(MISSING_API_URL);
-    }
     try {
       return await fetchBackend<T>(path);
     } catch {
-      if (path === "/resumes") {
-        return getDemoResumes() as T;
-      }
-      if (path === "/resumes/generated") {
-        return [] as T;
-      }
-      throw new Error(
-        path === "/resumes"
-          ? "Could not load resumes. Check NEXT_PUBLIC_API_URL and that your API is reachable."
-          : "Resume API unreachable. Verify NEXT_PUBLIC_API_URL and API health."
-      );
+      if (path === "/resumes") return getDemoResumes() as T;
+      if (path === "/resumes/generated") return [] as T;
+      throw new Error("Resume API unreachable. Verify NEXT_PUBLIC_API_URL and API health.");
     }
   }
 
@@ -1223,51 +1165,26 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
 }
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
-  // ── Always try local AI routes first (no env-var gate needed) ──
-  // If the route exists and ANTHROPIC_API_KEY is set server-side, we get real AI.
-  // If it fails (key missing, network issue), we silently fall back to demo mode below.
-  if (AI_ROUTE_MAP[path] && !API_URL) {
-    const aiResult = await tryLocalAI<T>(path, body);
-    if (aiResult !== null) return aiResult;
-    // AI failed — fall through to demo mode
-  }
-
-  if (path === "/jobs" && !API_URL) {
+  // ── When there is no FastAPI backend (!API_URL), ALL post operations use
+  //    local AI routes (server-side Claude) with demo-mode fallback.
+  //    This block catches every possible failure and always returns *something*.
+  if (!API_URL) {
+    // Try real AI first for routes that have a local AI handler
+    if (AI_ROUTE_MAP[path]) {
+      try {
+        const aiResult = await tryLocalAI<T>(path, body);
+        if (aiResult !== null) return aiResult;
+      } catch {
+        /* fall through to demo */
+      }
+    }
+    // Always fall through to demo mode when there is no backend
     return handleDemoPost(path, body) as T;
   }
 
-  if (path === "/outreach/thank-you" && !API_URL) {
-    return handleDemoPost(path, body) as T;
-  }
-
-  if ((path === "/interviews" || path === "/interviews/prep") && !API_URL) {
-    return handleDemoPost(path, body) as T;
-  }
-
-  if (path === "/contacts" && !API_URL) {
-    return handleDemoPost(path, body) as T;
-  }
-
-  if (path === "/timeline" && !API_URL) {
-    return handleDemoPost(path, body) as T;
-  }
-
-  if (path === "/notifications/reminders" && !API_URL) {
-    return handleDemoPost(path, body) as T;
-  }
-
-  if (path === "/salary" && !API_URL) {
-    return handleDemoPost(path, body) as T;
-  }
-
-  if (path === "/cover-letter/generate" && !API_URL) {
-    return handleDemoPost(path, body) as T;
-  }
+  // ── FastAPI backend IS configured ──
 
   if (resumePathUsesBackend(path)) {
-    if (!API_URL) {
-      return handleDemoPost(path, body) as T;
-    }
     return fetchBackend<T>(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1287,14 +1204,17 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
 }
 
 export async function apiPostFormData<T = unknown>(path: string, formData: FormData): Promise<T> {
-  if (resumePathUsesBackend(path)) {
-    if (!API_URL) {
-      if (path === "/resumes/upload") {
-        return handleDemoResumeUpload(formData) as T;
-      }
-      void formData;
-      return handleDemoPost(path) as T;
+  // ── No backend: demo mode for everything ──
+  if (!API_URL) {
+    if (path === "/resumes/upload") {
+      return handleDemoResumeUpload(formData) as T;
     }
+    void formData;
+    return handleDemoPost(path) as T;
+  }
+
+  // ── Backend configured ──
+  if (resumePathUsesBackend(path)) {
     const headers = await getAuthHeaders();
     return fetchBackend<T>(path, {
       method: "POST",
