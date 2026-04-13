@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
-import { apiPost, apiDelete, apiGet, isJobsApiConfigured } from "@/lib/api";
+import { apiPost, apiDelete, apiGet } from "@/lib/api";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,14 +17,16 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import type { GeneratedCoverLetter, CoverLetterTone } from "@/types";
-import { PenTool, Copy, Download, Trash2, Sparkles, Loader2 } from "lucide-react";
+import {
+  PenTool, Copy, Download, Trash2, Sparkles, Loader2, Upload, FileText, Edit3, Check, X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const TONE_OPTIONS: Array<{ value: CoverLetterTone; label: string }> = [
-  { value: "professional", label: "Professional" },
-  { value: "enthusiastic", label: "Enthusiastic" },
-  { value: "conversational", label: "Conversational" },
-  { value: "formal", label: "Formal" },
+const TONE_OPTIONS: Array<{ value: CoverLetterTone; label: string; desc: string }> = [
+  { value: "professional", label: "Professional", desc: "Polished and confident" },
+  { value: "enthusiastic", label: "Enthusiastic", desc: "Energetic and passionate" },
+  { value: "conversational", label: "Conversational", desc: "Friendly and approachable" },
+  { value: "formal", label: "Formal", desc: "Traditional and structured" },
 ];
 
 function CoverLetterPageContent() {
@@ -38,12 +40,56 @@ function CoverLetterPageContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentLetter, setCurrentLetter] = useState<GeneratedCoverLetter | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState("");
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: history, mutate: mutateHistory } = useSWR<GeneratedCoverLetter[]>(
     "/cover-letter/history",
     () => apiGet<GeneratedCoverLetter[]>("/cover-letter/history"),
     { revalidateOnFocus: false }
   );
+
+  // Resume file upload handler
+  const handleResumeUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Please upload a PDF file");
+      return;
+    }
+
+    setUploadingResume(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/parse-pdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Upload failed" }));
+        throw new Error(err.error || "Could not parse PDF");
+      }
+
+      const data = await res.json();
+      if (data.text && data.text.length > 0) {
+        setResumeText(data.text);
+        toast.success(`Resume loaded — ${data.chars.toLocaleString()} characters from ${data.pages} page${data.pages > 1 ? "s" : ""}`);
+      } else {
+        toast.error("No text could be extracted from this PDF. Try pasting your resume text manually.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to parse resume PDF");
+    } finally {
+      setUploadingResume(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, []);
 
   const handleGenerate = useCallback(async () => {
     if (!jobTitle.trim() && !company.trim()) {
@@ -52,6 +98,7 @@ function CoverLetterPageContent() {
     }
 
     setIsGenerating(true);
+    setIsEditing(false);
     try {
       const result = await apiPost<GeneratedCoverLetter>("/cover-letter/generate", {
         job_title: jobTitle,
@@ -73,26 +120,46 @@ function CoverLetterPageContent() {
   }, [jobTitle, company, jobDescription, resumeText, tone, instructions, mutateHistory]);
 
   const handleCopyToClipboard = useCallback(async () => {
-    if (!currentLetter) return;
+    const text = isEditing ? editContent : currentLetter?.content;
+    if (!text) return;
     try {
-      await navigator.clipboard.writeText(currentLetter.content);
+      await navigator.clipboard.writeText(text);
       toast.success("Copied to clipboard!");
     } catch {
       toast.error("Failed to copy to clipboard");
     }
-  }, [currentLetter]);
+  }, [currentLetter, isEditing, editContent]);
 
   const handleDownload = useCallback(() => {
-    if (!currentLetter) return;
+    const text = isEditing ? editContent : currentLetter?.content;
+    if (!text) return;
     const element = document.createElement("a");
-    const file = new Blob([currentLetter.content], { type: "text/plain" });
+    const file = new Blob([text], { type: "text/plain" });
     element.href = URL.createObjectURL(file);
-    element.download = `cover-letter-${currentLetter.company || "letter"}.txt`;
+    element.download = `cover-letter-${currentLetter?.company || "letter"}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
     toast.success("Cover letter downloaded!");
+  }, [currentLetter, isEditing, editContent]);
+
+  const handleStartEdit = useCallback(() => {
+    if (!currentLetter) return;
+    setEditContent(currentLetter.content);
+    setIsEditing(true);
   }, [currentLetter]);
+
+  const handleSaveEdit = useCallback(() => {
+    if (!currentLetter) return;
+    setCurrentLetter({ ...currentLetter, content: editContent });
+    setIsEditing(false);
+    toast.success("Edits saved");
+  }, [currentLetter, editContent]);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditing(false);
+    setEditContent("");
+  }, []);
 
   const handleDeleteLetter = useCallback(
     async (e: React.MouseEvent, id: string) => {
@@ -125,7 +192,8 @@ function CoverLetterPageContent() {
           <h1 className="text-2xl font-bold text-white">AI Cover Letter Generator</h1>
         </div>
         <p className="text-zinc-400 text-sm">
-          Generate personalized cover letters tailored to specific job opportunities
+          Generate personalized cover letters tailored to specific job opportunities. Upload your resume
+          or paste it, add the job details, and let AI craft the perfect letter.
         </p>
       </div>
 
@@ -136,26 +204,27 @@ function CoverLetterPageContent() {
             <h2 className="text-lg font-semibold text-white mb-4">Cover Letter Details</h2>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
-                  Job Title
-                </label>
-                <Input
-                  placeholder="e.g., Senior Data Engineer"
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  className="bg-zinc-950 border-zinc-700 text-white placeholder-zinc-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Company</label>
-                <Input
-                  placeholder="e.g., Databricks"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  className="bg-zinc-950 border-zinc-700 text-white placeholder-zinc-500"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-1">
+                    Job Title
+                  </label>
+                  <Input
+                    placeholder="e.g., Senior Data Engineer"
+                    value={jobTitle}
+                    onChange={(e) => setJobTitle(e.target.value)}
+                    className="bg-zinc-950 border-zinc-700 text-white placeholder-zinc-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-1">Company</label>
+                  <Input
+                    placeholder="e.g., Databricks"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    className="bg-zinc-950 border-zinc-700 text-white placeholder-zinc-500"
+                  />
+                </div>
               </div>
 
               <div>
@@ -172,16 +241,55 @@ function CoverLetterPageContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
-                  Your Resume/Background
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-zinc-300">
+                    Your Resume / Background
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {resumeText && (
+                      <span className="text-xs text-zinc-500">
+                        {resumeText.length.toLocaleString()} chars
+                      </span>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleResumeUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingResume}
+                      className="text-blue-400 hover:text-blue-300 h-7 text-xs gap-1"
+                    >
+                      {uploadingResume ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Upload className="h-3 w-3" />
+                      )}
+                      {uploadingResume ? "Parsing..." : "Upload PDF"}
+                    </Button>
+                  </div>
+                </div>
                 <Textarea
-                  placeholder="Paste your resume or background information..."
+                  placeholder="Paste your resume text here, or upload a PDF above..."
                   value={resumeText}
                   onChange={(e) => setResumeText(e.target.value)}
                   rows={4}
                   className="bg-zinc-950 border-zinc-700 text-white placeholder-zinc-500 resize-none"
                 />
+                {resumeText && (
+                  <button
+                    onClick={() => setResumeText("")}
+                    className="text-xs text-zinc-500 hover:text-zinc-300 mt-1 transition-colors"
+                  >
+                    Clear resume text
+                  </button>
+                )}
               </div>
 
               <div>
@@ -193,7 +301,8 @@ function CoverLetterPageContent() {
                   <SelectContent className="bg-zinc-900 border-zinc-700">
                     {TONE_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value} className="text-white">
-                        {opt.label}
+                        <span>{opt.label}</span>
+                        <span className="text-zinc-500 ml-2 text-xs">— {opt.desc}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -202,13 +311,13 @@ function CoverLetterPageContent() {
 
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-1">
-                  Special Instructions (Optional)
+                  Special Instructions <span className="text-zinc-500">(Optional)</span>
                 </label>
                 <Textarea
                   placeholder="Any specific points to emphasize or style preferences..."
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
-                  rows={3}
+                  rows={2}
                   className="bg-zinc-950 border-zinc-700 text-white placeholder-zinc-500 resize-none"
                 />
               </div>
@@ -241,12 +350,45 @@ function CoverLetterPageContent() {
             <Card className="bg-zinc-900 border-zinc-700 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">Generated Letter</h3>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
+                  {!isEditing ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleStartEdit}
+                      className="text-zinc-400 hover:text-white"
+                      title="Edit letter"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleSaveEdit}
+                        className="text-emerald-400 hover:text-emerald-300"
+                        title="Save edits"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelEdit}
+                        className="text-red-400 hover:text-red-300"
+                        title="Cancel edits"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleCopyToClipboard}
                     className="text-zinc-400 hover:text-white"
+                    title="Copy to clipboard"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -255,19 +397,38 @@ function CoverLetterPageContent() {
                     size="sm"
                     onClick={handleDownload}
                     className="text-zinc-400 hover:text-white"
+                    title="Download as TXT"
                   >
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              <div className="bg-zinc-950 border border-zinc-700 rounded p-4 max-h-96 overflow-y-auto">
-                <p className="text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">
-                  {currentLetter.content}
-                </p>
+              <div className="bg-zinc-950 border border-zinc-700 rounded p-4 max-h-[500px] overflow-y-auto">
+                {isEditing ? (
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full bg-transparent text-zinc-200 text-sm leading-relaxed resize-none min-h-[200px] outline-none"
+                    style={{ height: "auto", minHeight: "300px" }}
+                    autoFocus
+                  />
+                ) : (
+                  <p className="text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">
+                    {currentLetter.content}
+                  </p>
+                )}
               </div>
               <div className="mt-3 flex items-center justify-between">
-                <div className="text-xs text-zinc-500">
-                  Tone: <span className="capitalize text-zinc-300">{currentLetter.tone}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-zinc-500">
+                    Tone: <span className="capitalize text-zinc-300">{currentLetter.tone}</span>
+                  </span>
+                  {currentLetter.company && (
+                    <span className="text-xs text-zinc-500">
+                      <FileText className="h-3 w-3 inline mr-1" />
+                      {currentLetter.company}
+                    </span>
+                  )}
                 </div>
                 <div className="text-xs text-zinc-500">
                   {new Date(currentLetter.created_at).toLocaleDateString()}
@@ -279,12 +440,15 @@ function CoverLetterPageContent() {
           {/* History */}
           {history && history.length > 0 && (
             <Card className="bg-zinc-900 border-zinc-700 p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">History</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">History</h3>
+                <span className="text-xs text-zinc-500">{history.length} letter{history.length !== 1 ? "s" : ""}</span>
+              </div>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {reversedHistory.map((letter) => (
                   <div
                     key={letter.id}
-                    onClick={() => setCurrentLetter(letter)}
+                    onClick={() => { setCurrentLetter(letter); setIsEditing(false); }}
                     className={cn(
                       "p-3 rounded cursor-pointer border transition-colors",
                       currentLetter?.id === letter.id
@@ -330,6 +494,9 @@ function CoverLetterPageContent() {
               <PenTool className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
               <p className="text-zinc-400 text-sm">
                 Generate your first cover letter to see it here
+              </p>
+              <p className="text-zinc-500 text-xs mt-2">
+                Upload your resume PDF or paste the text, add the job details, and click Generate
               </p>
             </Card>
           )}
