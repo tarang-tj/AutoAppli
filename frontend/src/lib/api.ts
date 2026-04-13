@@ -2,6 +2,7 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import * as sbJobs from "@/lib/supabase/jobs";
 import * as sbSearch from "@/lib/supabase/search";
 import * as sbInterviews from "@/lib/supabase/interviews";
+import * as sbResumes from "@/lib/supabase/resumes";
 import {
   getDemoJobs,
   setDemoJobs,
@@ -1193,6 +1194,18 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
       }
     }
 
+    // Resumes → Supabase when configured
+    if (path === "/resumes" && isSupabaseConfigured()) {
+      const rows = await sbResumes.fetchResumes();
+      return rows.map((r) => ({
+        id: r.id,
+        file_name: r.file_name,
+        storage_path: r.storage_path,
+        parsed_text: r.parsed_text,
+        is_primary: r.is_primary,
+        created_at: r.created_at,
+      })) as T;
+    }
     if (path === "/resumes") return getDemoResumes() as T;
     if (path === "/resumes/generated") return getDemoGeneratedDocuments() as T;
     // All other paths fall through to the generic demo handler
@@ -1344,6 +1357,46 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
 export async function apiPostFormData<T = unknown>(path: string, formData: FormData): Promise<T> {
   // ── No backend: demo mode for everything ──
   if (!API_URL) {
+    // Resume upload → Supabase when configured, with server-side PDF parsing
+    if (path === "/resumes/upload" && isSupabaseConfigured()) {
+      const file = formData.get("file");
+      const fileName = file instanceof File ? file.name : "uploaded_resume.pdf";
+
+      // Extract text via our server-side PDF parser
+      let parsedText = "";
+      try {
+        const parseRes = await fetch("/api/parse-pdf", {
+          method: "POST",
+          body: formData,
+        });
+        if (parseRes.ok) {
+          const parsed = await parseRes.json();
+          parsedText = parsed.text || "";
+        }
+      } catch {
+        /* parsing failed — store with empty text */
+      }
+
+      if (!parsedText.trim()) {
+        parsedText = `[PDF text extraction returned no content for ${fileName}. The file may be image-based. Try re-uploading a text-based PDF.]`;
+      }
+
+      const row = await sbResumes.createResume({
+        file_name: fileName,
+        storage_path: `resumes/${fileName}`,
+        parsed_text: parsedText,
+      });
+
+      return {
+        id: row.id,
+        file_name: row.file_name,
+        storage_path: row.storage_path,
+        parsed_text: row.parsed_text,
+        is_primary: row.is_primary,
+        created_at: row.created_at,
+      } as T;
+    }
+
     if (path === "/resumes/upload") {
       return handleDemoResumeUpload(formData) as T;
     }
@@ -1500,6 +1553,17 @@ export async function apiDelete(path: string): Promise<void> {
 
   if (path.startsWith("/salary/") && path !== "/salary/compare" && API_URL) {
     await fetchBackend(path, { method: "DELETE" });
+    return;
+  }
+
+  // Resume delete → Supabase
+  if (path.startsWith("/resumes/") && !path.startsWith("/resumes/generated") && !path.startsWith("/resumes/review") && !path.startsWith("/resumes/generate") && !path.startsWith("/resumes/upload") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      await sbResumes.deleteResume(id);
+      return;
+    }
+    handleDemoDelete(path);
     return;
   }
 
