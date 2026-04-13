@@ -43,10 +43,10 @@ export default function SettingsPage() {
     setDisplayName(data.display_name ?? "");
     setHeadline(data.headline ?? "");
     setLinkedinUrl(data.linkedin_url ?? "");
-    setPhone((data as Record<string, string>).phone ?? "");
-    setLocation((data as Record<string, string>).location ?? "");
-    setPortfolioUrl((data as Record<string, string>).portfolio_url ?? "");
-    setBio((data as Record<string, string>).bio ?? "");
+    setPhone(data.phone ?? "");
+    setLocation(data.location ?? "");
+    setPortfolioUrl(data.portfolio_url ?? "");
+    setBio(data.bio ?? "");
   }, [data]);
 
   const handleSave = async () => {

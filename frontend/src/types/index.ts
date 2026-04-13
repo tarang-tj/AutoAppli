@@ -133,6 +133,10 @@ export interface UserProfile {
   display_name: string;
   headline: string;
   linkedin_url: string;
+  phone?: string | null;
+  location?: string | null;
+  portfolio_url?: string | null;
+  bio?: string | null;
   updated_at?: string | null;
 }
 
