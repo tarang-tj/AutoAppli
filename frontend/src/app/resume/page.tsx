@@ -11,6 +11,7 @@ import {
 } from "@/lib/demo-data";
 import { consumeResumeHandoff, tailoringTextFromJob } from "@/lib/tracker-handoff";
 import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
+import { KeywordMatch } from "@/components/resume/keyword-match";
 import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocument, EvalResult } from "@/types";
 import { EvalScoreCard } from "@/components/resume/eval-score-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -269,6 +270,12 @@ function ResumeBuilderContent() {
               </>
             )}
           </Button>
+          {selectedResumeId && jobDescription.trim() && (
+            <KeywordMatch
+              resumeText={resumes?.find((r) => r.id === selectedResumeId)?.parsed_text ?? ""}
+              jobDescription={jobDescription}
+            />
+          )}
           <ResumeReviewPanel
             review={review}
             loading={reviewing}

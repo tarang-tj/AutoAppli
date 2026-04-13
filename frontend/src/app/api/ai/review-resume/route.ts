@@ -13,16 +13,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const system = `You are a professional resume reviewer and ATS (Applicant Tracking System) expert. Analyze the resume and return a JSON object with this exact structure (no markdown, no code fences, just raw JSON):
+    const system = `You are a professional resume reviewer and ATS (Applicant Tracking System) expert with 15+ years of recruiting experience. Analyze the resume thoroughly and return a JSON object with this exact structure (no markdown, no code fences, just raw JSON):
 {
   "overall_score": <1-10>,
   "ats_score": <1-10>,
-  "strengths": ["..."],
-  "improvements": ["..."],
-  "ats_issues": ["..."],
-  "missing_sections": ["..."],
-  "keyword_suggestions": ["..."]
-}`;
+  "strengths": ["specific strength 1", "specific strength 2", ...],
+  "improvements": ["actionable improvement 1", "actionable improvement 2", ...],
+  "ats_issues": ["specific ATS issue 1", ...],
+  "missing_sections": ["section name 1", ...],
+  "keyword_suggestions": ["keyword 1", "keyword 2", ...]
+}
+
+SCORING GUIDE:
+- 1-3: Major issues, needs complete rewrite
+- 4-5: Below average, significant improvements needed
+- 6-7: Good but has clear areas for improvement
+- 8-9: Strong resume with minor tweaks needed
+- 10: Exceptional, near-perfect
+
+Be specific and actionable in your feedback. Instead of "improve formatting", say exactly what to fix. Instead of "add more keywords", suggest which specific keywords. Each improvement should be a concrete action the user can take.`;
 
     const userMessage = `Please review this resume:\n\n${resume_text}`;
 
