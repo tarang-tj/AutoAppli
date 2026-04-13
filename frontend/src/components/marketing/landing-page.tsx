@@ -1,5 +1,19 @@
 import Link from "next/link";
-import { ArrowRight, Kanban, Mail, Search, Sparkles, BarChart3, FileText, CalendarCheck, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Kanban,
+  Mail,
+  Search,
+  Sparkles,
+  BarChart3,
+  FileText,
+  CalendarCheck,
+  Users,
+  Zap,
+  Shield,
+  Clock,
+  CheckCircle2,
+} from "lucide-react";
 
 export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
   return (
@@ -25,7 +39,7 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
                 href="/signup"
                 className="rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
               >
-                Sign up
+                Sign up free
               </Link>
             </>
           ) : (
@@ -44,23 +58,24 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
         <section className="relative px-6 py-20 md:py-32 max-w-5xl mx-auto w-full">
           <div className="absolute inset-0 -z-10 overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-blue-500/5 rounded-full blur-3xl" />
+            <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-3xl" />
           </div>
 
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-400 mb-6">
             <Sparkles className="h-3 w-3" />
-            AI-powered job search platform
+            AI-powered job search automation
           </div>
 
           <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.1] max-w-4xl">
-            Your entire job search,{" "}
+            Land your next role{" "}
             <span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
-              one workspace.
+              faster.
             </span>
           </h1>
 
           <p className="mt-6 text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
-            Search roles, tailor your resume with AI, draft outreach messages, and track every
-            application on a visual Kanban board.
+            Search 300+ live job listings, tailor your resume with AI, generate cover letters and outreach
+            messages, and track every application on a visual Kanban board — all in one workspace.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-3">
@@ -90,59 +105,148 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
               </>
             )}
           </div>
+
+          {/* Trust indicators */}
+          <div className="mt-12 flex flex-wrap items-center gap-6 text-sm text-zinc-500">
+            <span className="inline-flex items-center gap-1.5">
+              <Shield className="h-4 w-4 text-emerald-500" />
+              Free to use
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Zap className="h-4 w-4 text-amber-500" />
+              AI-powered by Claude
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-blue-500" />
+              Set up in 2 minutes
+            </span>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section className="px-6 py-16 border-t border-zinc-800/50">
+          <div className="max-w-5xl mx-auto w-full">
+            <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-4">
+              How it works
+            </h2>
+            <p className="text-zinc-400 text-center mb-12 max-w-2xl mx-auto">
+              Go from searching to interviewing in three simple steps.
+            </p>
+            <div className="grid gap-8 sm:grid-cols-3">
+              <StepCard
+                step={1}
+                title="Find & save jobs"
+                description="Search live listings from Adzuna or paste any job URL. Save roles to your Kanban board with one click."
+              />
+              <StepCard
+                step={2}
+                title="AI tailors your docs"
+                description="Upload your resume and let AI optimize it for each role. Generate matching cover letters and outreach messages."
+              />
+              <StepCard
+                step={3}
+                title="Track & prepare"
+                description="Move applications through your pipeline, get AI interview prep, and track contacts and follow-ups."
+              />
+            </div>
+          </div>
         </section>
 
         {/* Feature grid */}
-        <section className="px-6 pb-20 max-w-5xl mx-auto w-full">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <FeatureCard
-              icon={Search}
-              iconColor="text-blue-400"
-              title="Job Search"
-              description="Browse live listings from LinkedIn, Indeed, and more. Filter by location and save to your tracker."
-            />
-            <FeatureCard
-              icon={FileText}
-              iconColor="text-amber-400"
-              title="Resume Builder"
-              description="Upload your resume, paste a job description, and get an AI-tailored version with ATS scoring."
-            />
-            <FeatureCard
-              icon={Mail}
-              iconColor="text-emerald-400"
-              title="Outreach"
-              description="Generate cold emails and LinkedIn messages matched to the role and company."
-            />
-            <FeatureCard
-              icon={Kanban}
-              iconColor="text-violet-400"
-              title="Pipeline"
-              description="Drag-and-drop Kanban board from bookmarked to offer with notes and reordering."
-            />
-            <FeatureCard
-              icon={CalendarCheck}
-              iconColor="text-rose-400"
-              title="Interview Prep"
-              description="AI-generated prep materials with company overview, talking points, and likely questions."
-            />
-            <FeatureCard
-              icon={BarChart3}
-              iconColor="text-cyan-400"
-              title="Analytics"
-              description="Funnel visualization, conversion rates, response metrics, and weekly activity trends."
-            />
-            <FeatureCard
-              icon={Users}
-              iconColor="text-orange-400"
-              title="Contacts CRM"
-              description="Track recruiters and hiring managers with relationship types and interaction history."
-            />
-            <FeatureCard
-              icon={Sparkles}
-              iconColor="text-pink-400"
-              title="Cover Letters"
-              description="Generate tailored cover letters in multiple tones with one-click copy and download."
-            />
+        <section className="px-6 py-16 border-t border-zinc-800/50">
+          <div className="max-w-5xl mx-auto w-full">
+            <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-4">
+              Everything you need to land the job
+            </h2>
+            <p className="text-zinc-400 text-center mb-12 max-w-2xl mx-auto">
+              A complete toolkit that replaces spreadsheets, bookmarks, and scattered notes.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <FeatureCard
+                icon={Search}
+                iconColor="text-blue-400"
+                title="Job Search"
+                description="Browse live listings from Adzuna with filters for location, job type, and experience level."
+              />
+              <FeatureCard
+                icon={FileText}
+                iconColor="text-amber-400"
+                title="Resume Builder"
+                description="Upload your resume, paste a job description, and get an AI-tailored version with ATS scoring."
+              />
+              <FeatureCard
+                icon={Mail}
+                iconColor="text-emerald-400"
+                title="Outreach"
+                description="Generate cold emails and LinkedIn messages matched to the role and company."
+              />
+              <FeatureCard
+                icon={Kanban}
+                iconColor="text-violet-400"
+                title="Pipeline"
+                description="Drag-and-drop Kanban board from bookmarked to offer with notes, priority, and tags."
+              />
+              <FeatureCard
+                icon={CalendarCheck}
+                iconColor="text-rose-400"
+                title="Interview Prep"
+                description="AI-generated prep materials with company overview, talking points, and likely questions."
+              />
+              <FeatureCard
+                icon={BarChart3}
+                iconColor="text-cyan-400"
+                title="Analytics"
+                description="Funnel visualization, conversion rates, response metrics, and weekly activity trends."
+              />
+              <FeatureCard
+                icon={Users}
+                iconColor="text-orange-400"
+                title="Contacts CRM"
+                description="Track recruiters and hiring managers with relationship types and interaction history."
+              />
+              <FeatureCard
+                icon={Sparkles}
+                iconColor="text-pink-400"
+                title="Cover Letters"
+                description="Generate tailored cover letters in multiple tones with one-click copy and download."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="px-6 py-20 border-t border-zinc-800/50">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Stop juggling spreadsheets.
+            </h2>
+            <p className="text-zinc-400 text-lg mb-8 max-w-xl mx-auto">
+              AutoAppli brings your entire job search into one workspace so you can focus on
+              what matters — landing interviews and getting offers.
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <Link
+                href={demoMode ? "/dashboard" : "/signup"}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-8 py-3.5 text-white font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 text-lg"
+              >
+                {demoMode ? "Open the app" : "Get started free"}
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-zinc-500">
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                No credit card required
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                Works with any resume
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                AI tailoring in seconds
+              </span>
+            </div>
           </div>
         </section>
       </main>
@@ -156,6 +260,26 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
         </Link>
         <span className="text-zinc-700">&copy; {new Date().getFullYear()} AutoAppli</span>
       </footer>
+    </div>
+  );
+}
+
+function StepCard({
+  step,
+  title,
+  description,
+}: {
+  step: number;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="relative text-center">
+      <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600/20 text-blue-400 font-bold text-lg mb-4">
+        {step}
+      </div>
+      <h3 className="font-semibold text-white text-lg mb-2">{title}</h3>
+      <p className="text-sm text-zinc-500 leading-relaxed">{description}</p>
     </div>
   );
 }
