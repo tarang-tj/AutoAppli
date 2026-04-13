@@ -1362,8 +1362,9 @@ export async function apiPostFormData<T = unknown>(path: string, formData: FormD
       const file = formData.get("file");
       const fileName = file instanceof File ? file.name : "uploaded_resume.pdf";
 
-      // Extract text via our server-side PDF parser
+      // Extract text via our server-side PDF parser (unpdf)
       let parsedText = "";
+      let parseError = "";
       try {
         const parseRes = await fetch("/api/parse-pdf", {
           method: "POST",
@@ -1371,14 +1372,17 @@ export async function apiPostFormData<T = unknown>(path: string, formData: FormD
         });
         if (parseRes.ok) {
           const parsed = await parseRes.json();
-          parsedText = parsed.text || "";
+          parsedText = (parsed.text || "").trim();
+        } else {
+          const errBody = await parseRes.json().catch(() => null);
+          parseError = errBody?.error || `HTTP ${parseRes.status}`;
         }
-      } catch {
-        /* parsing failed — store with empty text */
+      } catch (e) {
+        parseError = e instanceof Error ? e.message : "Network error";
       }
 
-      if (!parsedText.trim()) {
-        parsedText = `[PDF text extraction returned no content for ${fileName}. The file may be image-based. Try re-uploading a text-based PDF.]`;
+      if (!parsedText) {
+        parsedText = `[PDF text extraction failed for ${fileName}${parseError ? `: ${parseError}` : ""}. The file may be image-based or protected. Use "Paste resume text" below as a workaround.]`;
       }
 
       const row = await sbResumes.createResume({

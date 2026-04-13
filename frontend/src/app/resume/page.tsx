@@ -1,7 +1,10 @@
 "use client";
 import { ResumeUpload } from "@/components/resume/resume-upload";
+import { ResumeTextPaste } from "@/components/resume/resume-text-paste";
 import { JdInput } from "@/components/resume/jd-input";
 import { ResumePreview } from "@/components/resume/resume-preview";
+import { ResumeComparison } from "@/components/resume/resume-comparison";
+import { ResumeDownload } from "@/components/resume/resume-download";
 import { Button } from "@/components/ui/button";
 import { apiDelete, apiGet, apiPost, isJobsApiConfigured } from "@/lib/api";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
@@ -12,7 +15,7 @@ import {
 import { consumeResumeHandoff, tailoringTextFromJob } from "@/lib/tracker-handoff";
 import { ResumeReviewPanel } from "@/components/resume/resume-review-panel";
 import { KeywordMatch } from "@/components/resume/keyword-match";
-import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocument, EvalResult } from "@/types";
+import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocument } from "@/types";
 import { EvalScoreCard } from "@/components/resume/eval-score-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -112,6 +115,11 @@ function ResumeBuilderContent() {
     toast.success("Loaded sample resumes and job description");
   };
 
+  const handlePastedResume = (resume: Resume) => {
+    void mutate();
+    setSelectedResumeId(resume.id);
+  };
+
   const handleGenerate = async () => {
     if (!selectedResumeId) {
       toast.error("Please select a resume first");
@@ -151,7 +159,7 @@ function ResumeBuilderContent() {
     const selected = resumes?.find((r) => r.id === selectedResumeId);
     const text = (selected?.parsed_text ?? "").trim();
     if (!text) {
-      toast.error("No resume text to review for this item");
+      toast.error("No resume text to review — try the paste option if PDF extraction failed");
       return;
     }
     setReviewing(true);
@@ -169,13 +177,17 @@ function ResumeBuilderContent() {
     }
   };
 
+  const selectedResume = resumes?.find((r) => r.id === selectedResumeId);
+  const selectedResumeText = (selectedResume?.parsed_text ?? "").trim();
+  const hasExtractedText = selectedResumeText.length > 50 && !selectedResumeText.startsWith("[PDF text extraction");
+
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Resume Builder</h1>
         <p className="text-zinc-300 text-sm mt-1 max-w-2xl leading-relaxed">
-          Upload your resume and paste a job description. You’ll see a formatted preview, optional PDF
-          preview, and downloads (PDF + HTML) when the API is connected.
+          Upload your resume (or paste the text), add a job description, and get an AI-tailored resume
+          with keyword optimization and ATS scoring.
         </p>
         {!liveApi && !demoHintDismissed ? (
           <div
@@ -241,6 +253,7 @@ function ResumeBuilderContent() {
             onSelect={setSelectedResumeId}
             onUploadComplete={mutate}
           />
+          <ResumeTextPaste onSave={handlePastedResume} />
           <JdInput value={jobDescription} onChange={setJobDescription} />
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader>
@@ -256,32 +269,39 @@ function ResumeBuilderContent() {
               />
             </CardContent>
           </Card>
-          <Button
-            onClick={handleGenerate}
-            disabled={generating || !selectedResumeId || !jobDescription.trim()}
-            className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base"
-          >
-            {generating ? (
-              "Generating tailored resume..."
-            ) : (
-              <>
-                <Sparkles className="h-5 w-5 mr-2" />
-                Generate Tailored Resume
-              </>
-            )}
-          </Button>
-          {selectedResumeId && jobDescription.trim() && (
+
+          {/* Keyword Match — shows before generating */}
+          {selectedResumeId && jobDescription.trim() && hasExtractedText && (
             <KeywordMatch
-              resumeText={resumes?.find((r) => r.id === selectedResumeId)?.parsed_text ?? ""}
+              resumeText={selectedResumeText}
               jobDescription={jobDescription}
             />
           )}
+
+          <div className="flex gap-3">
+            <Button
+              onClick={handleGenerate}
+              disabled={generating || !selectedResumeId || !jobDescription.trim()}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 h-12 text-base"
+            >
+              {generating ? (
+                "Generating tailored resume..."
+              ) : (
+                <>
+                  <Sparkles className="h-5 w-5 mr-2" />
+                  Generate Tailored Resume
+                </>
+              )}
+            </Button>
+          </div>
+
           <ResumeReviewPanel
             review={review}
             loading={reviewing}
-            disabled={!selectedResumeId || !(resumes?.find((r) => r.id === selectedResumeId)?.parsed_text ?? "").trim()}
+            disabled={!selectedResumeId || !hasExtractedText}
             onRequestReview={handleReview}
           />
+
           {savedGenerated && savedGenerated.length > 0 ? (
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader className="pb-2">
@@ -349,6 +369,17 @@ function ResumeBuilderContent() {
         </div>
         <div className="space-y-6">
           <ResumePreview document={generated} />
+          {/* Download buttons for generated resume */}
+          {generated?.content && (
+            <ResumeDownload content={generated.content} />
+          )}
+          {/* Before/After comparison */}
+          {generated?.content && hasExtractedText && (
+            <ResumeComparison
+              originalText={selectedResumeText}
+              tailoredText={generated.content}
+            />
+          )}
           {generated?.eval_result && (
             <EvalScoreCard eval_result={generated.eval_result} />
           )}

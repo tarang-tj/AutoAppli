@@ -14,7 +14,6 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Omit `turbopack.root` / `outputFileTracingRoot`: on Vercel monorepos they must match exactly;
   // `process.cwd()` vs inferred `/vercel/path0` triggers a Next.js warning during build.
-  serverExternalPackages: ["pdfjs-dist"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
