@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
     const { extractText } = await import("unpdf");
     const { text, totalPages } = await extractText(uint8);
 
-    const cleaned = (text || "").trim();
+    const joined = Array.isArray(text) ? text.join("\n") : String(text || "");
+    const cleaned = joined.trim();
 
     return NextResponse.json({
       text: cleaned,
