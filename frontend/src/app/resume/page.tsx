@@ -3,7 +3,8 @@ import { ResumeUpload } from "@/components/resume/resume-upload";
 import { JdInput } from "@/components/resume/jd-input";
 import { ResumePreview } from "@/components/resume/resume-preview";
 import { Button } from "@/components/ui/button";
-import { apiDelete, apiGet, apiPost, isJobsApiConfigured, isResumeApiConfigured } from "@/lib/api";
+import { apiDelete, apiGet, apiPost, isJobsApiConfigured } from "@/lib/api";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import {
   loadSampleResumesForBuilder,
   SAMPLE_JOB_DESCRIPTION_FOR_BUILDER,
@@ -42,7 +43,7 @@ function ResumeBuilderContent() {
   const [reviewing, setReviewing] = useState(false);
 
   const searchParams = useSearchParams();
-  const liveApi = isResumeApiConfigured();
+  const liveApi = isSupabaseConfigured();
   const [demoHintDismissed, setDemoHintDismissed] = useState(false);
 
   useEffect(() => {
@@ -184,12 +185,15 @@ function ResumeBuilderContent() {
             <div className="flex-1 min-w-0 space-y-2">
               <p className="text-base font-semibold text-amber-200 tracking-tight">Demo mode</p>
               <p className="text-sm text-zinc-100 leading-relaxed">
-                Add{" "}
+                Connect Supabase to persist your data. Set{" "}
                 <code className="rounded-md border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-[13px] font-mono text-amber-200">
-                  NEXT_PUBLIC_API_URL
+                  NEXT_PUBLIC_SUPABASE_URL
                 </code>{" "}
-                pointing at your FastAPI base URL (optional <code className="rounded border border-zinc-600 bg-zinc-900 px-1 py-0.5 text-[12px] font-mono text-amber-200">/api/v1</code>
-                ) so PDF upload, tailoring, and Claude run against your backend.
+                and{" "}
+                <code className="rounded-md border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-[13px] font-mono text-amber-200">
+                  NEXT_PUBLIC_SUPABASE_ANON_KEY
+                </code>{" "}
+                to enable PDF upload, resume tailoring, and AI features.
               </p>
               <p className="text-xs leading-snug text-zinc-300">
                 <span className="font-medium text-zinc-200">Local dev:</span>{" "}

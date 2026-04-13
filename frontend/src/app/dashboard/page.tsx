@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { apiPost, isJobsApiConfigured } from "@/lib/api";
+import { apiPost } from "@/lib/api";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { downloadJobsCsv } from "@/lib/export-jobs-csv";
 import { filterJobsByQuery } from "@/lib/filter-jobs";
 import { normalizeJobUrl } from "@/lib/job-url";
@@ -363,14 +364,18 @@ export default function DashboardPage() {
         </div>
       ) : null}
 
-      {!isJobsApiConfigured() ? (
+      {!isSupabaseConfigured() ? (
         <div className="mb-4 max-w-2xl rounded-lg border border-zinc-600 bg-zinc-800/90 px-3 py-2.5">
           <p className="text-sm text-zinc-100 leading-relaxed">
-            Jobs are stored in this browser until you set{" "}
+            Jobs are stored in this browser until you connect Supabase. Set{" "}
             <code className="rounded border border-zinc-600 bg-zinc-950 px-1.5 py-0.5 text-xs font-mono text-sky-200">
-              NEXT_PUBLIC_API_URL
+              NEXT_PUBLIC_SUPABASE_URL
             </code>{" "}
-            for a shared backend. Drag cards between columns to update status.
+            and{" "}
+            <code className="rounded border border-zinc-600 bg-zinc-950 px-1.5 py-0.5 text-xs font-mono text-sky-200">
+              NEXT_PUBLIC_SUPABASE_ANON_KEY
+            </code>{" "}
+            to persist data. Drag cards between columns to update status.
           </p>
         </div>
       ) : null}
