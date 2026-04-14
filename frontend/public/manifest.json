@@ -1,0 +1,16 @@
+{
+  "name": "AutoAppli",
+  "short_name": "AutoAppli",
+  "description": "AI-powered job application platform — resume tailoring, smart outreach, and visual tracking",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

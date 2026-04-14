@@ -38,6 +38,7 @@ export const metadata: Metadata = {
     description:
       "Streamline your job search with AI-powered resume tailoring, smart outreach, and visual application tracking.",
   },
+  manifest: "/manifest.json",
   robots: { index: true, follow: true },
 };
 
