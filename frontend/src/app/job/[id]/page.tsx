@@ -280,7 +280,7 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="flex items-center justify-center py-24">
         <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
       </div>
     );
@@ -288,7 +288,7 @@ export default function JobDetailPage() {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-zinc-950 p-6">
+      <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <Button
             variant="ghost"
@@ -299,8 +299,21 @@ export default function JobDetailPage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
-          <div className="mt-8 text-center">
-            <p className="text-zinc-400">Job not found</p>
+          <div className="mt-16 text-center">
+            <div className="h-16 w-16 rounded-2xl bg-zinc-800 flex items-center justify-center mx-auto mb-4">
+              <Eye className="h-8 w-8 text-zinc-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-zinc-200 mb-2">Job not found</h2>
+            <p className="text-zinc-500 text-sm max-w-md mx-auto">
+              This job may have been deleted or the link is invalid.
+              Head back to your dashboard to see all your tracked applications.
+            </p>
+            <Button
+              onClick={() => router.push("/dashboard")}
+              className="mt-6 bg-blue-600 hover:bg-blue-700"
+            >
+              Go to Dashboard
+            </Button>
           </div>
         </div>
       </div>
@@ -308,7 +321,7 @@ export default function JobDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-6">
+    <div className="p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header with back button */}
         <Button
