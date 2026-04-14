@@ -16,9 +16,10 @@ import { filterJobsByQuery } from "@/lib/filter-jobs";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { useJobs } from "@/hooks/use-jobs";
 import type { Job } from "@/types";
+import { OnboardingWizard } from "@/components/dashboard/onboarding-wizard";
 import { ChevronDown, ChevronUp, Download, LayoutGrid, ListFilter, Plus, Search, Send, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,19 @@ export default function DashboardPage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(true);
+
+  useEffect(() => {
+    if (!isLoading && jobs.length === 0) {
+      const dismissed = typeof window !== "undefined" && sessionStorage.getItem("onboarding_dismissed") === "1";
+      setOnboardingDismissed(dismissed);
+    }
+  }, [isLoading, jobs.length]);
+
+  const dismissOnboarding = () => {
+    setOnboardingDismissed(true);
+    if (typeof window !== "undefined") sessionStorage.setItem("onboarding_dismissed", "1");
+  };
 
   const smartFilters = useSmartFilters();
 
@@ -400,6 +414,12 @@ export default function DashboardPage() {
         activeFilterCount={smartFilters.activeFilterCount}
       />
       <PipelineStats jobs={filteredJobs} allJobCount={jobs.length} />
+
+      {!isLoading && jobs.length === 0 && !onboardingDismissed ? (
+        <div className="mb-6">
+          <OnboardingWizard onDismiss={dismissOnboarding} />
+        </div>
+      ) : null}
 
       {!isLoading && jobs.length === 0 ? (
         <Card className="mb-6 bg-zinc-900/90 border-zinc-700 border-dashed">

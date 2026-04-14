@@ -23,8 +23,13 @@ import {
   DollarSign,
   ExternalLink,
   Eye,
+  FileText,
   Loader2,
   MapPin,
+  MessageSquare,
+  PenTool,
+  Send,
+  Sparkles,
   Trash2,
   Users,
   X,
@@ -342,6 +347,50 @@ export default function JobDetailPage() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+        </div>
+
+        {/* AI Quick Actions */}
+        <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">
+            AI Actions for this role
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/resume?company=${encodeURIComponent(job.company)}&title=${encodeURIComponent(job.title)}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-sm font-medium text-violet-300 hover:bg-violet-500/20 transition-colors"
+            >
+              <Sparkles className="h-4 w-4" />
+              Tailor Resume
+            </Link>
+            <Link
+              href={`/cover-letter?company=${encodeURIComponent(job.company)}&title=${encodeURIComponent(job.title)}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-300 hover:bg-amber-500/20 transition-colors"
+            >
+              <PenTool className="h-4 w-4" />
+              Cover Letter
+            </Link>
+            <Link
+              href={`/outreach?company=${encodeURIComponent(job.company)}&title=${encodeURIComponent(job.title)}&recruiter=${encodeURIComponent(job.recruiter_name ?? "")}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-300 hover:bg-emerald-500/20 transition-colors"
+            >
+              <Send className="h-4 w-4" />
+              Outreach Message
+            </Link>
+            <Link
+              href={`/interviews?jobId=${jobId}&company=${encodeURIComponent(job.company)}&title=${encodeURIComponent(job.title)}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-300 hover:bg-rose-500/20 transition-colors"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Interview Prep
+            </Link>
+            <Link
+              href={`/outreach?company=${encodeURIComponent(job.company)}&title=${encodeURIComponent(job.title)}&purpose=thank_you`}
+              className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-sm font-medium text-cyan-300 hover:bg-cyan-500/20 transition-colors"
+            >
+              <FileText className="h-4 w-4" />
+              Thank-You Note
+            </Link>
           </div>
         </div>
 
