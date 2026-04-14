@@ -3,6 +3,15 @@ import * as sbJobs from "@/lib/supabase/jobs";
 import * as sbSearch from "@/lib/supabase/search";
 import * as sbInterviews from "@/lib/supabase/interviews";
 import * as sbResumes from "@/lib/supabase/resumes";
+import * as sbProfiles from "@/lib/supabase/profiles";
+import * as sbCoverLetters from "@/lib/supabase/cover-letters";
+import * as sbOutreach from "@/lib/supabase/outreach";
+import * as sbContacts from "@/lib/supabase/contacts";
+import * as sbReminders from "@/lib/supabase/reminders";
+import * as sbTimeline from "@/lib/supabase/timeline";
+import * as sbCompensations from "@/lib/supabase/compensations";
+import * as sbTemplates from "@/lib/supabase/templates";
+import * as sbAutomation from "@/lib/supabase/automation";
 import {
   getDemoJobs,
   setDemoJobs,
@@ -1161,7 +1170,10 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
       }
     }
 
-    if (path === "/profile") return getDemoProfile() as T;
+    if (path === "/profile") {
+      if (isSupabaseConfigured()) return (await sbProfiles.fetchProfile()) as T;
+      return getDemoProfile() as T;
+    }
 
     // Search → Supabase when configured
     if (isSupabaseConfigured()) {
@@ -1208,6 +1220,48 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     }
     if (path === "/resumes") return getDemoResumes() as T;
     if (path === "/resumes/generated") return getDemoGeneratedDocuments() as T;
+
+    // ── Remaining features → Supabase when configured, demo otherwise ──
+    if (isSupabaseConfigured()) {
+      // Outreach
+      if (path === "/outreach") return (await sbOutreach.fetchOutreachMessages()) as T;
+
+      // Cover letters
+      if (path === "/cover-letter/history") return (await sbCoverLetters.fetchCoverLetters()) as T;
+
+      // Contacts
+      if (path === "/contacts") return (await sbContacts.fetchContacts()) as T;
+      if (path.startsWith("/contacts?job_id=")) {
+        const jobId = new URLSearchParams(path.split("?")[1]).get("job_id") ?? undefined;
+        return (await sbContacts.fetchContacts(jobId)) as T;
+      }
+
+      // Reminders
+      if (path === "/notifications/reminders" || path.startsWith("/notifications/reminders?"))
+        return (await sbReminders.fetchReminders()) as T;
+
+      // Salary / compensations
+      if (path === "/salary") return (await sbCompensations.fetchCompensations()) as T;
+      if (path.startsWith("/salary?job_id=")) {
+        const jobId = new URLSearchParams(path.split("?")[1]).get("job_id") ?? undefined;
+        return (await sbCompensations.fetchCompensations(jobId)) as T;
+      }
+
+      // Timeline
+      if (path === "/timeline") return (await sbTimeline.fetchTimelineEvents()) as T;
+      if (path.startsWith("/timeline?job_id=")) {
+        const jobId = new URLSearchParams(path.split("?")[1]).get("job_id") ?? undefined;
+        return (await sbTimeline.fetchTimelineEvents(jobId)) as T;
+      }
+
+      // Templates
+      if (path === "/templates" || path.startsWith("/templates?"))
+        return (await sbTemplates.fetchTemplates()) as T;
+
+      // Automation
+      if (path === "/automation/rules") return (await sbAutomation.fetchAutomationRules()) as T;
+    }
+
     // All other paths fall through to the generic demo handler
     return handleDemoGet(path) as T;
   }
@@ -1318,6 +1372,73 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
         notes: b.notes as string | undefined,
         status: b.status as "upcoming" | "completed" | "cancelled" | undefined,
       })) as T;
+    }
+
+    // ── Remaining features → Supabase when configured ──
+    if (isSupabaseConfigured()) {
+      // Profile update
+      if (path === "/profile") {
+        const b = body as Partial<UserProfile>;
+        return (await sbProfiles.updateProfile(b)) as T;
+      }
+      // Outreach
+      if (path === "/outreach/generate" || path === "/outreach/thank-you") {
+        // Try AI first, persist to Supabase on success
+        const aiResult = await tryLocalAI<T>(path, body);
+        if (aiResult !== null) {
+          const msg = aiResult as unknown as OutreachMessage;
+          try {
+            const b = body as Record<string, unknown>;
+            const saved = await sbOutreach.createOutreachMessage({
+              message_type: msg.message_type || (b.message_type as string) || "email",
+              recipient_name: msg.recipient_name || (b.recipient_name as string) || "",
+              recipient_role: msg.recipient_role || (b.recipient_role as string) || undefined,
+              subject: msg.subject,
+              body: msg.body,
+              message_purpose: path.includes("thank-you") ? "thank_you" : "outreach",
+              job_title: (b.job_title as string) || "",
+              company: (b.company as string) || "",
+            });
+            return saved as T;
+          } catch {
+            return aiResult; // Still return AI result even if save fails
+          }
+        }
+      }
+      // Cover letter generate
+      if (path === "/cover-letter/generate") {
+        const aiResult = await tryLocalAI<T>(path, body);
+        if (aiResult !== null) {
+          const letter = aiResult as unknown as GeneratedCoverLetter;
+          const b = body as Record<string, unknown>;
+          try {
+            const saved = await sbCoverLetters.createCoverLetter({
+              job_title: letter.job_title || (b.job_title as string) || "",
+              company: letter.company || (b.company as string) || "",
+              tone: (letter.tone || (b.tone as string) || "professional") as CoverLetterTone,
+              content: letter.content,
+              job_description: (b.job_description as string) || "",
+              resume_text: (b.resume_text as string) || "",
+              instructions: (b.instructions as string) || "",
+            });
+            return saved as T;
+          } catch {
+            return aiResult;
+          }
+        }
+      }
+      // Contacts
+      if (path === "/contacts") return (await sbContacts.createContact(body as Partial<CRMContact>)) as T;
+      // Reminders
+      if (path === "/notifications/reminders") return (await sbReminders.createReminder(body as Partial<Reminder>)) as T;
+      // Salary
+      if (path === "/salary") return (await sbCompensations.createCompensation(body as Partial<Compensation>)) as T;
+      // Timeline
+      if (path === "/timeline") return (await sbTimeline.createTimelineEvent(body as Partial<TimelineEvent>)) as T;
+      // Templates
+      if (path === "/templates") return (await sbTemplates.createTemplate(body as Partial<DocTemplate>)) as T;
+      // Automation
+      if (path === "/automation/rules") return (await sbAutomation.createAutomationRule(body as Partial<AutomationRule>)) as T;
     }
 
     // Try real AI first for routes that have a local AI handler
@@ -1456,6 +1577,7 @@ export async function apiPut<T = unknown>(path: string, body: unknown): Promise<
 export async function apiPatch<T = unknown>(path: string, body: unknown): Promise<T> {
   if (path === "/profile") {
     if (!API_URL) {
+      if (isSupabaseConfigured()) return (await sbProfiles.updateProfile(body as Partial<UserProfile>)) as T;
       return handleDemoPatch(path, body) as T;
     }
     return fetchBackend<T>(path, {
@@ -1482,14 +1604,42 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
   }
 
   if (path.startsWith("/contacts/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      return (await sbContacts.updateContact(id, body as Partial<CRMContact>)) as T;
+    }
     return handleDemoPatch(path, body) as T;
   }
 
   if (path.startsWith("/notifications/reminders/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/").pop()!;
+      return (await sbReminders.updateReminder(id, body as Partial<Reminder>)) as T;
+    }
     return handleDemoPatch(path, body) as T;
   }
 
   if (path.startsWith("/salary/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      return (await sbCompensations.updateCompensation(id, body as Partial<Compensation>)) as T;
+    }
+    return handleDemoPatch(path, body) as T;
+  }
+
+  if (path.startsWith("/templates/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      return (await sbTemplates.updateTemplate(id, body as Partial<DocTemplate>)) as T;
+    }
+    return handleDemoPatch(path, body) as T;
+  }
+
+  if (path.startsWith("/automation/rules/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[3];
+      return (await sbAutomation.updateAutomationRule(id, body as Partial<AutomationRule>)) as T;
+    }
     return handleDemoPatch(path, body) as T;
   }
 
@@ -1521,6 +1671,11 @@ export async function apiDelete(path: string): Promise<void> {
   }
 
   if (path.startsWith("/contacts/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      await sbContacts.deleteContact(id);
+      return;
+    }
     handleDemoDelete(path);
     return;
   }
@@ -1531,6 +1686,11 @@ export async function apiDelete(path: string): Promise<void> {
   }
 
   if (path.startsWith("/timeline/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      await sbTimeline.deleteTimelineEvent(id);
+      return;
+    }
     handleDemoDelete(path);
     return;
   }
@@ -1541,6 +1701,11 @@ export async function apiDelete(path: string): Promise<void> {
   }
 
   if (path.startsWith("/notifications/reminders/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/").pop()!;
+      await sbReminders.deleteReminder(id);
+      return;
+    }
     handleDemoDelete(path);
     return;
   }
@@ -1551,6 +1716,11 @@ export async function apiDelete(path: string): Promise<void> {
   }
 
   if (path.startsWith("/salary/") && path !== "/salary/compare" && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      await sbCompensations.deleteCompensation(id);
+      return;
+    }
     handleDemoDelete(path);
     return;
   }
@@ -1605,10 +1775,47 @@ export async function apiDelete(path: string): Promise<void> {
       throw new Error("Invalid message id");
     }
     if (!API_URL) {
+      if (isSupabaseConfigured()) {
+        await sbOutreach.deleteOutreachMessage(id);
+        return;
+      }
       removeDemoOutreachMessage(id);
       return;
     }
     await fetchBackend(path, { method: "DELETE" });
+    return;
+  }
+
+  // Cover letter delete
+  if (path.startsWith("/cover-letter/") && !API_URL) {
+    const id = path.split("/")[2];
+    if (isSupabaseConfigured()) {
+      await sbCoverLetters.deleteCoverLetter(id);
+      return;
+    }
+    removeDemoCoverLetter(id);
+    return;
+  }
+
+  // Templates delete
+  if (path.startsWith("/templates/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[2];
+      await sbTemplates.deleteTemplate(id);
+      return;
+    }
+    handleDemoDelete(path);
+    return;
+  }
+
+  // Automation rules delete
+  if (path.startsWith("/automation/rules/") && !API_URL) {
+    if (isSupabaseConfigured()) {
+      const id = path.split("/")[3];
+      await sbAutomation.deleteAutomationRule(id);
+      return;
+    }
+    handleDemoDelete(path);
     return;
   }
 
