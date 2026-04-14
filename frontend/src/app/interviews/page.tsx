@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api";
 import type { InterviewNote, InterviewPrepMaterial, Job } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,7 +96,15 @@ function PrepMaterialCard({ prep }: { prep: InterviewPrepMaterial }) {
 
 // ── New interview form ────────────────────────────────────────────
 
-function NewInterviewForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => void }) {
+function NewInterviewForm({
+  jobs,
+  onCreated,
+  prefillJobId,
+}: {
+  jobs: Job[];
+  onCreated: () => void;
+  prefillJobId?: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const [jobId, setJobId] = useState("");
   const [roundName, setRoundName] = useState("");
@@ -102,6 +112,17 @@ function NewInterviewForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => v
   const [interviewer, setInterviewer] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-open and pre-select job when linked from job detail page
+  useEffect(() => {
+    if (prefillJobId && jobs.length > 0) {
+      const match = jobs.find((j) => j.id === prefillJobId);
+      if (match) {
+        setJobId(prefillJobId);
+        setOpen(true);
+      }
+    }
+  }, [prefillJobId, jobs]);
 
   const interviewingJobs = jobs.filter((j) =>
     ["interviewing", "applied", "offer"].includes(j.status)
@@ -350,7 +371,10 @@ function InterviewCard({
 
 // ── Main page ─────────────────────────────────────────────────────
 
-export default function InterviewsPage() {
+function InterviewsPageContent() {
+  const searchParams = useSearchParams();
+  const prefillJobId = searchParams.get("jobId");
+
   const { data: interviews, mutate: refreshInterviews } = useSWR<InterviewNote[]>(
     "/interviews",
     () => apiGet<InterviewNote[]>("/interviews")
@@ -388,6 +412,7 @@ export default function InterviewsPage() {
             refreshInterviews();
             mutate("/interviews");
           }}
+          prefillJobId={prefillJobId}
         />
       </div>
 
@@ -433,5 +458,19 @@ export default function InterviewsPage() {
         </section>
       )}
     </div>
+  );
+}
+
+export default function InterviewsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-zinc-400 p-6 text-sm" role="status">
+          Loading interviews…
+        </div>
+      }
+    >
+      <InterviewsPageContent />
+    </Suspense>
   );
 }

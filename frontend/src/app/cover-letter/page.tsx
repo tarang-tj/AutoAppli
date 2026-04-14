@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
-import { apiPost, apiDelete, apiGet } from "@/lib/api";
+import { apiPost, apiDelete, apiGet, isJobsApiConfigured } from "@/lib/api";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import type { Job } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,11 +33,47 @@ const TONE_OPTIONS: Array<{ value: CoverLetterTone; label: string; desc: string 
 ];
 
 function CoverLetterPageContent() {
+  const searchParams = useSearchParams();
   const [demoMode] = useState(!isSupabaseConfigured());
   const [jobTitle, setJobTitle] = useState("");
   const [company, setCompany] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [resumeText, setResumeText] = useState("");
+  const prefillAppliedRef = useRef(false);
+
+  // Pre-fill from query params (from job detail AI actions)
+  useEffect(() => {
+    if (prefillAppliedRef.current) return;
+    const qTitle = searchParams.get("title");
+    const qCompany = searchParams.get("company");
+    const qJobId = searchParams.get("jobId");
+
+    if (!qTitle && !qCompany && !qJobId) return;
+    prefillAppliedRef.current = true;
+
+    if (qTitle) setJobTitle(qTitle);
+    if (qCompany) setCompany(qCompany);
+
+    // If jobId provided, fetch full job description
+    if (qJobId && isJobsApiConfigured()) {
+      void apiGet<Job>(`/jobs/${encodeURIComponent(qJobId)}`)
+        .then((job) => {
+          if (job.description) setJobDescription(job.description);
+          if (!qTitle && job.title) setJobTitle(job.title);
+          if (!qCompany && job.company) setCompany(job.company);
+          toast.success(
+            `Loaded ${[job.title, job.company].filter(Boolean).join(" at ")} details`
+          );
+        })
+        .catch(() => {
+          /* job fetch failed, user already has title/company from params */
+        });
+    } else if (qTitle || qCompany) {
+      toast.success(
+        `Pre-filled ${[qTitle, qCompany].filter(Boolean).join(" at ")}`
+      );
+    }
+  }, [searchParams]);
   const [tone, setTone] = useState<CoverLetterTone>("professional");
   const [instructions, setInstructions] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -508,8 +547,16 @@ function CoverLetterPageContent() {
 
 export default function CoverLetterPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 p-6">
-      <CoverLetterPageContent />
-    </div>
+    <Suspense
+      fallback={
+        <div className="text-zinc-400 p-6 text-sm" role="status">
+          Loading cover letter generator…
+        </div>
+      }
+    >
+      <div className="min-h-screen bg-zinc-950 p-6">
+        <CoverLetterPageContent />
+      </div>
+    </Suspense>
   );
 }

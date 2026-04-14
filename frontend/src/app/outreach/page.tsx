@@ -48,6 +48,9 @@ function OutreachPageContent() {
 
   useEffect(() => {
     const jobId = searchParams.get("jobId");
+    const qCompany = searchParams.get("company");
+    const qTitle = searchParams.get("title");
+    const qPurpose = searchParams.get("purpose");
 
     const applySessionHandoff = () => {
       const h = consumeOutreachHandoff();
@@ -59,6 +62,25 @@ function OutreachPageContent() {
       });
     };
 
+    // Direct query-param prefill from job detail AI action links
+    if ((qCompany || qTitle) && !jobId) {
+      const h: TrackerOutreachHandoff = {
+        v: 1,
+        jobTitle: qTitle ?? "",
+        company: qCompany ?? "",
+        jobContext: [qTitle, qCompany].filter(Boolean).join(" — "),
+      };
+      startTransition(() => {
+        setTrackerPrefill(h);
+        if (qPurpose === "thank_you") {
+          setHistoryFilter("thank_you");
+        }
+        const label = [qTitle, qCompany].filter(Boolean).join(" at ");
+        toast.success(label ? `Pre-filled: ${label}` : "Loaded job context");
+      });
+      return;
+    }
+
     if (jobId && isJobsApiConfigured()) {
       let cancelled = false;
       void apiGet<Job>(`/jobs/${encodeURIComponent(jobId)}`)
@@ -68,6 +90,9 @@ function OutreachPageContent() {
           const label = [h.jobTitle, h.company].filter(Boolean).join(" · ");
           startTransition(() => {
             setTrackerPrefill(h);
+            if (qPurpose === "thank_you") {
+              setHistoryFilter("thank_you");
+            }
             toast.success(label ? `Loaded from tracker: ${label}` : "Loaded role from tracker");
           });
         })
