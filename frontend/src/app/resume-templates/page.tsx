@@ -180,7 +180,7 @@ function TemplateCard({ template }: { template: ResumeTemplate }) {
 
 export default function ResumeTemplatesPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6 md:p-8">
+    <div className="text-white p-6 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">

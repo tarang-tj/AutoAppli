@@ -554,7 +554,7 @@ export default function CoverLetterPage() {
         </div>
       }
     >
-      <div className="min-h-screen bg-zinc-950 p-6">
+      <div className="p-6">
         <CoverLetterPageContent />
       </div>
     </Suspense>

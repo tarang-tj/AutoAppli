@@ -406,7 +406,7 @@ export default function TemplatesPage() {
   const coverLetters = templates.filter((t) => t.template_type === "cover_letter");
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6 md:p-8">
+    <div className="text-white p-6 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

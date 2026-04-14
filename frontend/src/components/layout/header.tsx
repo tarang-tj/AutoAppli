@@ -88,8 +88,20 @@ export function Header() {
         ) : null}
       </div>
 
-      {/* Right side: Notifications + User */}
+      {/* Right side: Cmd+K hint + Notifications + User */}
       <div className="flex items-center gap-2">
+        {/* Cmd+K search hint */}
+        <button
+          onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+          className="hidden md:flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors"
+          title="Quick navigation (Cmd+K)"
+        >
+          <span>Search...</span>
+          <kbd className="inline-flex items-center gap-0.5 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 border border-zinc-700">
+            ⌘K
+          </kbd>
+        </button>
+
         {/* Notification bell */}
         <button
           onClick={() => router.push("/notifications")}
