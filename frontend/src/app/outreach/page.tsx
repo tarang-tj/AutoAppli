@@ -15,7 +15,7 @@ import { startTransition, Suspense, useCallback, useEffect, useMemo, useState } 
 import { toast } from "sonner";
 import useSWR from "swr";
 import { useSearchParams } from "next/navigation";
-import { Heart, Trash2 } from "lucide-react";
+import { Heart, Trash2, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function messagePurpose(m: OutreachMessage): OutreachMessagePurpose {
@@ -147,9 +147,12 @@ function OutreachPageContent() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Outreach</h1>
-        <p className="text-zinc-400 text-sm mt-1">
-          Generate personalized emails and LinkedIn messages to recruiters and hiring managers
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <Send className="h-7 w-7 text-blue-400" aria-hidden />
+          Outreach
+        </h1>
+        <p className="text-zinc-400 text-sm mt-1 max-w-2xl leading-relaxed">
+          Generate personalized emails and LinkedIn messages to recruiters and hiring managers.
         </p>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -191,7 +194,7 @@ function OutreachPageContent() {
               </div>
               <div className="max-h-[min(24rem,50vh)] overflow-y-auto space-y-2 pr-1">
                 {filteredHistory.length === 0 ? (
-                  <p className="text-xs text-zinc-500 py-4 text-center">No messages in this filter.</p>
+                  <p className="text-xs text-zinc-400 py-4 text-center">No messages in this filter.</p>
                 ) : (
                   filteredHistory.map((msg) => {
                     const ty = messagePurpose(msg);

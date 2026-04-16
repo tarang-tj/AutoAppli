@@ -19,7 +19,7 @@ import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocumen
 import { EvalScoreCard } from "@/components/resume/eval-score-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { FileStack, History, Info, Sparkles, Trash2, X } from "lucide-react";
+import { FileStack, FileText, History, Info, Sparkles, Trash2, X } from "lucide-react";
 import { Suspense, useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -184,8 +184,11 @@ function ResumeBuilderContent() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Resume Builder</h1>
-        <p className="text-zinc-300 text-sm mt-1 max-w-2xl leading-relaxed">
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <FileText className="h-7 w-7 text-blue-400" aria-hidden />
+          Resume Builder
+        </h1>
+        <p className="text-zinc-400 text-sm mt-1 max-w-2xl leading-relaxed">
           Upload your resume (or paste the text), add a job description, and get an AI-tailored resume
           with keyword optimization and ATS scoring.
         </p>

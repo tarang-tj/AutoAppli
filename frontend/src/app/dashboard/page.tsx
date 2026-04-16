@@ -145,11 +145,11 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div>
+      <div role="status" aria-label="Loading dashboard">
         <div className="flex items-center justify-between mb-6">
-          <div>
+          <div className="space-y-2">
             <div className="h-8 w-48 bg-zinc-800 rounded animate-pulse" />
-            <div className="h-4 w-72 bg-zinc-800 rounded animate-pulse mt-2" />
+            <div className="h-4 w-72 bg-zinc-800/60 rounded animate-pulse" />
           </div>
           <div className="h-9 w-24 bg-zinc-800 rounded animate-pulse" />
         </div>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
           ))}
         </div>
         <div className="h-10 bg-zinc-800/40 rounded-lg animate-pulse mb-4" />
-        <div className="grid grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="space-y-3">
               <div className="h-8 bg-zinc-800/60 rounded animate-pulse" />
@@ -504,12 +504,12 @@ export default function DashboardPage() {
       ) : null}
 
       {!isLoading && jobs.length === 0 ? (
-        <Card className="mb-6 bg-zinc-900/90 border-zinc-700 border-dashed">
+        <Card className="mb-6 bg-zinc-900/90 border-zinc-800 border-dashed">
           <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-4 py-8">
             <div className="flex items-start gap-3 text-center sm:text-left">
-              <LayoutGrid className="h-10 w-10 text-zinc-500 shrink-0 hidden sm:block" />
+              <LayoutGrid className="h-10 w-10 text-zinc-600 shrink-0 hidden sm:block" aria-hidden />
               <div>
-                <p className="text-zinc-50 font-medium">No roles on your board yet</p>
+                <p className="text-zinc-50 font-medium text-lg">No roles on your board yet</p>
                 <p className="text-zinc-300 text-sm mt-1 leading-relaxed">
                   Add a job manually or save listings from Job Search. Then drag cards across stages
                   (Bookmarked → Applied → Interviewing…). Use sparkles or send on any card to open{" "}

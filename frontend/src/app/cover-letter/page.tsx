@@ -240,11 +240,11 @@ function CoverLetterPageContent() {
   return (
     <div className="w-full">
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <PenTool className="h-6 w-6 text-blue-400" />
-          <h1 className="text-2xl font-bold text-white">AI Cover Letter Generator</h1>
-        </div>
-        <p className="text-zinc-400 text-sm">
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <PenTool className="h-7 w-7 text-blue-400" aria-hidden />
+          AI Cover Letter Generator
+        </h1>
+        <p className="text-zinc-400 text-sm mt-1 max-w-2xl leading-relaxed">
           Generate personalized cover letters tailored to specific job opportunities. Upload your resume
           or paste it, add the job details, and let AI craft the perfect letter.
         </p>
@@ -543,13 +543,13 @@ function CoverLetterPageContent() {
           )}
 
           {!currentLetter && !history?.length && (
-            <Card className="bg-zinc-900 border-zinc-700 border-dashed p-8 text-center">
-              <PenTool className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-400 text-sm">
-                Generate your first cover letter to see it here
+            <Card className="bg-zinc-900 border-zinc-800 border-dashed p-8 text-center">
+              <PenTool className="h-12 w-12 text-zinc-600 mx-auto mb-4" aria-hidden />
+              <p className="text-zinc-300 font-medium text-lg">
+                No cover letters yet
               </p>
-              <p className="text-zinc-500 text-xs mt-2">
-                Upload your resume PDF or paste the text, add the job details, and click Generate
+              <p className="text-zinc-400 text-sm mt-1 max-w-sm mx-auto">
+                Upload your resume PDF or paste the text, add the job details, and click Generate.
               </p>
             </Card>
           )}
