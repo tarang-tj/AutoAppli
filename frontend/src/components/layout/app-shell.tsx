@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { CommandPalette } from "@/components/layout/command-palette";
+import { KeyboardShortcuts } from "@/components/layout/keyboard-shortcuts";
 
 /** Authenticated app chrome: dark sidebar, header, and a main area that respects global theme. */
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -16,6 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <CommandPalette />
+      <KeyboardShortcuts />
     </div>
   );
 }
