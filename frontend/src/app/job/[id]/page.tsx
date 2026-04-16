@@ -298,8 +298,19 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+      <div className="p-6" role="status" aria-label="Loading job details">
+        <div className="max-w-4xl mx-auto space-y-6 animate-pulse">
+          <div className="h-6 w-40 bg-zinc-800/60 rounded" />
+          <div className="space-y-3">
+            <div className="h-8 w-2/3 bg-zinc-800 rounded" />
+            <div className="h-5 w-1/3 bg-zinc-800/60 rounded" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="h-48 bg-zinc-800/60 rounded-xl" />
+            <div className="h-48 bg-zinc-800/60 rounded-xl" />
+          </div>
+          <div className="h-64 bg-zinc-800/60 rounded-xl" />
+        </div>
       </div>
     );
   }
@@ -354,14 +365,15 @@ export default function JobDetailPage() {
 
         {/* Title and company header */}
         <div className="mb-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white mb-1">{job.title}</h1>
-              <p className="text-lg text-zinc-400">{job.company}</p>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 break-words">{job.title}</h1>
+              <p className="text-base sm:text-lg text-zinc-400">{job.company}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Select value={job.status} onValueChange={handleStatusChange}>
                 <SelectTrigger
+                  aria-label="Job status"
                   className={cn(
                     "w-40 border-0",
                     STATUS_COLORS[job.status as JobStatus]
@@ -426,9 +438,9 @@ export default function JobDetailPage() {
         </div>
 
         {/* Two-column layout */}
-        <div className="grid grid-cols-3 gap-6">
-          {/* Main content - 2 columns */}
-          <div className="col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main content - 2 columns on lg+ */}
+          <div className="lg:col-span-2 space-y-6">
             {/* Salary Section */}
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader>

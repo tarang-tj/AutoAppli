@@ -79,50 +79,56 @@ export default function ExportPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Export Buttons */}
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardHeader>
-            <CardTitle className="text-white">Download Data</CardTitle>
-            <CardDescription className="text-zinc-500">Export your job applications in different formats</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button
-                onClick={handleExportCsv}
-                disabled={exporting || jobs.length === 0}
-                className="bg-blue-600 hover:bg-blue-700 text-white w-full"
-              >
-                <FileDown className="h-4 w-4 mr-2" aria-hidden />
-                Export CSV
-              </Button>
-              <Button
-                onClick={handleExportJson}
-                disabled={exporting || jobs.length === 0}
-                className="bg-blue-600 hover:bg-blue-700 text-white w-full"
-              >
-                <FileDown className="h-4 w-4 mr-2" aria-hidden />
-                Export JSON
-              </Button>
-              <Button
-                onClick={handleDownloadPdf}
-                disabled={exporting || jobs.length === 0}
-                className="bg-blue-600 hover:bg-blue-700 text-white w-full"
-              >
-                {exporting ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden />
-                ) : (
-                  <FileText className="h-4 w-4 mr-2" aria-hidden />
-                )}
-                Download Report (PDF)
-              </Button>
-            </div>
-            {jobs.length === 0 && (
-              <p className="text-zinc-400 text-sm mt-4">
-                Add some job applications to start exporting data.
+        {jobs.length === 0 ? (
+          <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <Download className="h-12 w-12 text-zinc-600 mb-4" aria-hidden />
+              <p className="text-zinc-300 font-medium text-lg">Nothing to export yet</p>
+              <p className="text-zinc-400 text-sm mt-1 max-w-md">
+                Add job applications to your tracker and a summary report and downloads will appear here.
               </p>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white">Download Data</CardTitle>
+              <CardDescription className="text-zinc-500">Export your job applications in different formats</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Button
+                  onClick={handleExportCsv}
+                  disabled={exporting}
+                  className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+                >
+                  <FileDown className="h-4 w-4 mr-2" aria-hidden />
+                  Export CSV
+                </Button>
+                <Button
+                  onClick={handleExportJson}
+                  disabled={exporting}
+                  className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+                >
+                  <FileDown className="h-4 w-4 mr-2" aria-hidden />
+                  Export JSON
+                </Button>
+                <Button
+                  onClick={handleDownloadPdf}
+                  disabled={exporting}
+                  className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+                >
+                  {exporting ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden />
+                  ) : (
+                    <FileText className="h-4 w-4 mr-2" aria-hidden />
+                  )}
+                  Download Report (PDF)
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Summary Report */}
         {displayReport && (
