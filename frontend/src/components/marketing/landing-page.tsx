@@ -19,7 +19,7 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
       {/* Header */}
-      <header className="border-b border-zinc-800/50 px-6 py-4 flex items-center justify-between gap-4 backdrop-blur-sm bg-zinc-950/80 sticky top-0 z-10">
+      <header className="border-b border-zinc-800/50 px-4 sm:px-6 py-4 flex items-center justify-between gap-4 backdrop-blur-sm bg-zinc-950/80 sticky top-0 z-10">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20">
             A
@@ -55,7 +55,7 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative px-6 py-20 md:py-32 max-w-5xl mx-auto w-full">
+        <section className="relative px-4 sm:px-6 py-16 md:py-32 max-w-5xl mx-auto w-full">
           <div className="absolute inset-0 -z-10 overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-blue-500/5 rounded-full blur-3xl" />
             <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-3xl" />
@@ -66,14 +66,14 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
             AI-powered job search automation
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.1] max-w-4xl">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.1] max-w-4xl">
             Land your next role{" "}
             <span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
               faster.
             </span>
           </h1>
 
-          <p className="mt-6 text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
+          <p className="mt-6 text-base sm:text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
             Search 300+ live job listings, tailor your resume with AI, generate cover letters and outreach
             messages, and track every application on a visual Kanban board — all in one workspace.
           </p>
@@ -107,7 +107,7 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
           </div>
 
           {/* Trust indicators */}
-          <div className="mt-12 flex flex-wrap items-center gap-6 text-sm text-zinc-500">
+          <div className="mt-10 sm:mt-12 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-zinc-400">
             <span className="inline-flex items-center gap-1.5">
               <Shield className="h-4 w-4 text-emerald-500" />
               Free to use
@@ -233,7 +233,7 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </div>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-zinc-500">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-zinc-400">
               <span className="inline-flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 No credit card required
@@ -279,7 +279,7 @@ function StepCard({
         {step}
       </div>
       <h3 className="font-semibold text-white text-lg mb-2">{title}</h3>
-      <p className="text-sm text-zinc-500 leading-relaxed">{description}</p>
+      <p className="text-sm text-zinc-400 leading-relaxed">{description}</p>
     </div>
   );
 }
@@ -299,7 +299,7 @@ function FeatureCard({
     <div className="group rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5 hover:border-zinc-700 hover:bg-zinc-900/70 transition-all duration-200">
       <Icon className={`h-7 w-7 ${iconColor} mb-3 group-hover:scale-110 transition-transform duration-200`} />
       <h2 className="font-semibold text-white">{title}</h2>
-      <p className="mt-2 text-sm text-zinc-500 leading-relaxed">
+      <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
         {description}
       </p>
     </div>

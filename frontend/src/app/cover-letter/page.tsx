@@ -563,8 +563,13 @@ export default function CoverLetterPage() {
   return (
     <Suspense
       fallback={
-        <div className="text-zinc-400 p-6 text-sm" role="status">
-          Loading cover letter generator…
+        <div className="p-6 space-y-4 animate-pulse" role="status" aria-label="Loading cover letter generator">
+          <div className="h-8 w-56 bg-zinc-800 rounded" />
+          <div className="h-4 w-80 bg-zinc-800/60 rounded" />
+          <div className="grid gap-4 md:grid-cols-2 mt-4">
+            <div className="h-64 bg-zinc-800/60 rounded-xl" />
+            <div className="h-64 bg-zinc-800/60 rounded-xl" />
+          </div>
         </div>
       }
     >

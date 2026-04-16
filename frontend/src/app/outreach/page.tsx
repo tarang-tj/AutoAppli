@@ -251,8 +251,13 @@ export default function OutreachPage() {
   return (
     <Suspense
       fallback={
-        <div className="text-zinc-400 p-6 text-sm" role="status">
-          Loading outreach…
+        <div className="p-6 space-y-4 animate-pulse" role="status" aria-label="Loading outreach">
+          <div className="h-8 w-48 bg-zinc-800 rounded" />
+          <div className="h-4 w-72 bg-zinc-800/60 rounded" />
+          <div className="grid gap-4 md:grid-cols-2 mt-4">
+            <div className="h-56 bg-zinc-800/60 rounded-xl" />
+            <div className="h-56 bg-zinc-800/60 rounded-xl" />
+          </div>
         </div>
       }
     >
