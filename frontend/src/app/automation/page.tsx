@@ -68,7 +68,7 @@ function RuleCard({
   const config = rule.action_config as Record<string, string | number>;
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800">
+    <Card className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -82,7 +82,7 @@ function RuleCard({
               </div>
               <div className="text-sm text-zinc-400">
                 <span className="font-medium text-white">{triggerInfo.label}</span>
-                <span className="mx-2 text-zinc-600">→</span>
+                <span className="mx-2 text-zinc-600" aria-hidden>→</span>
                 <span>{actionInfo.label}</span>
               </div>
             </div>
@@ -105,19 +105,21 @@ function RuleCard({
               onClick={() => onToggle(rule.id, !rule.is_active)}
               className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
                 rule.is_active
-                  ? "bg-blue-600/20 text-blue-400"
-                  : "bg-zinc-800 text-zinc-500"
+                  ? "bg-blue-600/20 text-blue-400 hover:bg-blue-600/30"
+                  : "bg-zinc-800 text-zinc-500 hover:bg-zinc-700"
               }`}
-              title={rule.is_active ? "Disable" : "Enable"}
+              aria-label={rule.is_active ? "Disable rule" : "Enable rule"}
+              title={rule.is_active ? "Disable rule" : "Enable rule"}
             >
-              <Zap className="h-4 w-4" />
+              <Zap className="h-4 w-4" aria-hidden />
             </button>
             <button
               onClick={() => onDelete(rule.id)}
               className="w-10 h-10 rounded-lg flex items-center justify-center bg-zinc-800 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 transition-colors"
+              aria-label="Delete rule"
               title="Delete rule"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" aria-hidden />
             </button>
           </div>
         </div>
@@ -186,7 +188,7 @@ function NewRuleForm({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-1">
                 Trigger
@@ -222,7 +224,7 @@ function NewRuleForm({
           </div>
 
           {trigger === "no_response_days" && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-1">
                   Days Threshold
@@ -290,7 +292,7 @@ function SuggestionCard({
   };
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800">
+    <Card className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -304,7 +306,7 @@ function SuggestionCard({
             onClick={handleApply}
             disabled={applying}
             size="sm"
-            className="flex-shrink-0 ml-4 bg-green-600 hover:bg-green-700 text-white"
+            className="flex-shrink-0 ml-4 bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             {applying ? "Applying..." : "Apply"}
           </Button>
@@ -469,7 +471,11 @@ export default function AutomationPage() {
           <h2 className="text-lg font-semibold text-white mb-3">Active Rules</h2>
           <div className="space-y-3 mb-6">
             {rulesLoading ? (
-              <div className="text-zinc-400">Loading rules...</div>
+              <div className="space-y-3 animate-pulse" role="status" aria-label="Loading rules">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="h-24 bg-zinc-800/60 rounded-xl" />
+                ))}
+              </div>
             ) : (rules || []).length > 0 ? (
               (rules || []).map((rule) => (
                 <RuleCard
@@ -480,7 +486,15 @@ export default function AutomationPage() {
                 />
               ))
             ) : (
-              <div className="text-zinc-400">No rules created yet</div>
+              <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+                  <Zap className="h-10 w-10 text-zinc-600 mb-3" aria-hidden />
+                  <p className="text-zinc-300 font-medium">No automation rules yet</p>
+                  <p className="text-zinc-400 text-sm mt-1 max-w-sm">
+                    Create a rule below to automatically move jobs through your pipeline.
+                  </p>
+                </CardContent>
+              </Card>
             )}
           </div>
 
@@ -508,9 +522,13 @@ export default function AutomationPage() {
               ))}
             </div>
           ) : (
-            <Card className="bg-zinc-900 border-zinc-800">
-              <CardContent className="p-4 text-center text-zinc-400">
-                No suggestions at this time. Rules will suggest actions when conditions are met.
+            <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                <Play className="h-8 w-8 text-zinc-600 mb-3" aria-hidden />
+                <p className="text-zinc-300 font-medium">No suggestions right now</p>
+                <p className="text-zinc-400 text-sm mt-1 max-w-sm">
+                  Rules will suggest actions when their conditions are met.
+                </p>
               </CardContent>
             </Card>
           )}

@@ -409,10 +409,10 @@ export default function TemplatesPage() {
     <div className="text-white p-6 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <FileStack className="h-8 w-8 text-blue-400" />
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+              <FileStack className="h-7 w-7 sm:h-8 sm:w-8 text-blue-400" aria-hidden />
               Document Templates
             </h1>
             <p className="text-zinc-400 mt-1">
@@ -423,9 +423,14 @@ export default function TemplatesPage() {
         </div>
 
         {templates.length === 0 ? (
-          <Card className="border-zinc-700 bg-zinc-900 text-center py-12">
-            <FileStack className="h-12 w-12 text-zinc-600 mx-auto mb-3" />
-            <p className="text-zinc-400">No templates yet. Create your first one!</p>
+          <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <FileStack className="h-12 w-12 text-zinc-600 mb-4" aria-hidden />
+              <p className="text-zinc-300 font-medium text-lg">No templates yet</p>
+              <p className="text-zinc-400 text-sm mt-1 max-w-md">
+                Create your first template for resumes or cover letters and reuse it across applications.
+              </p>
+            </CardContent>
           </Card>
         ) : (
           <>

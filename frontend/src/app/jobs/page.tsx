@@ -1,11 +1,13 @@
 "use client";
 import { JobSearchForm } from "@/components/jobs/job-search-form";
 import { JobListingCard } from "@/components/jobs/job-listing-card";
+import { Card, CardContent } from "@/components/ui/card";
 import { apiGet } from "@/lib/api";
 import { getDemoJobSearchResults } from "@/lib/demo-data";
 import { normalizeJobSearchHistory, normalizeJobSearchResponse } from "@/lib/job-search";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import type { JobSearchHistoryItem, JobSearchResult } from "@/types";
+import { SearchX } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -77,9 +79,15 @@ export default function JobsPage() {
         onLoadCached={!demoMode ? loadCached : undefined}
       />
       {searched && results.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-zinc-300">No jobs found. Try different search terms.</p>
-        </div>
+        <Card className="mt-6 bg-zinc-900 border-zinc-800 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <SearchX className="h-10 w-10 text-zinc-600 mb-3" aria-hidden />
+            <p className="text-zinc-300 font-medium">No jobs found</p>
+            <p className="text-zinc-400 text-sm mt-1 max-w-md">
+              Try different keywords, broaden your location, or adjust the filters above.
+            </p>
+          </CardContent>
+        </Card>
       )}
       {results.length > 0 && (
         <div className="mt-4 mb-2 flex items-center justify-between">

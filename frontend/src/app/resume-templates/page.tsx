@@ -110,12 +110,12 @@ function TemplateCard({ template }: { template: ResumeTemplate }) {
     <Card className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-all group">
       <CardContent className="p-5">
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
           <div className="flex items-center gap-2.5">
             <div className={`${template.accent}`}>{template.icon}</div>
             <h3 className="text-lg font-semibold text-white">{template.name}</h3>
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 flex-wrap">
             {template.tags.map((tag) => (
               <Badge
                 key={tag}
@@ -183,8 +183,8 @@ export default function ResumeTemplatesPage() {
     <div className="text-white p-6 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <FileText className="h-8 w-8 text-blue-400" />
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+            <FileText className="h-7 w-7 sm:h-8 sm:w-8 text-blue-400" aria-hidden />
             Resume Templates
           </h1>
           <p className="text-zinc-400 mt-2 max-w-2xl leading-relaxed">
