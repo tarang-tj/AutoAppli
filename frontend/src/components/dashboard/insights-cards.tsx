@@ -9,7 +9,6 @@ import {
   Zap,
   Target,
   BarChart3,
-  ArrowRight,
 } from "lucide-react";
 import { useMemo } from "react";
 

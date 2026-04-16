@@ -118,6 +118,59 @@ export default function DashboardPage() {
     toast.success(`Exported ${rows.length} job${rows.length === 1 ? "" : "s"}`);
   };
 
+  // Quick-add state
+  const [quickCompany, setQuickCompany] = useState("");
+  const [quickTitle, setQuickTitle] = useState("");
+  const [quickAdding, setQuickAdding] = useState(false);
+
+  const handleQuickAdd = async () => {
+    if (!quickCompany.trim() || !quickTitle.trim()) {
+      toast.error("Company and title are required");
+      return;
+    }
+    setQuickAdding(true);
+    try {
+      await apiPost("/jobs", { company: quickCompany.trim(), title: quickTitle.trim() });
+      setQuickCompany("");
+      setQuickTitle("");
+      mutate();
+      toast.success("Job added to board");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to add");
+    } finally {
+      setQuickAdding(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="h-8 w-48 bg-zinc-800 rounded animate-pulse" />
+            <div className="h-4 w-72 bg-zinc-800 rounded animate-pulse mt-2" />
+          </div>
+          <div className="h-9 w-24 bg-zinc-800 rounded animate-pulse" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-zinc-800/60 rounded-xl animate-pulse" />
+          ))}
+        </div>
+        <div className="h-10 bg-zinc-800/40 rounded-lg animate-pulse mb-4" />
+        <div className="grid grid-cols-6 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="space-y-3">
+              <div className="h-8 bg-zinc-800/60 rounded animate-pulse" />
+              <div className="h-32 bg-zinc-800/30 rounded-lg animate-pulse" />
+              <div className="h-32 bg-zinc-800/20 rounded-lg animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
@@ -360,6 +413,34 @@ export default function DashboardPage() {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
+
+      {/* Quick-add bar */}
+      <div className="mb-4 flex items-center gap-2 max-w-2xl">
+        <Input
+          value={quickCompany}
+          onChange={(e) => setQuickCompany(e.target.value)}
+          placeholder="Company"
+          className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 flex-1"
+          onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+        />
+        <Input
+          value={quickTitle}
+          onChange={(e) => setQuickTitle(e.target.value)}
+          placeholder="Job title"
+          className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 flex-1"
+          onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+        />
+        <Button
+          type="button"
+          size="sm"
+          onClick={handleQuickAdd}
+          disabled={quickAdding || !quickCompany.trim() || !quickTitle.trim()}
+          className="bg-blue-600 hover:bg-blue-700 shrink-0"
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          {quickAdding ? "..." : "Quick Add"}
+        </Button>
       </div>
 
       {jobs.length > 0 ? (

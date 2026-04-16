@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Filter, SlidersHorizontal, X, Star, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -112,77 +112,78 @@ export function useSmartFilters(): SmartFiltersContextType {
     return count;
   }, [filters]);
 
-  const applyFilters = (jobs: Job[]): Job[] => {
-    let filtered = [...jobs];
+  const applyFilters = useCallback((jobs: Job[]): Job[] => {
+    // Single-pass filter: build a combined predicate for all active filters
+    const hasAny =
+      filters.salaryMin !== undefined ||
+      filters.salaryMax !== undefined ||
+      filters.remoteTypes.length > 0 ||
+      filters.jobTypes.length > 0 ||
+      filters.experienceLevels.length > 0 ||
+      filters.minPriority > 0 ||
+      filters.skills.length > 0 ||
+      filters.tags.length > 0 ||
+      filters.hasDeadline;
 
-    // Apply filters
-    if (filters.salaryMin !== undefined) {
-      filtered = filtered.filter((j) => (j.salary_max ?? 0) >= filters.salaryMin!);
-    }
-    if (filters.salaryMax !== undefined) {
-      filtered = filtered.filter((j) => (j.salary_min ?? 0) <= filters.salaryMax!);
-    }
-    if (filters.remoteTypes.length > 0) {
-      filtered = filtered.filter((j) => filters.remoteTypes.includes(j.remote_type || 'unknown'));
-    }
-    if (filters.jobTypes.length > 0) {
-      filtered = filtered.filter((j) => filters.jobTypes.includes(j.job_type!));
-    }
-    if (filters.experienceLevels.length > 0) {
-      filtered = filtered.filter((j) => filters.experienceLevels.includes(j.experience_level!));
-    }
-    if (filters.minPriority > 0) {
-      filtered = filtered.filter((j) => (j.priority ?? 0) >= filters.minPriority);
-    }
-    if (filters.skills.length > 0) {
-      filtered = filtered.filter((j) => {
-        const jobSkills = (j.skills ?? []).map((s) => s.toLowerCase());
-        return filters.skills.every((skill) => jobSkills.some((s) => s.includes(skill.toLowerCase())));
-      });
-    }
-    if (filters.tags.length > 0) {
-      filtered = filtered.filter((j) => {
-        const jobTags = (j.tags ?? []).map((t) => t.toLowerCase());
-        return filters.tags.every((tag) => jobTags.some((t) => t.includes(tag.toLowerCase())));
-      });
-    }
-    if (filters.hasDeadline) {
-      filtered = filtered.filter((j) => j.deadline !== undefined && j.deadline !== null && j.deadline !== '');
-    }
+    // Pre-compute lowercase skill/tag arrays once
+    const lowerSkills = filters.skills.map((s) => s.toLowerCase());
+    const lowerTags = filters.tags.map((t) => t.toLowerCase());
 
-    // Apply sorting
+    const filtered = hasAny
+      ? jobs.filter((j) => {
+          if (filters.salaryMin !== undefined && (j.salary_max ?? 0) < filters.salaryMin) return false;
+          if (filters.salaryMax !== undefined && (j.salary_min ?? 0) > filters.salaryMax) return false;
+          if (filters.remoteTypes.length > 0 && !filters.remoteTypes.includes(j.remote_type || "unknown")) return false;
+          if (filters.jobTypes.length > 0 && !filters.jobTypes.includes(j.job_type!)) return false;
+          if (filters.experienceLevels.length > 0 && !filters.experienceLevels.includes(j.experience_level!)) return false;
+          if (filters.minPriority > 0 && (j.priority ?? 0) < filters.minPriority) return false;
+          if (lowerSkills.length > 0) {
+            const jobSkills = (j.skills ?? []).map((s) => s.toLowerCase());
+            if (!lowerSkills.every((skill) => jobSkills.some((s) => s.includes(skill)))) return false;
+          }
+          if (lowerTags.length > 0) {
+            const jobTags = (j.tags ?? []).map((t) => t.toLowerCase());
+            if (!lowerTags.every((tag) => jobTags.some((t) => t.includes(tag)))) return false;
+          }
+          if (filters.hasDeadline && !j.deadline) return false;
+          return true;
+        })
+      : [...jobs];
+
+    // Sort
     filtered.sort((a, b) => {
-      let comparison = 0;
-
+      let cmp = 0;
       switch (sortBy) {
-        case 'priority':
-          comparison = (b.priority ?? 0) - (a.priority ?? 0);
+        case "priority":
+          cmp = (b.priority ?? 0) - (a.priority ?? 0);
           break;
-        case 'salary':
-          const aSalary = Math.max(a.salary_min ?? 0, a.salary_max ?? 0);
-          const bSalary = Math.max(b.salary_min ?? 0, b.salary_max ?? 0);
-          comparison = bSalary - aSalary;
+        case "salary": {
+          const aS = Math.max(a.salary_min ?? 0, a.salary_max ?? 0);
+          const bS = Math.max(b.salary_min ?? 0, b.salary_max ?? 0);
+          cmp = bS - aS;
           break;
-        case 'deadline':
-          const aDeadline = a.deadline || '9999-12-31';
-          const bDeadline = b.deadline || '9999-12-31';
-          comparison = aDeadline.localeCompare(bDeadline);
+        }
+        case "deadline": {
+          const aD = a.deadline || "9999-12-31";
+          const bD = b.deadline || "9999-12-31";
+          cmp = aD.localeCompare(bD);
           break;
-        case 'dateAdded':
-          const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
-          const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
-          comparison = bDate - aDate;
+        }
+        case "dateAdded": {
+          const aT = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const bT = b.created_at ? new Date(b.created_at).getTime() : 0;
+          cmp = bT - aT;
           break;
-        case 'company':
-          comparison = (a.company || '').localeCompare(b.company || '');
+        }
+        case "company":
+          cmp = (a.company || "").localeCompare(b.company || "");
           break;
       }
-
-      return sortDir === 'desc' ? -comparison : comparison;
+      return sortDir === "desc" ? -cmp : cmp;
     });
 
     return filtered;
-  };
+  }, [filters, sortBy, sortDir]);
 
   return {
     filters,
