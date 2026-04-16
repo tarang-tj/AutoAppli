@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { apiGet, apiPatch } from "@/lib/api";
+import { apiGet, apiPatch, apiPost } from "@/lib/api";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -230,6 +231,23 @@ export default function JobDetailPage() {
 
   const handleDeadlineChange = (value: string) => {
     updateField("deadline", value || null);
+
+    // Auto-create a reminder 2 days before the deadline
+    if (value && job && isSupabaseConfigured()) {
+      const deadlineDate = new Date(value + "T09:00:00");
+      const reminderDate = new Date(deadlineDate.getTime() - 2 * 24 * 60 * 60 * 1000);
+      if (reminderDate > new Date()) {
+        apiPost("/notifications/reminders", {
+          job_id: job.id,
+          reminder_type: "deadline",
+          title: `Deadline in 2 days: ${job.title} at ${job.company}`,
+          body: `Application deadline is ${deadlineDate.toLocaleDateString()}. Make sure to submit!`,
+          due_at: reminderDate.toISOString(),
+        }).then(() => {
+          toast.success("Reminder set for 2 days before deadline");
+        }).catch(() => { /* best-effort */ });
+      }
+    }
   };
 
   const handleNextStepChange = (value: string) => {

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import useSWR from "swr";
 import { apiPost, apiDelete, apiGet, isJobsApiConfigured } from "@/lib/api";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
-import type { Job } from "@/types";
+import type { Job, Resume } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,6 +74,20 @@ function CoverLetterPageContent() {
       );
     }
   }, [searchParams]);
+
+  // Auto-load primary resume text so user doesn't have to re-upload every time
+  useEffect(() => {
+    if (resumeText) return; // Already has text (from upload or paste)
+    apiGet<Resume[]>("/resumes")
+      .then((resumes) => {
+        const primary = resumes.find((r) => r.is_primary) || resumes[0];
+        if (primary?.parsed_text) {
+          setResumeText(primary.parsed_text);
+        }
+      })
+      .catch(() => { /* no resumes yet */ });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [tone, setTone] = useState<CoverLetterTone>("professional");
   const [instructions, setInstructions] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
