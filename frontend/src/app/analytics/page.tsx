@@ -343,16 +343,19 @@ export default function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6 animate-pulse">
-        <div className="h-8 w-48 bg-zinc-800 rounded" />
+      <div className="space-y-6 animate-pulse" role="status" aria-label="Loading analytics">
+        <div className="space-y-3">
+          <div className="h-8 w-48 bg-zinc-800 rounded" />
+          <div className="h-4 w-72 bg-zinc-800/60 rounded" />
+        </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 bg-zinc-800 rounded-xl" />
+            <div key={i} className="h-24 bg-zinc-800/60 rounded-xl" />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-64 bg-zinc-800 rounded-xl" />
-          <div className="h-64 bg-zinc-800 rounded-xl" />
+          <div className="h-64 bg-zinc-800/60 rounded-xl" />
+          <div className="h-64 bg-zinc-800/60 rounded-xl" />
         </div>
       </div>
     );
@@ -360,13 +363,21 @@ export default function AnalyticsPage() {
 
   if (!data) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-white mb-2">Analytics</h1>
+      <div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <BarChart3 className="h-7 w-7 text-blue-400" aria-hidden />
+            Analytics
+          </h1>
+          <p className="text-zinc-400 text-sm mt-1 max-w-2xl leading-relaxed">
+            Track your application pipeline, conversion rates, and activity trends.
+          </p>
+        </div>
         <Card className="bg-zinc-900 border-zinc-800 border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Activity className="h-12 w-12 text-zinc-600 mb-4" />
+            <Activity className="h-12 w-12 text-zinc-600 mb-4" aria-hidden />
             <p className="text-zinc-300 font-medium text-lg">No data yet</p>
-            <p className="text-zinc-500 text-sm mt-1 max-w-md">
+            <p className="text-zinc-400 text-sm mt-1 max-w-md">
               Add job applications to your tracker to see analytics about your pipeline,
               conversion rates, and activity trends.
             </p>

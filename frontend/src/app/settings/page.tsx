@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { apiGet, apiPatch, isResumeApiConfigured } from "@/lib/api";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { UserProfile } from "@/types";
-import { User, Shield, Download, KeyRound, Bell, AlertTriangle, LogOut } from "lucide-react";
+import { User, Shield, Download, KeyRound, Bell, AlertTriangle, LogOut, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -34,6 +34,9 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Export
   const [exporting, setExporting] = useState(false);
@@ -184,7 +187,7 @@ export default function SettingsPage() {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <User className="h-5 w-5 text-blue-400" />
+              <User className="h-5 w-5 text-blue-400" aria-hidden />
               Profile
             </CardTitle>
             <CardDescription className="text-zinc-500">
@@ -291,7 +294,7 @@ export default function SettingsPage() {
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                <Shield className="h-5 w-5 text-emerald-400" />
+                <Shield className="h-5 w-5 text-emerald-400" aria-hidden />
                 Security
               </CardTitle>
               <CardDescription className="text-zinc-500">
@@ -301,35 +304,68 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-zinc-300">Current password</Label>
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password"
-                  className="bg-zinc-800 border-zinc-700 text-white"
-                />
+                <div className="relative">
+                  <Input
+                    type={showCurrent ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    className="bg-zinc-800 border-zinc-700 text-white pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                    tabIndex={-1}
+                    aria-label={showCurrent ? "Hide current password" : "Show current password"}
+                  >
+                    {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-zinc-300">New password</Label>
-                  <Input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 6 characters"
-                    minLength={6}
-                    className="bg-zinc-800 border-zinc-700 text-white"
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showNew ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Min 6 characters"
+                      minLength={6}
+                      className="bg-zinc-800 border-zinc-700 text-white pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNew(!showNew)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                      tabIndex={-1}
+                      aria-label={showNew ? "Hide new password" : "Show new password"}
+                    >
+                      {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-300">Confirm new password</Label>
-                  <Input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat new password"
-                    className="bg-zinc-800 border-zinc-700 text-white"
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showConfirm ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Repeat new password"
+                      className="bg-zinc-800 border-zinc-700 text-white pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(!showConfirm)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                      tabIndex={-1}
+                      aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
               {newPassword && confirmPassword && newPassword !== confirmPassword && (
@@ -352,7 +388,7 @@ export default function SettingsPage() {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Download className="h-5 w-5 text-amber-400" />
+              <Download className="h-5 w-5 text-amber-400" aria-hidden />
               Data Export
             </CardTitle>
             <CardDescription className="text-zinc-500">
@@ -381,7 +417,7 @@ export default function SettingsPage() {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Bell className="h-5 w-5 text-blue-400" />
+              <Bell className="h-5 w-5 text-blue-400" aria-hidden />
               Dashboard Nudges
             </CardTitle>
             <CardDescription className="text-zinc-500">
@@ -448,7 +484,7 @@ export default function SettingsPage() {
           <Card className="bg-zinc-900 border-red-900/50">
             <CardHeader>
               <CardTitle className="text-red-400 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
+                <AlertTriangle className="h-5 w-5" aria-hidden />
                 Danger Zone
               </CardTitle>
               <CardDescription className="text-zinc-500">
