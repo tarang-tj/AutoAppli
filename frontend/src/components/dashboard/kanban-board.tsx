@@ -2,6 +2,8 @@
 import { useJobs } from "@/hooks/use-jobs";
 import { useMatchScores } from "@/hooks/use-match-scores";
 import { filterJobsByQuery } from "@/lib/filter-jobs";
+import { apiPost } from "@/lib/api";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { Job, JobStatus } from "@/types";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useMemo } from "react";
@@ -88,6 +90,20 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
       await persistColumnOrder(newStatus, destIds);
       if (sourceIds.length > 0) {
         await persistColumnOrder(sourceStatus, sourceIds);
+      }
+      const statusLabel = COLUMNS.find((c) => c.id === newStatus)?.label ?? newStatus;
+      toast.success(`Moved to ${statusLabel}`, {
+        description: `${job.title} at ${job.company}`,
+      });
+
+      // Auto-log timeline event
+      if (isSupabaseConfigured()) {
+        apiPost("/timeline", {
+          job_id: jobId,
+          event_type: "status_change",
+          title: `Status changed to ${statusLabel}`,
+          description: `${job.title} at ${job.company} moved from ${sourceStatus} to ${newStatus}`,
+        }).catch(() => { /* best-effort */ });
       }
     } catch {
       toast.error("Could not update job status. Try again.");
