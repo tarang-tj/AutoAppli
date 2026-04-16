@@ -161,7 +161,7 @@ function NewInterviewForm({
   }
 
   return (
-    <Card className="border-zinc-700 bg-zinc-900">
+    <Card className="border-zinc-800 bg-zinc-900">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">New Interview Round</CardTitle>
       </CardHeader>
@@ -288,7 +288,7 @@ function InterviewCard({
   }
 
   return (
-    <Card className="border-zinc-700 bg-zinc-900 transition-colors hover:border-zinc-600">
+    <Card className="border-zinc-800 bg-zinc-900 transition-colors hover:border-zinc-700">
       <CardContent className="pt-4 pb-3 px-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
@@ -421,10 +421,22 @@ function InterviewsPageContent() {
         <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
           <Clock className="h-4 w-4" /> Upcoming ({upcoming.length})
         </h2>
-        {upcoming.length === 0 ? (
-          <p className="text-sm text-zinc-500 italic">
-            No upcoming interviews. Add one to get started with AI-powered prep.
-          </p>
+        {!interviews ? (
+          <div className="space-y-3">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="h-24 bg-zinc-800/60 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : upcoming.length === 0 ? (
+          <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+              <Calendar className="h-10 w-10 text-zinc-600 mb-3" />
+              <p className="text-zinc-300 font-medium">No upcoming interviews</p>
+              <p className="text-zinc-400 text-sm mt-1 max-w-sm">
+                Add an interview to get started with AI-powered prep material.
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-3">
             {upcoming.map((note) => (
@@ -465,8 +477,14 @@ export default function InterviewsPage() {
   return (
     <Suspense
       fallback={
-        <div className="text-zinc-400 p-6 text-sm" role="status">
-          Loading interviews…
+        <div className="mx-auto max-w-3xl py-8 px-4 space-y-6 animate-pulse" role="status">
+          <div className="h-8 w-48 bg-zinc-800 rounded" />
+          <div className="h-4 w-72 bg-zinc-800/60 rounded" />
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-24 bg-zinc-800/60 rounded-xl" />
+            ))}
+          </div>
         </div>
       }
     >

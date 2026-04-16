@@ -87,7 +87,7 @@ function NewReminderForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => vo
   }
 
   return (
-    <Card className="border-zinc-700 bg-zinc-900">
+    <Card className="border-zinc-800 bg-zinc-900">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">New Reminder</CardTitle>
       </CardHeader>
@@ -192,7 +192,7 @@ function ReminderCard({
   }
 
   return (
-    <Card className={`border-zinc-700 bg-zinc-900 transition-colors hover:border-zinc-600 ${reminder.is_read ? "opacity-60" : ""}`}>
+    <Card className={`border-zinc-800 bg-zinc-900 transition-colors hover:border-zinc-700 ${reminder.is_read ? "opacity-60" : ""}`}>
       <CardContent className="pt-4 pb-3 px-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
@@ -227,7 +227,8 @@ function ReminderCard({
               variant="ghost"
               size="sm"
               onClick={handleMarkRead}
-              className="h-7 px-2"
+              className="h-7 px-2 transition-colors"
+              aria-label={reminder.is_read ? "Mark unread" : "Mark read"}
               title={reminder.is_read ? "Mark unread" : "Mark read"}
             >
               {reminder.is_read ? <Bell className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
@@ -236,7 +237,8 @@ function ReminderCard({
               variant="ghost"
               size="sm"
               onClick={handleDismiss}
-              className="h-7 px-2"
+              className="h-7 px-2 transition-colors"
+              aria-label="Dismiss reminder"
               title="Dismiss"
             >
               <BellOff className="h-3.5 w-3.5" />
@@ -245,7 +247,8 @@ function ReminderCard({
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              className="h-7 px-2 text-red-400 hover:text-red-300"
+              className="h-7 px-2 text-red-400 hover:text-red-300 transition-colors"
+              aria-label="Delete reminder"
               title="Delete"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -304,10 +307,22 @@ export default function NotificationsPage() {
         <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
           <Bell className="h-4 w-4" /> Active ({unread.length})
         </h2>
-        {unread.length === 0 ? (
-          <p className="text-sm text-zinc-500 italic">
-            No active reminders. They&apos;ll appear automatically based on your job activity.
-          </p>
+        {!reminders ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-20 bg-zinc-800/60 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : unread.length === 0 ? (
+          <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+              <Bell className="h-10 w-10 text-zinc-600 mb-3" />
+              <p className="text-zinc-300 font-medium">All caught up</p>
+              <p className="text-zinc-400 text-sm mt-1 max-w-sm">
+                Reminders will appear automatically based on your job activity.
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-3">
             {sortReminders(unread).map((rem) => (

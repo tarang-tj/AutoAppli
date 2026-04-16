@@ -101,6 +101,7 @@ export function Sidebar() {
       <Button
         variant="ghost"
         size="icon"
+        aria-label={open ? "Close navigation" : "Open navigation"}
         className="fixed top-4 left-4 z-50 md:hidden text-zinc-300"
         onClick={() => setOpen(!open)}
       >
@@ -126,7 +127,7 @@ export function Sidebar() {
         <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
           {navGroups.map((group) => (
             <div key={group.title}>
-              <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+              <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
                 {group.title}
               </p>
               <div className="space-y-0.5">

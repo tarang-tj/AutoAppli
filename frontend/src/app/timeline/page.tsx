@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { apiGet, apiPost, apiDelete } from "@/lib/api";
 import type { TimelineEvent, Job } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -115,7 +115,7 @@ function AddEventForm({ jobId, onCreated }: { jobId: string; onCreated: () => vo
   }
 
   return (
-    <Card className="border-zinc-700 bg-zinc-900">
+    <Card className="border-zinc-800 bg-zinc-900">
       <CardContent className="pt-3 pb-3">
         <form onSubmit={handleSubmit} className="space-y-2">
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Note title…" className="bg-zinc-800 border-zinc-700 text-sm" required />
@@ -185,7 +185,7 @@ export default function TimelinePage() {
 
       {/* Selected job summary */}
       {selectedJob && (
-        <Card className="border-zinc-700 bg-zinc-900/50">
+        <Card className="border-zinc-800 bg-zinc-900/50">
           <CardContent className="pt-3 pb-3 px-4">
             <div className="flex items-center justify-between">
               <div>
@@ -203,10 +203,28 @@ export default function TimelinePage() {
       {/* Timeline */}
       {effectiveJobId && (
         <section>
-          {(timeline || []).length === 0 ? (
-            <p className="text-sm text-zinc-500 italic">
-              No activity yet for this job. Events will appear here as you track progress.
-            </p>
+          {!timeline ? (
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex gap-3">
+                  <div className="h-8 w-8 rounded-full bg-zinc-800 animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-2/3 bg-zinc-800 rounded animate-pulse" />
+                    <div className="h-3 w-1/3 bg-zinc-800/60 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : timeline.length === 0 ? (
+            <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                <Clock className="h-10 w-10 text-zinc-600 mb-3" />
+                <p className="text-zinc-300 font-medium">No activity yet</p>
+                <p className="text-zinc-400 text-sm mt-1 max-w-sm">
+                  Events will appear here as you track progress for this job.
+                </p>
+              </CardContent>
+            </Card>
           ) : (
             <div className="mt-2">
               {(timeline || []).map((evt) => (

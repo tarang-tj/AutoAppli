@@ -105,7 +105,8 @@ export function Header() {
         {/* Notification bell */}
         <button
           onClick={() => router.push("/notifications")}
-          className="relative p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+          className="relative p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"}
           title={unreadCount > 0 ? `${unreadCount} unread reminder${unreadCount > 1 ? "s" : ""}` : "Notifications"}
         >
           <Bell className="h-5 w-5" />
@@ -118,9 +119,9 @@ export function Header() {
 
         {/* User dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger aria-label="User menu" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg">
             <span className="flex items-center gap-2 outline-none cursor-pointer">
-              <span className="text-sm text-zinc-300 hidden sm:block truncate max-w-[160px]">
+              <span className="text-sm text-zinc-300 hidden sm:block truncate max-w-[120px] sm:max-w-[160px]">
                 {displayName}
               </span>
               <Avatar className="h-8 w-8">

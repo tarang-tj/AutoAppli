@@ -45,7 +45,7 @@ function ComparisonBanner({ comparison, jobMap }: { comparison: CompensationComp
           <Award className="h-5 w-5 text-emerald-400" />
           <h3 className="font-semibold text-emerald-300 text-sm">Offer Comparison</h3>
         </div>
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-xs text-zinc-400 mb-1">Best Total Comp</p>
             <p className="text-lg font-bold text-emerald-400">
@@ -122,7 +122,7 @@ function NewCompensationForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () =
   }
 
   return (
-    <Card className="border-zinc-700 bg-zinc-900">
+    <Card className="border-zinc-800 bg-zinc-900">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Track Compensation</CardTitle>
       </CardHeader>
@@ -278,7 +278,7 @@ function CompensationCard({
   }
 
   return (
-    <Card className={`border-zinc-700 bg-zinc-900 transition-colors hover:border-zinc-600 ${isBest ? "ring-1 ring-emerald-600/50" : ""}`}>
+    <Card className={`border-zinc-800 bg-zinc-900 transition-colors hover:border-zinc-700 ${isBest ? "ring-1 ring-emerald-600/50" : ""}`}>
       <CardContent className="pt-4 pb-3 px-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
@@ -320,7 +320,8 @@ function CompensationCard({
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              className="h-7 px-2 text-red-400 hover:text-red-300"
+              className="h-7 px-2 text-red-400 hover:text-red-300 transition-colors"
+              aria-label="Delete compensation package"
               title="Delete"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -385,10 +386,22 @@ export default function SalaryPage() {
         <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
           <DollarSign className="h-4 w-4" /> Packages ({sorted.length})
         </h2>
-        {sorted.length === 0 ? (
-          <p className="text-sm text-zinc-500 italic">
-            No compensation packages tracked yet. Add one to start comparing offers.
-          </p>
+        {!compensations ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-28 bg-zinc-800/60 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : sorted.length === 0 ? (
+          <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <DollarSign className="h-10 w-10 text-zinc-600 mb-3" />
+              <p className="text-zinc-300 font-medium">No packages tracked yet</p>
+              <p className="text-zinc-400 text-sm mt-1 max-w-sm">
+                Add a compensation package to start comparing offers side by side.
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-3">
             {sorted.map((entry) => (

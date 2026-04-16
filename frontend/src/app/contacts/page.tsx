@@ -87,13 +87,13 @@ function NewContactForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => voi
   }
 
   return (
-    <Card className="border-zinc-700 bg-zinc-900">
+    <Card className="border-zinc-800 bg-zinc-900">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">New Contact</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-zinc-400 block mb-1">Name *</label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Sarah Kim" className="bg-zinc-800 border-zinc-700" required />
@@ -103,7 +103,7 @@ function NewContactForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => voi
               <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Technical Recruiter" className="bg-zinc-800 border-zinc-700" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-zinc-400 block mb-1">Company</label>
               <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Acme Inc" className="bg-zinc-800 border-zinc-700" />
@@ -119,7 +119,7 @@ function NewContactForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => voi
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-zinc-400 block mb-1">Email</label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sarah@company.com" className="bg-zinc-800 border-zinc-700" />
@@ -167,7 +167,7 @@ function ContactCard({ contact, job, onRefresh }: { contact: CRMContact; job?: J
   }
 
   return (
-    <Card className="border-zinc-700 bg-zinc-900 transition-colors hover:border-zinc-600">
+    <Card className="border-zinc-800 bg-zinc-900 transition-colors hover:border-zinc-700">
       <CardContent className="pt-4 pb-3 px-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
@@ -207,7 +207,7 @@ function ContactCard({ contact, job, onRefresh }: { contact: CRMContact; job?: J
 
             {contact.notes && <p className="text-xs text-zinc-400 mt-2">{contact.notes}</p>}
           </div>
-          <Button variant="ghost" size="sm" onClick={handleDelete} className="h-7 px-2 text-red-400 hover:text-red-300" title="Delete">
+          <Button variant="ghost" size="sm" onClick={handleDelete} className="h-7 px-2 text-red-400 hover:text-red-300 transition-colors" aria-label={`Delete contact ${contact.name}`} title="Delete">
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -273,10 +273,22 @@ export default function ContactsPage() {
         <NewContactForm jobs={jobs || []} onCreated={refreshContacts} />
       </div>
 
-      {(contacts || []).length === 0 ? (
-        <p className="text-sm text-zinc-500 italic">
-          No contacts yet. Add recruiters and hiring managers to keep track of your network.
-        </p>
+      {!contacts ? (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-24 bg-zinc-800/60 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : contacts.length === 0 ? (
+        <Card className="bg-zinc-900 border-zinc-800 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <Users className="h-10 w-10 text-zinc-600 mb-3" />
+            <p className="text-zinc-300 font-medium">No contacts yet</p>
+            <p className="text-zinc-400 text-sm mt-1 max-w-sm">
+              Add recruiters and hiring managers to keep track of your professional network.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         relOrder.filter((r) => byRel.has(r)).map((rel) => (
           <section key={rel}>
