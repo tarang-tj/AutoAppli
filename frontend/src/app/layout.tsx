@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/site";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/next";
 
 const siteUrl = getSiteUrl();
 
@@ -58,6 +59,7 @@ export default function RootLayout({
       >
         {children}
         <Toaster theme="dark" richColors position="top-center" />
+        <Analytics />
       </body>
     </html>
   );
