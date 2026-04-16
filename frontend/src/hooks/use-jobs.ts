@@ -163,7 +163,7 @@ export function useJobs(status?: string) {
 
   const patchJob = async (
     jobId: string,
-    patch: { status?: JobStatus; notes?: string | null }
+    patch: Partial<Pick<Job, "status" | "notes" | "applied_at">>
   ) => {
     const updated = await apiPatch<Job>(`/jobs/${jobId}`, patch);
     await mutate(

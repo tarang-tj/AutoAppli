@@ -87,6 +87,10 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
 
     try {
       await updateJobStatus(jobId, newStatus);
+      // Auto-set applied_at when moving to "applied" for the first time
+      if (newStatus === "applied" && !job.applied_at && patchJob) {
+        patchJob(jobId, { applied_at: new Date().toISOString() }).catch(() => {});
+      }
       await persistColumnOrder(newStatus, destIds);
       if (sourceIds.length > 0) {
         await persistColumnOrder(sourceStatus, sourceIds);

@@ -24,6 +24,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useJobs } from "@/hooks/use-jobs";
+import { apiGet } from "@/lib/api"
+import useSWR from "swr";
+
+interface Reminder { id: string; is_read: boolean; }
+
 
 type NavItem = { href: string; label: string; icon: React.ElementType };
 type NavGroup = { title: string; items: NavItem[] };
@@ -75,6 +81,21 @@ const navGroups: NavGroup[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { jobs } = useJobs();
+  const { data: reminders } = useSWR<Reminder[]>(
+    "/notifications/reminders",
+    () => apiGet<Reminder[]>("/notifications/reminders"),
+    { revalidateOnFocus: false, refreshInterval: 60000 }
+  );
+
+  const jobCount = jobs.length;
+  const unreadReminders = reminders?.filter((r) => !r.is_read).length ?? 0;
+
+  // Badge map: href → count (only show if > 0)
+  const badges: Record<string, number> = {};
+  if (jobCount > 0) badges["/dashboard"] = jobCount;
+  if (unreadReminders > 0) badges["/notifications"] = unreadReminders;
+
   return (
     <>
       <Button
@@ -128,7 +149,17 @@ export function Sidebar() {
                       <item.icon
                         className={cn("h-4.5 w-4.5 shrink-0", isActive && "text-blue-400")}
                       />
-                      {item.label}
+                      <span className="flex-1">{item.label}</span>
+                      {badges[item.href] ? (
+                        <span className={cn(
+                          "ml-auto text-[10px] font-semibold tabular-nums rounded-full px-1.5 py-0.5 min-w-[20px] text-center",
+                          item.href === "/notifications"
+                            ? "bg-red-500/20 text-red-400"
+                            : "bg-zinc-800 text-zinc-500"
+                        )}>
+                          {badges[item.href]}
+                        </span>
+                      ) : null}
                     </Link>
                   );
                 })}
