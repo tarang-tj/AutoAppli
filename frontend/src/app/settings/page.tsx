@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { apiGet, apiPatch, isResumeApiConfigured } from "@/lib/api";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { UserProfile } from "@/types";
-import { User, Shield, Download, KeyRound } from "lucide-react";
+import { User, Shield, Download, KeyRound, Bell, AlertTriangle, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -37,6 +37,44 @@ export default function SettingsPage() {
 
   // Export
   const [exporting, setExporting] = useState(false);
+
+  // Notification preferences (stored in localStorage)
+  const [notifStaleBookmarks, setNotifStaleBookmarks] = useState(true);
+  const [notifNoResponse, setNotifNoResponse] = useState(true);
+  const [notifDeadlines, setNotifDeadlines] = useState(true);
+  const [notifLongInterviews, setNotifLongInterviews] = useState(true);
+
+  // Danger zone
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  // Load notification prefs from localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const prefs = localStorage.getItem("autoappli_notif_prefs");
+    if (prefs) {
+      try {
+        const parsed = JSON.parse(prefs);
+        setNotifStaleBookmarks(parsed.staleBookmarks ?? true);
+        setNotifNoResponse(parsed.noResponse ?? true);
+        setNotifDeadlines(parsed.deadlines ?? true);
+        setNotifLongInterviews(parsed.longInterviews ?? true);
+      } catch { /* ignore */ }
+    }
+  }, []);
+
+  const saveNotifPrefs = (key: string, value: boolean) => {
+    const current = {
+      staleBookmarks: notifStaleBookmarks,
+      noResponse: notifNoResponse,
+      deadlines: notifDeadlines,
+      longInterviews: notifLongInterviews,
+      [key]: value,
+    };
+    localStorage.setItem("autoappli_notif_prefs", JSON.stringify(current));
+    toast.success("Notification preference saved");
+  };
 
   useEffect(() => {
     if (!data) return;
@@ -338,6 +376,201 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Notification Preferences Card */}
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Bell className="h-5 w-5 text-blue-400" />
+              Dashboard Nudges
+            </CardTitle>
+            <CardDescription className="text-zinc-500">
+              Control which smart reminders appear on your dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[
+              {
+                key: "staleBookmarks",
+                label: "Stale bookmarks",
+                desc: "Remind me about jobs bookmarked for over a week",
+                checked: notifStaleBookmarks,
+                set: setNotifStaleBookmarks,
+              },
+              {
+                key: "noResponse",
+                label: "No response follow-ups",
+                desc: "Nudge me about applications with no response after 2 weeks",
+                checked: notifNoResponse,
+                set: setNotifNoResponse,
+              },
+              {
+                key: "deadlines",
+                label: "Upcoming deadlines",
+                desc: "Warn about application deadlines within 3 days",
+                checked: notifDeadlines,
+                set: setNotifDeadlines,
+              },
+              {
+                key: "longInterviews",
+                label: "Long interview processes",
+                desc: "Flag interviews in progress for 3+ weeks",
+                checked: notifLongInterviews,
+                set: setNotifLongInterviews,
+              },
+            ].map((pref) => (
+              <label
+                key={pref.key}
+                className="flex items-start gap-3 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={pref.checked}
+                  onChange={(e) => {
+                    pref.set(e.target.checked);
+                    saveNotifPrefs(pref.key, e.target.checked);
+                  }}
+                  className="mt-0.5 rounded border-zinc-600 bg-zinc-800 text-blue-600 focus:ring-blue-500"
+                />
+                <div>
+                  <p className="text-sm text-zinc-200 font-medium group-hover:text-white transition-colors">
+                    {pref.label}
+                  </p>
+                  <p className="text-xs text-zinc-500">{pref.desc}</p>
+                </div>
+              </label>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Danger Zone */}
+        {supabaseOn && (
+          <Card className="bg-zinc-900 border-red-900/50">
+            <CardHeader>
+              <CardTitle className="text-red-400 flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Danger Zone
+              </CardTitle>
+              <CardDescription className="text-zinc-500">
+                Irreversible account actions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Sign out */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-zinc-200 font-medium">Sign out</p>
+                  <p className="text-xs text-zinc-500">
+                    Sign out of your current session
+                  </p>
+                </div>
+                {!confirmSignOut ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-zinc-600 text-zinc-200 hover:bg-zinc-800"
+                    onClick={() => setConfirmSignOut(true)}
+                  >
+                    <LogOut className="h-4 w-4 mr-1" />
+                    Sign out
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-zinc-600 text-zinc-200"
+                      onClick={() => setConfirmSignOut(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      onClick={async () => {
+                        const supabase = createClient();
+                        await supabase.auth.signOut();
+                        window.location.href = "/login";
+                      }}
+                    >
+                      Confirm sign out
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Delete account */}
+              <div className="border-t border-zinc-800 pt-4">
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <p className="text-sm text-red-300 font-medium">
+                      Delete account
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      Permanently delete your account and all associated data.
+                      This cannot be undone.
+                    </p>
+                  </div>
+                  {!confirmDeleteAccount ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-red-800 text-red-300 hover:bg-red-950/50 w-fit"
+                      onClick={() => setConfirmDeleteAccount(true)}
+                    >
+                      Delete my account
+                    </Button>
+                  ) : (
+                    <div className="space-y-3 rounded-lg bg-red-950/20 border border-red-900/50 p-3">
+                      <p className="text-xs text-red-300">
+                        Type <strong className="text-red-200">delete my account</strong> below to confirm:
+                      </p>
+                      <Input
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        placeholder="delete my account"
+                        className="bg-zinc-950 border-red-900 text-white text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="border-zinc-600 text-zinc-200"
+                          onClick={() => {
+                            setConfirmDeleteAccount(false);
+                            setDeleteConfirmText("");
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                          disabled={deleteConfirmText !== "delete my account"}
+                          onClick={() => {
+                            toast.error(
+                              "Account deletion requires server-side processing. Please contact support."
+                            );
+                            setConfirmDeleteAccount(false);
+                            setDeleteConfirmText("");
+                          }}
+                        >
+                          Permanently delete
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

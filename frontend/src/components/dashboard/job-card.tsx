@@ -51,6 +51,8 @@ interface JobCardProps {
   matchScore?: MatchScore;
   onRemove?: () => void | Promise<void>;
   onSaveNotes?: (notes: string) => void | Promise<void>;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 function MatchBadge({ score }: { score: number }) {
@@ -100,7 +102,7 @@ function PriorityStars({ count }: { count: number }) {
   );
 }
 
-export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCardProps) {
+export function JobCard({ job, index, matchScore, onRemove, onSaveNotes, isSelected, onToggleSelect }: JobCardProps) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
@@ -205,11 +207,31 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
             className={cn(
               "bg-zinc-900 border-zinc-800 cursor-grab touch-manipulation active:cursor-grabbing select-none",
               snapshot.isDragging &&
-                "shadow-xl shadow-black/30 ring-1 ring-blue-500/30 opacity-[0.97] z-10"
+                "shadow-xl shadow-black/30 ring-1 ring-blue-500/30 opacity-[0.97] z-10",
+              isSelected && "ring-2 ring-blue-500/50 bg-blue-950/20"
             )}
           >
             <CardContent className="p-3">
               <div className="flex items-start justify-between gap-2">
+                {onToggleSelect && (
+                  <button
+                    type="button"
+                    className={cn(
+                      "mt-0.5 shrink-0 h-4 w-4 rounded border transition-colors flex items-center justify-center",
+                      isSelected
+                        ? "bg-blue-600 border-blue-500"
+                        : "border-zinc-600 hover:border-zinc-400"
+                    )}
+                    onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
+                    aria-label={isSelected ? "Deselect job" : "Select job"}
+                  >
+                    {isSelected && (
+                      <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </button>
+                )}
                 <div className="min-w-0 flex-1">
                   <button
                     type="button"

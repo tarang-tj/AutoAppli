@@ -6,8 +6,10 @@ import { apiPost } from "@/lib/api";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { Job, JobStatus } from "@/types";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { KanbanColumn } from "./kanban-column";
+import { KanbanMobileTabs } from "./kanban-mobile-tabs";
+import { BatchActionBar } from "./batch-action-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
@@ -24,6 +26,7 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
   const {
     jobs,
     isLoading,
+    mutate,
     updateJobStatus,
     reorderJobsInColumn,
     persistColumnOrder,
@@ -33,10 +36,67 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
 
   const { scores: matchScores } = useMatchScores();
 
+  // Mobile tab state
+  const [mobileTab, setMobileTab] = useState<JobStatus | null>(null);
+
+  // Batch selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelect = useCallback((jobId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(jobId)) next.delete(jobId);
+      else next.add(jobId);
+      return next;
+    });
+  }, []);
+
+  const handleBatchMove = useCallback(
+    async (status: JobStatus) => {
+      const ids = Array.from(selectedIds);
+      try {
+        await Promise.all(ids.map((id) => updateJobStatus(id, status)));
+        toast.success(`Moved ${ids.length} ${ids.length === 1 ? "job" : "jobs"} to ${status}`);
+        setSelectedIds(new Set());
+        mutate();
+      } catch {
+        toast.error("Could not move some jobs");
+      }
+    },
+    [selectedIds, updateJobStatus, mutate]
+  );
+
+  const handleBatchDelete = useCallback(async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      await Promise.all(ids.map((id) => deleteJob(id)));
+      toast.success(`Removed ${ids.length} ${ids.length === 1 ? "job" : "jobs"}`);
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Could not remove some jobs");
+    }
+  }, [selectedIds, deleteJob]);
+
   const visibleJobs = useMemo(
     () => filterJobsByQuery(jobs, searchQuery),
     [jobs, searchQuery]
   );
+
+  // Column counts for mobile tabs
+  const columnCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const knownIds = new Set(COLUMNS.map((c) => c.id));
+    for (const col of COLUMNS) {
+      if (col.id === "bookmarked") {
+        counts[col.id] = visibleJobs.filter(
+          (j) => j.status === "bookmarked" || !knownIds.has(j.status)
+        ).length;
+      } else {
+        counts[col.id] = visibleJobs.filter((j) => j.status === col.id).length;
+      }
+    }
+    return counts;
+  }, [visibleJobs]);
 
   const handleSaveNotes = async (jobId: string, notes: string) => {
     try {
@@ -132,34 +192,54 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
     );
   }
 
+  // Filter columns by mobile tab
+  const visibleColumns = mobileTab
+    ? COLUMNS.filter((c) => c.id === mobileTab)
+    : COLUMNS;
+
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex flex-col lg:flex-row gap-4 min-h-[65vh] items-stretch overflow-x-auto pb-1 -mx-1 px-1">
-        {COLUMNS.map((col) => {
-          const colJobs =
-            col.id === "bookmarked"
-              ? visibleJobs.filter(
-                  (j) => j.status === "bookmarked" || !knownIds.has(j.status)
-                )
-              : getJobsByStatus(col.id);
-          return (
-            <div
-              key={col.id}
-              className="min-w-[min(100%,18rem)] flex-1 lg:min-w-[11.5rem] flex flex-col"
-            >
-              <KanbanColumn
-                id={col.id}
-                label={col.label}
-                color={col.color}
-                jobs={colJobs}
-                matchScores={matchScores}
-                onRemoveJob={handleRemoveJob}
-                onSaveNotes={handleSaveNotes}
-              />
-            </div>
-          );
-        })}
-      </div>
-    </DragDropContext>
+    <>
+      <KanbanMobileTabs
+        activeTab={mobileTab}
+        onTabChange={setMobileTab}
+        counts={columnCounts}
+      />
+      <BatchActionBar
+        selectedCount={selectedIds.size}
+        onMoveAll={handleBatchMove}
+        onDeleteAll={handleBatchDelete}
+        onClearSelection={() => setSelectedIds(new Set())}
+      />
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex flex-col lg:flex-row gap-4 min-h-[65vh] items-stretch overflow-x-auto pb-1 -mx-1 px-1">
+          {visibleColumns.map((col) => {
+            const colJobs =
+              col.id === "bookmarked"
+                ? visibleJobs.filter(
+                    (j) => j.status === "bookmarked" || !knownIds.has(j.status)
+                  )
+                : getJobsByStatus(col.id);
+            return (
+              <div
+                key={col.id}
+                className="min-w-[min(100%,18rem)] flex-1 lg:min-w-[11.5rem] flex flex-col"
+              >
+                <KanbanColumn
+                  id={col.id}
+                  label={col.label}
+                  color={col.color}
+                  jobs={colJobs}
+                  matchScores={matchScores}
+                  onRemoveJob={handleRemoveJob}
+                  onSaveNotes={handleSaveNotes}
+                  selectedIds={selectedIds}
+                  onToggleSelect={toggleSelect}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </DragDropContext>
+    </>
   );
 }

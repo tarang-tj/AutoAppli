@@ -17,6 +17,7 @@ import { normalizeJobUrl } from "@/lib/job-url";
 import { useJobs } from "@/hooks/use-jobs";
 import type { Job } from "@/types";
 import { OnboardingWizard } from "@/components/dashboard/onboarding-wizard";
+import { StaleNudges } from "@/components/dashboard/stale-nudges";
 import { ChevronDown, ChevronUp, Download, LayoutGrid, ListFilter, Plus, Search, Send, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -564,6 +565,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      {jobs.length > 0 && <StaleNudges jobs={jobs} />}
 
       <KanbanBoard searchQuery={boardSearch} />
     </div>
