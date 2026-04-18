@@ -18,7 +18,7 @@ import {
   type JobLike,
 } from "@/lib/match";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
-import type { JobSearchHistoryItem, JobSearchResult, ProfileResponse } from "@/types";
+import type { JobSearchHistoryItem, JobSearchResult, UserProfile } from "@/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -57,7 +57,7 @@ export default function JobsPage() {
   const [results, setResults] = useState<JobSearchResult[]>([]);
   const [searched, setSearched] = useState(false);
   const [history, setHistory] = useState<JobSearchHistoryItem[]>([]);
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [filters, setFilters] = useState<SmartFilterState>(INITIAL_FILTERS);
 
   const loadHistory = useCallback(async () => {
@@ -78,7 +78,7 @@ export default function JobsPage() {
   // apiGet handles the fallback chain itself.
   const loadProfile = useCallback(async () => {
     try {
-      const p = await apiGet<ProfileResponse>("/profile");
+      const p = await apiGet<UserProfile>("/profile");
       setProfile(p);
     } catch {
       setProfile(null);
