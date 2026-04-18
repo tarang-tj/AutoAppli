@@ -72,6 +72,12 @@ import type {
   AutomationSuggestion,
   CoverLetterTone,
 } from "@/types";
+import {
+  scoreMatch,
+  toCandidateProfile,
+  toJobProfile,
+  type CandidateProfile,
+} from "@/lib/match";
 
 function computeDemoAnalytics(jobs: Job[]): AnalyticsData {
   const total = jobs.length;
@@ -232,7 +238,39 @@ function computeDemoMatchScore(resumeText: string, jobDescription: string): Matc
 
 function computeDemoMatchScores(resumeText: string, jobs: Job[]): MatchScoresResponse {
   const scores: Record<string, MatchScore> = {};
+  // Search accuracy v2: score with the explainable 7-signal scorer when we
+  // can build a CandidateProfile (resume text is non-empty). Falls back to
+  // the legacy TF-IDF path per-job on any failure so existing callers keep
+  // working on malformed input.
+  let candidate: CandidateProfile | null = null;
+  if (resumeText && resumeText.trim().length > 0) {
+    try {
+      candidate = toCandidateProfile({ resume_text: resumeText });
+    } catch {
+      candidate = null;
+    }
+  }
   for (const job of jobs) {
+    if (candidate) {
+      try {
+        const jobProfile = toJobProfile(job as unknown as Record<string, unknown>);
+        const result = scoreMatch(jobProfile, candidate);
+        // Map the v2 result back onto the legacy MatchScore shape so callers
+        // (dashboard, match history) don't need to change.
+        const topKeywords = Array.from(
+          new Set([...result.matchedSkills, ...result.missingSkills])
+        ).slice(0, 20);
+        scores[job.id] = {
+          score: Math.round(result.score),
+          matched_keywords: result.matchedSkills.slice(0, 15),
+          missing_keywords: result.missingSkills.slice(0, 10),
+          top_job_keywords: topKeywords,
+        };
+        continue;
+      } catch {
+        // fall through to legacy TF-IDF
+      }
+    }
     scores[job.id] = computeDemoMatchScore(resumeText, job.description || "");
   }
   return { scores };

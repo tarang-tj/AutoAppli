@@ -193,7 +193,7 @@ export function SmartFilters({
           onChange={(e) => patch({ hideApplied: e.target.checked })}
           className="rounded border-zinc-300"
         />
-        Hide jobs I've already applied to
+        Hide jobs I&apos;ve already applied to
       </label>
 
       <div>
