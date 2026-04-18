@@ -100,7 +100,14 @@ def main() -> int:
         print(f"Wrote {args.out}", file=sys.stderr)
 
     if args.dry_run:
-        print(json.dumps(rows, indent=2, ensure_ascii=False))
+        try:
+            print(json.dumps(rows, indent=2, ensure_ascii=False))
+        except BrokenPipeError:
+            # Downstream consumer (head, less, etc.) closed the pipe. Not an error.
+            try:
+                sys.stdout.close()
+            except Exception:
+                pass
         return 0
 
     inserted = _upsert_to_supabase(rows)
@@ -109,4 +116,13 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except BrokenPipeError:
+        # Final safety net: suppress the interpreter's stderr trace when a
+        # downstream pipe closes mid-flush (e.g. `... | head`).
+        try:
+            sys.stdout.close()
+        except Exception:
+            pass
+        raise SystemExit(0)

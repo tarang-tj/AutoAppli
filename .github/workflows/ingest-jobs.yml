@@ -1,0 +1,122 @@
+name: Ingest Jobs
+
+# Nightly rotation through Greenhouse / Lever / Ashby public boards.
+#
+# Each matrix leg runs independently with fail-fast: false, so a single
+# source outage (e.g. Lever API timeouts) doesn't stop the others from
+# upserting their data into Supabase.
+#
+# Required repo secrets:
+#   SUPABASE_URL                 — project URL, e.g. https://abc.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY    — service-role key (server-only)
+#
+# Manual run:
+#   gh workflow run "Ingest Jobs"
+#   gh workflow run "Ingest Jobs" -f source=ashby -f ids=ramp,linear
+
+on:
+  schedule:
+    # Daily at 06:00 UTC ≈ 02:00 ET. Roughly matches when most US boards
+    # have posted the day's openings.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Source to ingest (leave blank to run the full matrix)'
+        required: false
+        default: ''
+      ids:
+        description: 'Comma-separated slugs (requires source)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'If true, do not upsert to Supabase'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    # Skip the matrix when a one-off source+ids is specified on manual dispatch.
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.source == '' }}
+    name: ingest-${{ matrix.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - source: greenhouse
+            ids: airbnb,stripe,anthropic,openai,gitlab,dropbox
+          - source: lever
+            ids: lever,mixpanel,mux,attentive,gopuff,whatnot
+          - source: ashby
+            ids: ramp,linear,notion,mercury,retool,posthog,vercel
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Audit slugs (non-blocking)
+        continue-on-error: true
+        run: |
+          python -m backend.scripts.audit_sources \
+            --source ${{ matrix.source }} \
+            --ids ${{ matrix.ids }} \
+            --timeout 10
+
+      - name: Ingest ${{ matrix.source }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python -m backend.scripts.ingest \
+              --source ${{ matrix.source }} \
+              --ids ${{ matrix.ids }} \
+              --dry-run > /dev/null
+          else
+            python -m backend.scripts.ingest \
+              --source ${{ matrix.source }} \
+              --ids ${{ matrix.ids }}
+          fi
+
+  ingest-oneoff:
+    # One-off dispatch: `gh workflow run ... -f source=X -f ids=a,b`
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.source != '' }}
+    name: ingest-oneoff-${{ github.event.inputs.source }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Ingest (one-off)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python -m backend.scripts.ingest \
+              --source "${{ github.event.inputs.source }}" \
+              --ids "${{ github.event.inputs.ids }}" \
+              --dry-run > /dev/null
+          else
+            python -m backend.scripts.ingest \
+              --source "${{ github.event.inputs.source }}" \
+              --ids "${{ github.event.inputs.ids }}"
+          fi
