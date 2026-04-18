@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * SmartFilters — compact controls panel for /jobs.
+ * SmartFilters — compact dark-themed controls panel for /jobs.
  *
  * Layout:
  *   row 1 (toolbar, always visible):
@@ -10,6 +10,10 @@
  *     [Remote ×] [Senior ×] [≥ $100k ×] [Python ×] …
  *   row 3 (collapsible "More" drawer, hidden by default):
  *     min salary, hide-applied, searchable skills picker, saved searches.
+ *
+ * Colors are zinc-800 / zinc-700 / zinc-50 so the panel sits properly over
+ * the dark /jobs page (see /jobs/page.tsx which uses text-zinc-50 /
+ * text-zinc-200 for its headings and body). Accent is blue-500/600.
  *
  * State shape is unchanged — same `SmartFilterState` emitted to the parent
  * so /jobs/page.tsx doesn't need any changes.
@@ -80,6 +84,13 @@ const REMOTE_LABEL: Record<string, string> = Object.fromEntries(
   REMOTE_OPTIONS.map((o) => [o.value ?? "any", o.label])
 );
 
+/** Shared tailwind class-sets to keep the markup readable. */
+const CONTROL =
+  "rounded border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-500 " +
+  "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+const LABEL = "text-xs font-medium text-zinc-300";
+const MUTED = "text-xs text-zinc-400";
+
 /** True when any filter (excluding sortBy, which is an ordering) is non-default. */
 function isDirty(s: SmartFilterState): boolean {
   return (
@@ -141,7 +152,6 @@ export function SmartFilters({
 
   function handleLoad(s: SavedSearch) {
     onChange(s.filters);
-    // If the loaded search includes drawer filters, pop the drawer open.
     if (hasDrawerFilters(s.filters)) setShowMore(true);
   }
 
@@ -150,8 +160,8 @@ export function SmartFilters({
     setSavedSearches(savedSearches.filter((s) => s.id !== id));
   }
 
-  // Build skill list: candidate's own first, then rest alphabetical. Then
-  // filter case-insensitively by the inline search input.
+  // Build skill list: candidate's own first, then rest alphabetical. Filter
+  // case-insensitively by the inline search input.
   const candidateSet = new Set(candidateSkills);
   const allSkills = SKILLS.map((s) => s.name);
   const orderedSkills = [
@@ -177,7 +187,7 @@ export function SmartFilters({
 
   return (
     <div
-      className={`flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-3 ${className}`}
+      className={`flex flex-col gap-2 rounded-lg border border-zinc-700 bg-zinc-900/80 backdrop-blur p-3 ${className}`}
     >
       {/* ── Toolbar row ─────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
@@ -186,7 +196,7 @@ export function SmartFilters({
           value={value.query ?? ""}
           onChange={(e) => patch({ query: e.target.value })}
           placeholder="Search role, company, keyword…"
-          className="min-w-[200px] flex-1 rounded border border-zinc-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+          className={`${CONTROL} min-w-[200px] flex-1 px-3 py-1.5 text-sm`}
         />
 
         <select
@@ -194,11 +204,11 @@ export function SmartFilters({
           onChange={(e) =>
             patch({ remoteType: e.target.value as SmartFilterState["remoteType"] })
           }
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+          className={`${CONTROL} px-2 py-1.5 text-sm`}
           aria-label="Remote type"
         >
           {REMOTE_OPTIONS.map((opt) => (
-            <option key={opt.label} value={opt.value ?? "any"}>
+            <option key={opt.label} value={opt.value ?? "any"} className="bg-zinc-800 text-zinc-100">
               {opt.label}
             </option>
           ))}
@@ -207,11 +217,11 @@ export function SmartFilters({
         <select
           value={value.seniority ?? ""}
           onChange={(e) => patch({ seniority: e.target.value || null })}
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+          className={`${CONTROL} px-2 py-1.5 text-sm`}
           aria-label="Seniority"
         >
           {SENIORITY_OPTIONS.map((opt) => (
-            <option key={opt.label} value={opt.value ?? ""}>
+            <option key={opt.label} value={opt.value ?? ""} className="bg-zinc-800 text-zinc-100">
               {opt.label}
             </option>
           ))}
@@ -222,7 +232,7 @@ export function SmartFilters({
           onChange={(e) =>
             patch({ sortBy: e.target.value as SmartFilterState["sortBy"] })
           }
-          className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+          className={`${CONTROL} px-2 py-1.5 text-sm`}
           aria-label="Sort by"
         >
           {SORT_OPTIONS.map((opt) => (
@@ -230,6 +240,7 @@ export function SmartFilters({
               key={opt.label}
               value={opt.value}
               disabled={opt.value === "match" && !hasMatchScores}
+              className="bg-zinc-800 text-zinc-100"
             >
               Sort: {opt.label}
             </option>
@@ -239,18 +250,22 @@ export function SmartFilters({
         <button
           type="button"
           onClick={() => setShowMore((v) => !v)}
-          className="rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-700 hover:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          className="rounded border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-sm text-zinc-200 hover:border-zinc-500 hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-expanded={showMore}
         >
           {showMore ? "Less" : "More"} filters
-          {drawerActiveCount > 0 ? ` · ${drawerActiveCount}` : ""}
+          {drawerActiveCount > 0 ? (
+            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-blue-600 px-1.5 text-[10px] font-semibold text-white">
+              {drawerActiveCount}
+            </span>
+          ) : null}
         </button>
 
         {dirty && (
           <button
             type="button"
             onClick={clearAll}
-            className="rounded px-2.5 py-1.5 text-sm text-zinc-500 hover:text-red-600 hover:underline focus:outline-none"
+            className="rounded px-2.5 py-1.5 text-sm text-zinc-400 hover:text-red-400 hover:underline focus:outline-none"
           >
             Clear all
           </button>
@@ -302,12 +317,10 @@ export function SmartFilters({
 
       {/* ── More-filters drawer ──────────────────────── */}
       {showMore && (
-        <div className="mt-2 flex flex-col gap-3 border-t border-zinc-100 pt-3">
+        <div className="mt-2 flex flex-col gap-3 border-t border-zinc-700 pt-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-zinc-700 mb-1">
-                Min salary (k)
-              </label>
+              <label className={`block ${LABEL} mb-1`}>Min salary (k)</label>
               <input
                 type="number"
                 min={0}
@@ -322,15 +335,15 @@ export function SmartFilters({
                   })
                 }
                 placeholder="any"
-                className="w-full rounded border border-zinc-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className={`${CONTROL} w-full px-3 py-1.5 text-sm`}
               />
             </div>
-            <label className="flex items-center gap-2 self-end pb-1.5 text-xs text-zinc-700">
+            <label className="flex items-center gap-2 self-end pb-1.5 text-xs text-zinc-200">
               <input
                 type="checkbox"
                 checked={Boolean(value.hideApplied)}
                 onChange={(e) => patch({ hideApplied: e.target.checked })}
-                className="rounded border-zinc-300"
+                className="rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500"
               />
               Hide jobs I&apos;ve already applied to
             </label>
@@ -339,7 +352,7 @@ export function SmartFilters({
           {/* ── Skills picker with inline search ──────── */}
           <div>
             <div className="flex items-center justify-between mb-2 gap-2">
-              <label className="text-xs font-medium text-zinc-700 whitespace-nowrap">
+              <label className={`${LABEL} whitespace-nowrap`}>
                 Skills{activeSkillCount > 0 ? ` · ${activeSkillCount}` : ""}
               </label>
               <input
@@ -347,7 +360,7 @@ export function SmartFilters({
                 value={skillSearch}
                 onChange={(e) => setSkillSearch(e.target.value)}
                 placeholder="Filter skills…"
-                className="w-48 rounded border border-zinc-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className={`${CONTROL} w-48 px-2 py-1 text-xs`}
               />
             </div>
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -355,7 +368,7 @@ export function SmartFilters({
                 .filter((cat) => skillsByCategory[cat].length > 0)
                 .map((cat) => (
                   <div key={cat}>
-                    <div className="text-[10px] uppercase tracking-wide text-zinc-400 mb-1">
+                    <div className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">
                       {cat}
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -369,10 +382,10 @@ export function SmartFilters({
                             onClick={() => toggleSkill(s)}
                             className={`text-xs rounded px-2 py-0.5 border transition-colors ${
                               active
-                                ? "bg-blue-600 text-white border-blue-600"
+                                ? "bg-blue-600 text-white border-blue-500 hover:bg-blue-500"
                                 : owned
-                                ? "bg-emerald-50 text-emerald-900 border-emerald-200 hover:border-emerald-400"
-                                : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-400"
+                                ? "bg-emerald-900/30 text-emerald-200 border-emerald-700/60 hover:border-emerald-500"
+                                : "bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-zinc-500 hover:bg-zinc-700"
                             }`}
                             title={owned ? "On your resume" : undefined}
                           >
@@ -385,7 +398,7 @@ export function SmartFilters({
                   </div>
                 ))}
               {filteredSkills.length === 0 && (
-                <div className="text-xs text-zinc-400 py-2">
+                <div className={`${MUTED} py-2`}>
                   No skills match &quot;{skillSearch}&quot;.
                 </div>
               )}
@@ -393,20 +406,20 @@ export function SmartFilters({
           </div>
 
           {/* ── Saved searches ──────────────────────── */}
-          <div className="border-t border-zinc-100 pt-3">
+          <div className="border-t border-zinc-700 pt-3">
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
                 placeholder="Save these filters as…"
-                className="flex-1 rounded border border-zinc-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className={`${CONTROL} flex-1 px-2 py-1 text-xs`}
               />
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={!saveName.trim()}
-                className="rounded bg-zinc-900 px-2.5 py-1 text-xs text-white hover:bg-zinc-700 disabled:opacity-40"
+                className="rounded bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-500 disabled:opacity-40"
               >
                 Save
               </button>
@@ -416,19 +429,19 @@ export function SmartFilters({
                 {savedSearches.map((s) => (
                   <div
                     key={s.id}
-                    className="flex items-center justify-between rounded border border-zinc-200 px-2 py-1 text-xs"
+                    className="flex items-center justify-between rounded border border-zinc-700 bg-zinc-800/60 px-2 py-1 text-xs"
                   >
                     <button
                       type="button"
                       onClick={() => handleLoad(s)}
-                      className="flex-1 text-left text-zinc-800 hover:text-blue-700"
+                      className="flex-1 text-left text-zinc-200 hover:text-blue-400"
                     >
                       {s.name}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(s.id)}
-                      className="ml-2 text-zinc-400 hover:text-red-600"
+                      className="ml-2 text-zinc-500 hover:text-red-400"
                       aria-label={`Delete ${s.name}`}
                     >
                       ×
@@ -453,12 +466,12 @@ function FilterPill({
   onRemove: () => void;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs text-blue-800">
+    <span className="inline-flex items-center gap-1 rounded-full border border-blue-700/60 bg-blue-950/60 px-2 py-0.5 text-xs text-blue-200">
       {label}
       <button
         type="button"
         onClick={onRemove}
-        className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-900"
+        className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-blue-300 hover:bg-blue-900/60 hover:text-blue-100"
         aria-label={`Remove ${label}`}
       >
         ×
