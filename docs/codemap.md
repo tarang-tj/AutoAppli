@@ -744,8 +744,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - meta: route `LAYOUT /dashboard`; 6 lines
 - **`page.tsx`**
   - exports: DashboardPage (default)
-  - imports: `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs`, `@/components/dashboard/weekly-digest`, `@/components/ui/button` (+13 more)
-  - meta: route `PAGE /dashboard`; 536 lines
+  - imports: `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/outcomes-breakdown`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs`, `@/components/dashboard/stale-jobs-nudge` (+15 more)
+  - meta: route `PAGE /dashboard`; 544 lines
 
 **`frontend/src/app/export/`**
 
@@ -914,6 +914,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`onboarding-tour.tsx`**
   - exports: OnboardingTour
   - meta: 204 lines
+- **`outcomes-breakdown.tsx`**
+  - exports: OutcomesBreakdown
+  - imports: `@/types`
+  - meta: 349 lines
 - **`pipeline-stats.tsx`**
   - exports: PipelineStats
   - imports: `@/lib/utils`, `@/types`
@@ -922,10 +926,14 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: PublicJobCandidate (type), RecommendedJobs (default), RecommendedJobsProps (type)
   - imports: `@/lib/supabase/client`
   - meta: 285 lines
+- **`stale-jobs-nudge.tsx`**
+  - exports: OPEN_GHOST_NUDGE_EVENT, StaleJobsNudge
+  - imports: `@/components/ui/badge`, `@/components/ui/button`, `@/components/ui/dialog`, `@/hooks/use-stale-jobs`, `@/types`
+  - meta: 379 lines
 - **`weekly-digest.tsx`**
   - exports: WeeklyDigest
-  - imports: `@/types`
-  - meta: 231 lines
+  - imports: `@/components/dashboard/stale-jobs-nudge`, `@/types`
+  - meta: 244 lines
 
 **`frontend/src/components/jobs/`**
 
@@ -1107,6 +1115,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: useMatchScores
   - imports: `@/lib/api`, `@/types`
   - meta: 36 lines
+- **`use-stale-jobs.ts`** — _LocalStorage key holding the user's chosen ghost threshold (days)._
+  - exports: STALE_DISMISSED_AT_KEY, STALE_THRESHOLD_DEFAULT, STALE_THRESHOLD_KEY, useStaleJobs
+  - imports: `@/lib/api`, `@/types`
+  - meta: 97 lines
 - **`use-user.ts`**
   - exports: useUser
   - imports: `@/lib/supabase/client`
@@ -1121,7 +1133,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`demo-data.ts`**
   - exports: computeDemoExportReport, evaluateDemoRules, generateDemoCoverLetter, getDemoAutomationRules, getDemoCompensations, getDemoContacts (+42 more)
   - imports: `@/types`
-  - meta: 1255 lines
+  - meta: 1338 lines
 - **`demo-mode.ts`**
   - exports: disableDemoMode, enableDemoMode, isDemoMode
   - meta: 47 lines
@@ -1233,8 +1245,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 ## Stats
 
-- ts files: 141
-- ts lines: 23184
+- ts files: 144
+- ts lines: 24113
 - js files: 10
 - js lines: 948
 - py files: 82

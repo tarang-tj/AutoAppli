@@ -1,7 +1,7 @@
 {
   "stats": {
-    "ts files": 141,
-    "ts lines": 23184,
+    "ts files": 144,
+    "ts lines": 24113,
     "js files": 10,
     "js lines": 948,
     "py files": 82,
@@ -2019,8 +2019,10 @@
         "@/components/dashboard/insights-cards",
         "@/components/dashboard/kanban-board",
         "@/components/dashboard/onboarding-tour",
+        "@/components/dashboard/outcomes-breakdown",
         "@/components/dashboard/pipeline-stats",
         "@/components/dashboard/recommended-jobs",
+        "@/components/dashboard/stale-jobs-nudge",
         "@/components/dashboard/weekly-digest",
         "@/components/ui/button",
         "@/components/ui/card",
@@ -2039,7 +2041,7 @@
       ],
       "next_route": "PAGE /dashboard",
       "api_routes": [],
-      "line_count": 536
+      "line_count": 544
     },
     {
       "path": "frontend/src/app/error.tsx",
@@ -2675,6 +2677,20 @@
       "line_count": 204
     },
     {
+      "path": "frontend/src/components/dashboard/outcomes-breakdown.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "OutcomesBreakdown"
+      ],
+      "imports": [
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 349
+    },
+    {
       "path": "frontend/src/components/dashboard/pipeline-stats.tsx",
       "kind": "ts",
       "role": null,
@@ -2706,6 +2722,25 @@
       "line_count": 285
     },
     {
+      "path": "frontend/src/components/dashboard/stale-jobs-nudge.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "OPEN_GHOST_NUDGE_EVENT",
+        "StaleJobsNudge"
+      ],
+      "imports": [
+        "@/components/ui/badge",
+        "@/components/ui/button",
+        "@/components/ui/dialog",
+        "@/hooks/use-stale-jobs",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 379
+    },
+    {
       "path": "frontend/src/components/dashboard/weekly-digest.tsx",
       "kind": "ts",
       "role": null,
@@ -2713,11 +2748,12 @@
         "WeeklyDigest"
       ],
       "imports": [
+        "@/components/dashboard/stale-jobs-nudge",
         "@/types"
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 231
+      "line_count": 244
     },
     {
       "path": "frontend/src/components/jobs/job-listing-card.tsx",
@@ -3395,6 +3431,24 @@
       "line_count": 36
     },
     {
+      "path": "frontend/src/hooks/use-stale-jobs.ts",
+      "kind": "ts",
+      "role": "LocalStorage key holding the user's chosen ghost threshold (days).",
+      "exports": [
+        "STALE_DISMISSED_AT_KEY",
+        "STALE_THRESHOLD_DEFAULT",
+        "STALE_THRESHOLD_KEY",
+        "useStaleJobs"
+      ],
+      "imports": [
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 97
+    },
+    {
       "path": "frontend/src/hooks/use-user.ts",
       "kind": "ts",
       "role": null,
@@ -3496,7 +3550,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 1255
+      "line_count": 1338
     },
     {
       "path": "frontend/src/lib/demo-mode.ts",
