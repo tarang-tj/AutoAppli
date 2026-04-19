@@ -1,4 +1,5 @@
 "use client";
+import { RecommendedJobs } from "@/components/dashboard/recommended-jobs";
 import { KanbanBoard } from "@/components/dashboard/kanban-board";
 import { InsightsCards } from "@/components/dashboard/insights-cards";
 import { PipelineStats } from "@/components/dashboard/pipeline-stats";
@@ -382,6 +383,7 @@ export default function DashboardPage() {
 
       <InsightsCards jobs={jobs} />
       <PipelineStats jobs={filteredJobs} allJobCount={jobs.length} />
+      <RecommendedJobs userSkills={[]} remotePreference={null} displayCount={10} />
 
       {!isLoading && jobs.length === 0 ? (
         <Card className="mb-6 bg-zinc-900/90 border-zinc-700 border-dashed">
