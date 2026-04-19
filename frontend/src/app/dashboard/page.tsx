@@ -6,6 +6,8 @@ import { PipelineStats } from "@/components/dashboard/pipeline-stats";
 import { DemoModeBanner } from "@/components/dashboard/demo-mode-banner";
 import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
 import { WeeklyDigest } from "@/components/dashboard/weekly-digest";
+import { OutcomesBreakdown } from "@/components/dashboard/outcomes-breakdown";
+import { StaleJobsNudge } from "@/components/dashboard/stale-jobs-nudge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -38,7 +40,7 @@ export default function DashboardPage() {
 }
 
 function DashboardContent() {
-  const { jobs, mutate, isLoading } = useJobs();
+  const { jobs, mutate, isLoading, closeOutJob, archiveJob } = useJobs();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
@@ -461,8 +463,14 @@ function DashboardContent() {
         </p>
       ) : null}
 
+      <StaleJobsNudge
+        closeOutJob={closeOutJob}
+        archiveJob={archiveJob}
+        mutateJobs={mutate}
+      />
       <WeeklyDigest jobs={jobs} />
       <InsightsCards jobs={jobs} />
+      <OutcomesBreakdown jobs={jobs} />
       <PipelineStats jobs={filteredJobs} allJobCount={jobs.length} />
       <RecommendedJobs userSkills={[]} remotePreference={null} displayCount={10} />
 

@@ -12,6 +12,7 @@ import {
   Minus,
 } from "lucide-react";
 import type { Job } from "@/types";
+import { OPEN_GHOST_NUDGE_EVENT } from "@/components/dashboard/stale-jobs-nudge";
 
 /**
  * WeeklyDigest — at-a-glance KPIs computed entirely from the jobs array.
@@ -153,25 +154,37 @@ export function WeeklyDigest({ jobs }: Props) {
           </div>
         </div>
 
-        {/* Stale apps */}
-        <div
-          className={`rounded-xl border p-4 ${
-            stats.stale.length > 0
-              ? "border-amber-500/30 bg-amber-500/5"
-              : "border-zinc-800 bg-zinc-900/60"
-          }`}
-        >
-          <div className="flex items-center gap-1.5 text-xs text-zinc-400 mb-2">
-            <AlertTriangle className="h-3.5 w-3.5" />
-            Needs follow-up
+        {/* Stale apps — clickable when there's something to review */}
+        {stats.stale.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent(OPEN_GHOST_NUDGE_EVENT));
+              }
+            }}
+            className="text-left rounded-xl border p-4 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+            aria-label={`Review ${stats.stale.length} stale applications`}
+          >
+            <div className="flex items-center gap-1.5 text-xs text-zinc-400 mb-2">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Needs follow-up
+            </div>
+            <div className="text-2xl font-bold text-white">{stats.stale.length}</div>
+            <div className="mt-1 text-[11px] text-amber-200/80">
+              Silent 14+ days &middot; Click to review
+            </div>
+          </button>
+        ) : (
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+            <div className="flex items-center gap-1.5 text-xs text-zinc-400 mb-2">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Needs follow-up
+            </div>
+            <div className="text-2xl font-bold text-white">0</div>
+            <div className="mt-1 text-[11px] text-zinc-500">Everything recent</div>
           </div>
-          <div className="text-2xl font-bold text-white">{stats.stale.length}</div>
-          <div className="mt-1 text-[11px] text-zinc-500">
-            {stats.stale.length === 0
-              ? "Everything recent"
-              : `Silent 14+ days`}
-          </div>
-        </div>
+        )}
 
         {/* Upcoming */}
         <div
