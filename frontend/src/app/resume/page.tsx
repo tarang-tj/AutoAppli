@@ -182,14 +182,25 @@ function ResumeBuilderContent() {
           >
             <Info className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" aria-hidden />
             <div className="flex-1 min-w-0 space-y-2">
-              <p className="text-base font-semibold text-amber-200 tracking-tight">Demo mode</p>
+              <p className="text-base font-semibold text-amber-200 tracking-tight">
+                Running without FastAPI
+              </p>
               <p className="text-sm text-zinc-100 leading-relaxed">
-                Add{" "}
+                AI tailoring and review still work — they run through the built-in Next.js routes and need{" "}
+                <code className="rounded-md border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-[13px] font-mono text-amber-200">
+                  ANTHROPIC_API_KEY
+                </code>{" "}
+                on the server, not a separate backend. What’s limited right now is{" "}
+                <strong className="text-zinc-50">PDF upload parsing</strong>: without{" "}
                 <code className="rounded-md border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-[13px] font-mono text-amber-200">
                   NEXT_PUBLIC_API_URL
                 </code>{" "}
-                pointing at your FastAPI base URL (optional <code className="rounded border border-zinc-600 bg-zinc-900 px-1 py-0.5 text-[12px] font-mono text-amber-200">/api/v1</code>
-                ) so PDF upload, tailoring, and Claude run against your backend.
+                pointing at a FastAPI base URL (optional{" "}
+                <code className="rounded border border-zinc-600 bg-zinc-900 px-1 py-0.5 text-[12px] font-mono text-amber-200">
+                  /api/v1
+                </code>
+                ), uploaded PDFs aren’t text-extracted. Use <strong className="text-zinc-50">Load sample</strong>{" "}
+                below to explore full-fidelity output.
               </p>
               <p className="text-xs leading-snug text-zinc-300">
                 <span className="font-medium text-zinc-200">Local dev:</span>{" "}

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiPost, isJobsApiConfigured } from "@/lib/api";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { downloadJobsCsv } from "@/lib/export-jobs-csv";
 import { filterJobsByQuery } from "@/lib/filter-jobs";
 import { normalizeJobUrl } from "@/lib/job-url";
@@ -409,11 +410,23 @@ function DashboardContent() {
       {!isJobsApiConfigured() ? (
         <div className="mb-4 max-w-2xl rounded-lg border border-zinc-600 bg-zinc-800/90 px-3 py-2.5">
           <p className="text-sm text-zinc-100 leading-relaxed">
-            Jobs are stored in this browser until you set{" "}
-            <code className="rounded border border-zinc-600 bg-zinc-950 px-1.5 py-0.5 text-xs font-mono text-sky-200">
-              NEXT_PUBLIC_API_URL
-            </code>{" "}
-            for a shared backend. Drag cards between columns to update status.
+            {isSupabaseConfigured() ? (
+              <>
+                Jobs are saved directly to your Supabase database — no FastAPI needed. Set{" "}
+                <code className="rounded border border-zinc-600 bg-zinc-950 px-1.5 py-0.5 text-xs font-mono text-sky-200">
+                  NEXT_PUBLIC_API_URL
+                </code>{" "}
+                if you want the FastAPI-backed workflow with server-side match scoring. Drag cards between columns to update status.
+              </>
+            ) : (
+              <>
+                Jobs are stored in this browser until you configure Supabase env vars or set{" "}
+                <code className="rounded border border-zinc-600 bg-zinc-950 px-1.5 py-0.5 text-xs font-mono text-sky-200">
+                  NEXT_PUBLIC_API_URL
+                </code>{" "}
+                for a shared backend. Drag cards between columns to update status.
+              </>
+            )}
           </p>
         </div>
       ) : null}
