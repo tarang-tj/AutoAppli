@@ -745,7 +745,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`page.tsx`**
   - exports: DashboardPage (default)
   - imports: `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs`, `@/components/dashboard/weekly-digest`, `@/components/ui/button` (+13 more)
-  - meta: route `PAGE /dashboard`; 514 lines
+  - meta: route `PAGE /dashboard`; 536 lines
 
 **`frontend/src/app/export/`**
 
@@ -902,15 +902,15 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`job-card.tsx`**
   - exports: JobCard
   - imports: `@/components/ui/badge`, `@/components/ui/button`, `@/components/ui/card`, `@/components/ui/dialog`, `@/components/ui/input`, `@/components/ui/label`, `@/components/ui/textarea`, `@/lib/api` (+4 more)
-  - meta: 582 lines
+  - meta: 847 lines
 - **`kanban-board.tsx`**
   - exports: KanbanBoard
   - imports: `./kanban-column`, `@/components/ui/skeleton`, `@/hooks/use-jobs`, `@/hooks/use-match-scores`, `@/lib/filter-jobs`, `@/types`
-  - meta: 146 lines
+  - meta: 181 lines
 - **`kanban-column.tsx`**
   - exports: KanbanColumn
   - imports: `./job-card`, `@/components/ui/badge`, `@/lib/utils`, `@/types`
-  - meta: 70 lines
+  - meta: 82 lines
 - **`onboarding-tour.tsx`**
   - exports: OnboardingTour
   - meta: 204 lines
@@ -1102,7 +1102,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`use-jobs.ts`**
   - exports: useJobs
   - imports: `@/lib/api`, `@/lib/demo-data`, `@/lib/kanban-reorder`, `@/types`
-  - meta: 188 lines
+  - meta: 218 lines
 - **`use-match-scores.ts`** — _Fetches match scores for all jobs against the user's primary resume._
   - exports: useMatchScores
   - imports: `@/lib/api`, `@/types`
@@ -1117,7 +1117,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`api.ts`**
   - exports: apiDelete, apiGet, apiPatch, apiPost, apiPostFormData, apiPut (+3 more)
   - imports: `@/lib/demo-data`, `@/lib/demo-mode`, `@/lib/job-url`, `@/lib/kanban-reorder`, `@/lib/supabase/client`, `@/lib/supabase/jobs`, `@/lib/supabase/search`, `@/types`
-  - meta: 1524 lines
+  - meta: 1539 lines
 - **`demo-data.ts`**
   - exports: computeDemoExportReport, evaluateDemoRules, generateDemoCoverLetter, getDemoAutomationRules, getDemoCompensations, getDemoContacts (+42 more)
   - imports: `@/types`
@@ -1234,7 +1234,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 ## Stats
 
 - ts files: 141
-- ts lines: 22805
+- ts lines: 23184
 - js files: 10
 - js lines: 948
 - py files: 82

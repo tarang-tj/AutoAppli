@@ -1,7 +1,7 @@
 {
   "stats": {
     "ts files": 141,
-    "ts lines": 22805,
+    "ts lines": 23184,
     "js files": 10,
     "js lines": 948,
     "py files": 82,
@@ -2039,7 +2039,7 @@
       ],
       "next_route": "PAGE /dashboard",
       "api_routes": [],
-      "line_count": 514
+      "line_count": 536
     },
     {
       "path": "frontend/src/app/error.tsx",
@@ -2624,7 +2624,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 582
+      "line_count": 847
     },
     {
       "path": "frontend/src/components/dashboard/kanban-board.tsx",
@@ -2643,7 +2643,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 146
+      "line_count": 181
     },
     {
       "path": "frontend/src/components/dashboard/kanban-column.tsx",
@@ -2660,7 +2660,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 70
+      "line_count": 82
     },
     {
       "path": "frontend/src/components/dashboard/onboarding-tour.tsx",
@@ -3377,7 +3377,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 188
+      "line_count": 218
     },
     {
       "path": "frontend/src/hooks/use-match-scores.ts",
@@ -3435,7 +3435,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 1524
+      "line_count": 1539
     },
     {
       "path": "frontend/src/lib/demo-data.ts",
