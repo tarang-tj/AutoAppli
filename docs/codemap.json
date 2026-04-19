@@ -1,7 +1,7 @@
 {
   "stats": {
-    "ts files": 138,
-    "ts lines": 21532,
+    "ts files": 140,
+    "ts lines": 22058,
     "js files": 10,
     "js lines": 948,
     "py files": 82,
@@ -2362,7 +2362,7 @@
       ],
       "next_route": "PAGE /resume",
       "api_routes": [],
-      "line_count": 363
+      "line_count": 368
     },
     {
       "path": "frontend/src/app/resume-templates/layout.tsx",
@@ -2995,6 +2995,21 @@
       "line_count": 16
     },
     {
+      "path": "frontend/src/components/resume/resume-diff-view.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ResumeDiffView"
+      ],
+      "imports": [
+        "@/lib/resume-diff",
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 317
+    },
+    {
       "path": "frontend/src/components/resume/resume-formatted-view.tsx",
       "kind": "ts",
       "role": null,
@@ -3017,6 +3032,7 @@
         "ResumePreview"
       ],
       "imports": [
+        "@/components/resume/resume-diff-view",
         "@/components/resume/resume-formatted-view",
         "@/components/ui/button",
         "@/components/ui/card",
@@ -3026,7 +3042,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 229
+      "line_count": 251
     },
     {
       "path": "frontend/src/components/resume/resume-review-panel.tsx",
@@ -3769,6 +3785,22 @@
       "next_route": null,
       "api_routes": [],
       "line_count": 128
+    },
+    {
+      "path": "frontend/src/lib/resume-diff.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DiffChunk (type)",
+        "DiffOp (type)",
+        "diffResumes",
+        "DiffStats (type)",
+        "diffWords"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 182
     },
     {
       "path": "frontend/src/lib/resume-export-html.ts",

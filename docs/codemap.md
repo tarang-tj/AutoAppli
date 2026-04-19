@@ -825,7 +825,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`page.tsx`**
   - exports: ResumePage (default)
   - imports: `@/components/resume/eval-score-card`, `@/components/resume/jd-input`, `@/components/resume/resume-preview`, `@/components/resume/resume-review-panel`, `@/components/resume/resume-upload`, `@/components/ui/button`, `@/components/ui/card`, `@/components/ui/textarea` (+4 more)
-  - meta: route `PAGE /resume`; 363 lines
+  - meta: route `PAGE /resume`; 368 lines
 
 **`frontend/src/app/resume-templates/`**
 
@@ -1010,14 +1010,18 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: JdInput
   - imports: `@/components/ui/card`, `@/components/ui/textarea`
   - meta: 16 lines
+- **`resume-diff-view.tsx`**
+  - exports: ResumeDiffView
+  - imports: `@/lib/resume-diff`, `@/lib/utils`
+  - meta: 317 lines
 - **`resume-formatted-view.tsx`**
   - exports: ResumeFormattedView
   - imports: `@/lib/parse-resume-text`, `@/lib/utils`
   - meta: 114 lines
 - **`resume-preview.tsx`**
   - exports: ResumePreview
-  - imports: `@/components/resume/resume-formatted-view`, `@/components/ui/button`, `@/components/ui/card`, `@/lib/resume-export-html`, `@/lib/utils`, `@/types`
-  - meta: 229 lines
+  - imports: `@/components/resume/resume-diff-view`, `@/components/resume/resume-formatted-view`, `@/components/ui/button`, `@/components/ui/card`, `@/lib/resume-export-html`, `@/lib/utils`, `@/types`
+  - meta: 251 lines
 - **`resume-review-panel.tsx`**
   - exports: ResumeReviewPanel
   - imports: `@/components/ui/badge`, `@/components/ui/button`, `@/components/ui/card`, `@/types`
@@ -1143,6 +1147,9 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`parse-resume-text.ts`** — _Parse tailored resume plain text into blocks for on-screen layout._
   - exports: parseResumePlainText, ResumeBlock (type), stripInlineMarkdown
   - meta: 128 lines
+- **`resume-diff.ts`**
+  - exports: DiffChunk (type), DiffOp (type), diffResumes, DiffStats (type), diffWords
+  - meta: 182 lines
 - **`resume-export-html.ts`** — _Standalone HTML document for download or print-from-new-window._
   - exports: buildResumeHtmlDocument, downloadResumeHtml, openResumePrintWindow
   - imports: `@/lib/parse-resume-text`
@@ -1222,8 +1229,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 ## Stats
 
-- ts files: 138
-- ts lines: 21532
+- ts files: 140
+- ts lines: 22058
 - js files: 10
 - js lines: 948
 - py files: 82
