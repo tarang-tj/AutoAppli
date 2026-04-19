@@ -6,7 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadResumeHtml, openResumePrintWindow } from "@/lib/resume-export-html";
 import type { GeneratedDocument } from "@/types";
-import { Copy, Download, FileText, GitCompareArrows, LayoutTemplate, Printer, ScrollText } from "lucide-react";
+import {
+  Copy,
+  Download,
+  FileText,
+  GitCompareArrows,
+  LayoutTemplate,
+  Printer,
+  RotateCcw,
+  ScrollText,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { ReactNode } from "react";
 import { startTransition, useEffect, useState } from "react";
@@ -42,6 +52,15 @@ export function ResumePreview({
 }) {
   const [tab, setTab] = useState<PreviewTab>("formatted");
   const [pdfObjectUrl, setPdfObjectUrl] = useState<string | null>(null);
+  // Cherry-picked hybrid text (set from the Diff tab via Apply hybrid).
+  // When non-null, the Formatted/Plain-text views and the Copy/HTML/Print
+  // actions all use this instead of the raw tailored content. The PDF tab
+  // intentionally still renders the original AI version, since the bytes
+  // come from the model and we can't regenerate locally.
+  const [hybridContent, setHybridContent] = useState<string | null>(null);
+  // Lifted so per-row reject decisions survive tab switches (the Diff tab
+  // unmounts when the user navigates to Formatted/PDF/Plain text).
+  const [rejectedRows, setRejectedRows] = useState<Record<number, true>>({});
 
   const du = doc?.download_url?.trim() ?? "";
   const hasPdfUrl =
@@ -74,6 +93,12 @@ export function ResumePreview({
     });
   }, [doc?.id, doc?.download_url, doc?.pdf_base64]);
 
+  // Drop any active hybrid + reject decisions when the underlying doc changes.
+  useEffect(() => {
+    setHybridContent(null);
+    setRejectedRows({});
+  }, [doc?.id]);
+
   if (!doc) {
     return (
       <Card className="bg-zinc-900 border-zinc-800 h-full min-h-[400px] flex items-center justify-center">
@@ -90,6 +115,8 @@ export function ResumePreview({
   }
 
   const content = doc.content?.trim() ?? "";
+  const effectiveContent = hybridContent ?? content;
+  const hybridActive = hybridContent !== null;
 
   const downloadPdfFromBase64 = () => {
     const b64 = doc.pdf_base64;
@@ -126,7 +153,15 @@ export function ResumePreview({
   return (
     <Card className="bg-zinc-900 border-zinc-800 overflow-hidden">
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-4">
-        <CardTitle className="text-white text-lg">Generated resume</CardTitle>
+        <CardTitle className="text-white text-lg flex items-center gap-2">
+          Generated resume
+          {hybridActive ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-200">
+              <Sparkles className="h-3 w-3" />
+              Hybrid
+            </span>
+          ) : null}
+        </CardTitle>
         <div className="flex flex-wrap items-center gap-2">
           {hasPdfUrl ? (
             <Button
@@ -149,13 +184,18 @@ export function ResumePreview({
               Download PDF
             </Button>
           ) : null}
-          {content ? (
+          {effectiveContent ? (
             <>
               <Button
                 variant="outline"
                 size="sm"
                 className="border-zinc-600 text-zinc-100 bg-zinc-800/80 hover:bg-zinc-800"
-                onClick={() => downloadResumeHtml(content, `tailored-resume-${doc.id}.html`)}
+                onClick={() =>
+                  downloadResumeHtml(
+                    effectiveContent,
+                    `${hybridActive ? "hybrid" : "tailored"}-resume-${doc.id}.html`
+                  )
+                }
               >
                 <Download className="h-4 w-4 mr-2" />
                 HTML
@@ -164,7 +204,7 @@ export function ResumePreview({
                 variant="outline"
                 size="sm"
                 className="border-zinc-600 text-zinc-100 bg-zinc-800/80 hover:bg-zinc-800"
-                onClick={() => openResumePrintWindow(content)}
+                onClick={() => openResumePrintWindow(effectiveContent)}
               >
                 <Printer className="h-4 w-4 mr-2" />
                 Print
@@ -174,8 +214,12 @@ export function ResumePreview({
                 size="sm"
                 className="border-zinc-600 text-zinc-100 bg-zinc-800/80 hover:bg-zinc-800"
                 onClick={() => {
-                  void navigator.clipboard.writeText(content);
-                  toast.success("Resume text copied");
+                  void navigator.clipboard.writeText(effectiveContent);
+                  toast.success(
+                    hybridActive
+                      ? "Hybrid resume text copied"
+                      : "Resume text copied"
+                  );
                 }}
               >
                 <Copy className="h-4 w-4 mr-2" />
@@ -186,6 +230,27 @@ export function ResumePreview({
         </div>
       </CardHeader>
       <CardContent className="pt-4 space-y-4">
+        {hybridActive ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-100">
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-300" />
+              Showing your cherry-picked hybrid. The PDF tab still reflects the
+              original AI version.
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setHybridContent(null);
+                toast.success("Reverted to AI tailored version");
+              }}
+              className="inline-flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-200 hover:bg-zinc-800"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Reset to AI version
+            </button>
+          </div>
+        ) : null}
+
         <div
           className="flex flex-wrap gap-1 rounded-lg bg-zinc-950/80 p-1 border border-zinc-800"
           role="tablist"
@@ -198,7 +263,7 @@ export function ResumePreview({
             <FileText className="h-4 w-4" />,
             !pdfIframeSrc
           )}
-          {tabBtn("source", "Plain text", <ScrollText className="h-4 w-4" />, !content)}
+          {tabBtn("source", "Plain text", <ScrollText className="h-4 w-4" />, !effectiveContent)}
           {tabBtn(
             "diff",
             "Diff",
@@ -207,9 +272,9 @@ export function ResumePreview({
           )}
         </div>
 
-        {tab === "formatted" && content ? (
+        {tab === "formatted" && effectiveContent ? (
           <div className="max-h-[min(72vh,880px)] overflow-y-auto rounded-md bg-zinc-950 p-4">
-            <ResumeFormattedView text={content} />
+            <ResumeFormattedView text={effectiveContent} />
           </div>
         ) : null}
 
@@ -222,23 +287,30 @@ export function ResumePreview({
             />
             <p className="text-xs text-zinc-500 px-3 py-2 border-t border-zinc-800">
               This is the same layout as the downloaded PDF (ATS-friendly sections and bullets).
+              {hybridActive ? " It does not include your hybrid edits." : ""}
             </p>
           </div>
         ) : null}
 
-        {tab === "source" && content ? (
+        {tab === "source" && effectiveContent ? (
           <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 max-h-[min(72vh,720px)] overflow-y-auto">
             <pre className="text-sm text-zinc-200 whitespace-pre-wrap font-mono leading-relaxed">
-              {content}
+              {effectiveContent}
             </pre>
           </div>
         ) : null}
 
         {tab === "diff" && content && originalText?.trim() ? (
-          <ResumeDiffView original={originalText} tailored={content} />
+          <ResumeDiffView
+            original={originalText}
+            tailored={content}
+            rejectedRows={rejectedRows}
+            onRejectedRowsChange={setRejectedRows}
+            onApplyHybrid={(text) => setHybridContent(text)}
+          />
         ) : null}
 
-        {!content && !pdfIframeSrc ? (
+        {!effectiveContent && !pdfIframeSrc ? (
           <p className="text-zinc-500 text-sm">
             No content returned. Set <code className="text-zinc-400">ANTHROPIC_API_KEY</code> on the API
             and try generating again.
