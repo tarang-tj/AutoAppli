@@ -1,8 +1,9 @@
 "use client";
 
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { disableDemoMode } from "@/lib/demo-mode";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Exit demo mode if the visitor came here to create a real account.
+  useEffect(() => {
+    disableDemoMode();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

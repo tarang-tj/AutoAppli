@@ -1,4 +1,5 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { isDemoMode } from "@/lib/demo-mode";
 import * as sbJobs from "@/lib/supabase/jobs";
 import * as sbSearch from "@/lib/supabase/search";
 import {
@@ -72,12 +73,6 @@ import type {
   AutomationSuggestion,
   CoverLetterTone,
 } from "@/types";
-import {
-  scoreMatch,
-  toCandidateProfile,
-  toJobProfile,
-  type CandidateProfile,
-} from "@/lib/match";
 
 function computeDemoAnalytics(jobs: Job[]): AnalyticsData {
   const total = jobs.length;
@@ -238,39 +233,7 @@ function computeDemoMatchScore(resumeText: string, jobDescription: string): Matc
 
 function computeDemoMatchScores(resumeText: string, jobs: Job[]): MatchScoresResponse {
   const scores: Record<string, MatchScore> = {};
-  // Search accuracy v2: score with the explainable 7-signal scorer when we
-  // can build a CandidateProfile (resume text is non-empty). Falls back to
-  // the legacy TF-IDF path per-job on any failure so existing callers keep
-  // working on malformed input.
-  let candidate: CandidateProfile | null = null;
-  if (resumeText && resumeText.trim().length > 0) {
-    try {
-      candidate = toCandidateProfile({ resume_text: resumeText });
-    } catch {
-      candidate = null;
-    }
-  }
   for (const job of jobs) {
-    if (candidate) {
-      try {
-        const jobProfile = toJobProfile(job as unknown as Record<string, unknown>);
-        const result = scoreMatch(jobProfile, candidate);
-        // Map the v2 result back onto the legacy MatchScore shape so callers
-        // (dashboard, match history) don't need to change.
-        const topKeywords = Array.from(
-          new Set([...result.matchedSkills, ...result.missingSkills])
-        ).slice(0, 20);
-        scores[job.id] = {
-          score: Math.round(result.score),
-          matched_keywords: result.matchedSkills.slice(0, 15),
-          missing_keywords: result.missingSkills.slice(0, 10),
-          top_job_keywords: topKeywords,
-        };
-        continue;
-      } catch {
-        // fall through to legacy TF-IDF
-      }
-    }
     scores[job.id] = computeDemoMatchScore(resumeText, job.description || "");
   }
   return { scores };
@@ -1181,10 +1144,15 @@ function handleDemoPut(path: string, body: unknown): unknown {
 }
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {
-  // ── No FastAPI backend: use Supabase directly for jobs, demo for the rest ──
-  if (!API_URL) {
-    // Jobs → Supabase when configured, otherwise demo
-    if (isSupabaseConfigured()) {
+  // ── No FastAPI backend OR demo mode: use Supabase directly for jobs, demo for the rest ──
+  // Demo mode short-circuits both FastAPI and Supabase so users exploring
+  // via "Try demo" get the seeded in-memory data regardless of deployment.
+  const demo = isDemoMode();
+  const useSupabase = isSupabaseConfigured() && !demo;
+
+  if (!API_URL || demo) {
+    // Jobs → Supabase when configured (and not in demo), otherwise demo
+    if (useSupabase) {
       if (isJobsListPath(path)) {
         const status = path.includes("?status=")
           ? new URLSearchParams(path.split("?")[1]).get("status") ?? undefined
@@ -1200,7 +1168,7 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     if (path === "/profile") return getDemoProfile() as T;
 
     // Search → Supabase when configured
-    if (isSupabaseConfigured()) {
+    if (useSupabase) {
       if (path === "/search/history" || path.startsWith("/search/history?")) {
         const limitParam = path.includes("?") ? new URLSearchParams(path.split("?")[1]).get("limit") : null;
         return (await sbSearch.fetchSearchHistory(limitParam ? parseInt(limitParam, 10) : 12)) as T;
@@ -1247,11 +1215,13 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
 }
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
-  // ── When there is no FastAPI backend (!API_URL), route jobs to Supabase,
-  //    AI to local routes, and everything else to demo mode.
-  if (!API_URL) {
-    // Jobs → Supabase when configured
-    if (isSupabaseConfigured() && path === "/jobs") {
+  // ── When there is no FastAPI backend (!API_URL) OR demo mode is active,
+  //    route jobs to Supabase, AI to local routes, and everything else to demo mode.
+  const demo = isDemoMode();
+  const useSupabase = isSupabaseConfigured() && !demo;
+  if (!API_URL || demo) {
+    // Jobs → Supabase when configured (and not in demo)
+    if (useSupabase && path === "/jobs") {
       const b = body as Record<string, unknown>;
       return (await sbJobs.createJob({
         company: (b.company as string) ?? "",
@@ -1282,8 +1252,8 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
       })) as T;
     }
 
-    // Search → Supabase when configured
-    if (isSupabaseConfigured() && path === "/search") {
+    // Search → Supabase when configured (and not in demo)
+    if (useSupabase && path === "/search") {
       const b = body as {
         query?: string;
         location?: string;
@@ -1335,8 +1305,8 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
 }
 
 export async function apiPostFormData<T = unknown>(path: string, formData: FormData): Promise<T> {
-  // ── No backend: demo mode for everything ──
-  if (!API_URL) {
+  // ── No backend OR demo mode: demo routing for everything ──
+  if (!API_URL || isDemoMode()) {
     if (path === "/resumes/upload") {
       return handleDemoResumeUpload(formData) as T;
     }
@@ -1371,9 +1341,10 @@ export async function apiPut<T = unknown>(path: string, body: unknown): Promise<
   if (path !== "/jobs/reorder") {
     throw new Error(`Unsupported PUT ${path}`);
   }
-  if (!API_URL) {
-    // Supabase reorder
-    if (isSupabaseConfigured()) {
+  const demo = isDemoMode();
+  if (!API_URL || demo) {
+    // Supabase reorder when configured (and not in demo)
+    if (isSupabaseConfigured() && !demo) {
       const b = body as { moves?: Array<{ id: string; status: string; sort_order: number }> };
       if (b.moves?.length) {
         await sbJobs.reorderJobs(b.moves);
@@ -1390,8 +1361,11 @@ export async function apiPut<T = unknown>(path: string, body: unknown): Promise<
 }
 
 export async function apiPatch<T = unknown>(path: string, body: unknown): Promise<T> {
+  const demo = isDemoMode();
+  const noBackend = !API_URL || demo;
+
   if (path === "/profile") {
-    if (!API_URL) {
+    if (noBackend) {
       return handleDemoPatch(path, body) as T;
     }
     return fetchBackend<T>(path, {
@@ -1401,31 +1375,31 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
     });
   }
 
-  if (path.startsWith("/jobs/") && !API_URL) {
-    if (isSupabaseConfigured()) {
+  if (path.startsWith("/jobs/") && noBackend) {
+    if (isSupabaseConfigured() && !demo) {
       const id = path.split("/")[2];
       return (await sbJobs.updateJob(id, body as Partial<Job>)) as T;
     }
     return handleDemoPatch(path, body) as T;
   }
 
-  if (path.startsWith("/interviews/") && !API_URL) {
+  if (path.startsWith("/interviews/") && noBackend) {
     return handleDemoPatch(path, body) as T;
   }
 
-  if (path.startsWith("/contacts/") && !API_URL) {
+  if (path.startsWith("/contacts/") && noBackend) {
     return handleDemoPatch(path, body) as T;
   }
 
-  if (path.startsWith("/notifications/reminders/") && !API_URL) {
+  if (path.startsWith("/notifications/reminders/") && noBackend) {
     return handleDemoPatch(path, body) as T;
   }
 
-  if (path.startsWith("/salary/") && !API_URL) {
+  if (path.startsWith("/salary/") && noBackend) {
     return handleDemoPatch(path, body) as T;
   }
 
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || demo) {
     return handleDemoPatch(path, body) as T;
   }
 
@@ -1437,58 +1411,61 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
 }
 
 export async function apiDelete(path: string): Promise<void> {
-  if (path.startsWith("/interviews/") && !API_URL) {
+  const demo = isDemoMode();
+  const noBackend = !API_URL || demo;
+
+  if (path.startsWith("/interviews/") && noBackend) {
     handleDemoDelete(path);
     return;
   }
 
-  if (path.startsWith("/interviews/") && API_URL) {
+  if (path.startsWith("/interviews/") && !noBackend) {
     await fetchBackend(path, { method: "DELETE" });
     return;
   }
 
-  if (path.startsWith("/contacts/") && !API_URL) {
+  if (path.startsWith("/contacts/") && noBackend) {
     handleDemoDelete(path);
     return;
   }
 
-  if (path.startsWith("/contacts/") && API_URL) {
+  if (path.startsWith("/contacts/") && !noBackend) {
     await fetchBackend(path, { method: "DELETE" });
     return;
   }
 
-  if (path.startsWith("/timeline/") && !API_URL) {
+  if (path.startsWith("/timeline/") && noBackend) {
     handleDemoDelete(path);
     return;
   }
 
-  if (path.startsWith("/timeline/") && API_URL) {
+  if (path.startsWith("/timeline/") && !noBackend) {
     await fetchBackend(path, { method: "DELETE" });
     return;
   }
 
-  if (path.startsWith("/notifications/reminders/") && !API_URL) {
+  if (path.startsWith("/notifications/reminders/") && noBackend) {
     handleDemoDelete(path);
     return;
   }
 
-  if (path.startsWith("/notifications/reminders/") && API_URL) {
+  if (path.startsWith("/notifications/reminders/") && !noBackend) {
     await fetchBackend(path, { method: "DELETE" });
     return;
   }
 
-  if (path.startsWith("/salary/") && path !== "/salary/compare" && !API_URL) {
+  if (path.startsWith("/salary/") && path !== "/salary/compare" && noBackend) {
     handleDemoDelete(path);
     return;
   }
 
-  if (path.startsWith("/salary/") && path !== "/salary/compare" && API_URL) {
+  if (path.startsWith("/salary/") && path !== "/salary/compare" && !noBackend) {
     await fetchBackend(path, { method: "DELETE" });
     return;
   }
 
-  if (path.startsWith("/jobs/") && !API_URL) {
-    if (isSupabaseConfigured()) {
+  if (path.startsWith("/jobs/") && noBackend) {
+    if (isSupabaseConfigured() && !demo) {
       const id = path.split("/")[2];
       await sbJobs.deleteJob(id);
       return;
@@ -1497,7 +1474,7 @@ export async function apiDelete(path: string): Promise<void> {
     return;
   }
 
-  if (path.startsWith("/jobs/") && API_URL) {
+  if (path.startsWith("/jobs/") && !noBackend) {
     await fetchBackend(path, { method: "DELETE" });
     return;
   }
@@ -1507,7 +1484,7 @@ export async function apiDelete(path: string): Promise<void> {
     if (!id) {
       throw new Error("Invalid document id");
     }
-    if (!API_URL) {
+    if (noBackend) {
       removeDemoGeneratedDocument(id);
       return;
     }
@@ -1520,7 +1497,7 @@ export async function apiDelete(path: string): Promise<void> {
     if (!id) {
       throw new Error("Invalid message id");
     }
-    if (!API_URL) {
+    if (noBackend) {
       removeDemoOutreachMessage(id);
       return;
     }
@@ -1528,7 +1505,7 @@ export async function apiDelete(path: string): Promise<void> {
     return;
   }
 
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || demo) {
     return;
   }
   if (!API_URL) {

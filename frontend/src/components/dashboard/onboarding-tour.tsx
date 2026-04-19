@@ -1,0 +1,203 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { ArrowRight, Kanban, Mail, Sparkles, Upload, X } from "lucide-react";
+import Link from "next/link";
+
+/**
+ * OnboardingTour — first-run guided intro shown on /dashboard.
+ *
+ * Design choices:
+ * - No portals, no anchors, no positioning library: a centered modal keeps
+ *   copy and images aligned regardless of viewport or layout shifts.
+ * - localStorage flag persists dismissal (`autoappli_tour_completed`).
+ *   Clearing the flag via the browser dev tools re-runs the tour.
+ * - Mounts only on the client: avoids SSR hydration flicker and keeps
+ *   the initial paint clean.
+ * - Escape key or "Skip tour" dismisses without marking completed — the
+ *   tour re-appears next visit unless the user clicks "Finish".
+ */
+
+type Step = {
+  icon: React.ElementType;
+  title: string;
+  body: string;
+  cta?: { label: string; href: string };
+};
+
+const STEPS: Step[] = [
+  {
+    icon: Upload,
+    title: "Upload your resume once",
+    body: "Drop your PDF into the Resume Builder. We parse your skills, seniority, and experience so every tailored version starts from a solid base.",
+    cta: { label: "Go to Resume Builder", href: "/resume" },
+  },
+  {
+    icon: Kanban,
+    title: "Save jobs to your Kanban board",
+    body: "Every job gets a card with a fit score, notes, and one-click tailoring. Drag between Bookmarked, Applied, Interviewing, and Offer as things move.",
+  },
+  {
+    icon: Sparkles,
+    title: "Tailor + apply in 30 seconds",
+    body: "From any card, click the sparkles icon to generate a tailored resume, or use Outreach to draft a cold message matched to the role and company.",
+    cta: { label: "Try Outreach", href: "/outreach" },
+  },
+  {
+    icon: Mail,
+    title: "You're set",
+    body: "Everything lives in one workspace — no spreadsheets, no 12 tabs. Come back daily; your pipeline stays in sync.",
+  },
+];
+
+const STORAGE_KEY = "autoappli_tour_completed";
+
+export function OnboardingTour() {
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    try {
+      const done = window.localStorage.getItem(STORAGE_KEY) === "1";
+      if (!done) setOpen(true);
+    } catch {
+      /* private browsing — just skip the tour */
+    }
+  }, []);
+
+  const close = useCallback((markCompleted: boolean) => {
+    if (markCompleted) {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+    }
+    setOpen(false);
+  }, []);
+
+  // Keyboard affordances: Esc to dismiss, → to advance.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close(false);
+      else if (e.key === "ArrowRight") {
+        setStep((s) => Math.min(s + 1, STEPS.length - 1));
+      } else if (e.key === "ArrowLeft") {
+        setStep((s) => Math.max(s - 1, 0));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, close]);
+
+  if (!open) return null;
+
+  const current = STEPS[step];
+  const Icon = current.icon;
+  const isLast = step === STEPS.length - 1;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tour-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm"
+    >
+      <div className="relative w-full max-w-md rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-2xl">
+        <button
+          type="button"
+          aria-label="Dismiss tour"
+          onClick={() => close(false)}
+          className="absolute top-3 right-3 rounded-md p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-800"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="p-6 md:p-8">
+          <div className="mx-auto h-14 w-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-violet-500/20 border border-blue-500/30 flex items-center justify-center mb-5">
+            <Icon className="h-7 w-7 text-blue-300" />
+          </div>
+
+          <h2
+            id="tour-title"
+            className="text-xl md:text-2xl font-bold text-white tracking-tight text-center"
+          >
+            {current.title}
+          </h2>
+          <p className="mt-3 text-sm text-zinc-400 leading-relaxed text-center">
+            {current.body}
+          </p>
+
+          {current.cta && (
+            <Link
+              href={current.cta.href}
+              onClick={() => close(true)}
+              className="mt-5 mx-auto w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-500/40 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-200 hover:bg-blue-500/20 transition-colors"
+            >
+              {current.cta.label}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
+
+          {/* Progress dots */}
+          <div className="mt-6 flex items-center justify-center gap-1.5">
+            {STEPS.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Go to step ${i + 1}`}
+                onClick={() => setStep(i)}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === step
+                    ? "w-6 bg-blue-500"
+                    : "w-1.5 bg-zinc-700 hover:bg-zinc-500"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Nav */}
+          <div className="mt-6 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => close(false)}
+              className="text-xs text-zinc-500 hover:text-zinc-300"
+            >
+              Skip tour
+            </button>
+            <div className="flex items-center gap-2">
+              {step > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => Math.max(s - 1, 0))}
+                  className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800"
+                >
+                  Back
+                </button>
+              )}
+              {isLast ? (
+                <button
+                  type="button"
+                  onClick={() => close(true)}
+                  className="rounded-md bg-blue-600 hover:bg-blue-700 px-4 py-1.5 text-xs font-medium text-white shadow-lg shadow-blue-600/20"
+                >
+                  Finish
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => Math.min(s + 1, STEPS.length - 1))}
+                  className="rounded-md bg-blue-600 hover:bg-blue-700 px-4 py-1.5 text-xs font-medium text-white shadow-lg shadow-blue-600/20 inline-flex items-center gap-1.5"
+                >
+                  Next
+                  <ArrowRight className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

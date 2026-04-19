@@ -1,8 +1,9 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { disableDemoMode } from "@/lib/demo-mode";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,12 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Exit demo mode: once a real account exists, all api.ts calls should
+  // talk to Supabase with the fresh session.
+  useEffect(() => {
+    disableDemoMode();
+  }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -5,40 +5,63 @@ import { Toaster } from "sonner";
 
 const siteUrl = getSiteUrl();
 
+const DESCRIPTION =
+  "Save roles, tailor resumes with AI in 30 seconds, draft outreach, and track every application on a Kanban board. Free forever tier, no credit card required.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "AutoAppli — AI Job Application Platform",
+    default: "AutoAppli — Your entire job search, one workspace",
     template: "%s · AutoAppli",
   },
-  description:
-    "Streamline your job search with AI-powered resume tailoring, smart outreach, and visual application tracking.",
+  description: DESCRIPTION,
   applicationName: "AutoAppli",
   keywords: [
     "job search",
-    "resume",
     "AI resume",
-    "job applications",
-    "career",
-    "outreach",
+    "resume builder",
+    "job tracker",
+    "Kanban job board",
+    "cover letter generator",
+    "cold outreach",
+    "ATS resume",
+    "application tracker",
+    "career tools",
   ],
   authors: [{ name: "AutoAppli" }],
+  creator: "AutoAppli",
+  publisher: "AutoAppli",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: siteUrl,
     siteName: "AutoAppli",
-    title: "AutoAppli — AI Job Application Platform",
-    description:
-      "Streamline your job search with AI-powered resume tailoring, smart outreach, and visual application tracking.",
+    title: "AutoAppli — Your entire job search, one workspace",
+    description: DESCRIPTION,
+    // `opengraph-image.tsx` at the app-root is auto-discovered by Next.js
+    // and used as the default OG image; no explicit `images` entry needed.
   },
   twitter: {
     card: "summary_large_image",
-    title: "AutoAppli — AI Job Application Platform",
-    description:
-      "Streamline your job search with AI-powered resume tailoring, smart outreach, and visual application tracking.",
+    title: "AutoAppli — Your entire job search, one workspace",
+    description: DESCRIPTION,
+    creator: "@autoappli",
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  category: "productivity",
 };
 
 export default function RootLayout({

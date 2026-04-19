@@ -3,6 +3,8 @@ import { RecommendedJobs } from "@/components/dashboard/recommended-jobs";
 import { KanbanBoard } from "@/components/dashboard/kanban-board";
 import { InsightsCards } from "@/components/dashboard/insights-cards";
 import { PipelineStats } from "@/components/dashboard/pipeline-stats";
+import { DemoModeBanner } from "@/components/dashboard/demo-mode-banner";
+import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -103,6 +105,8 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <OnboardingTour />
+      <DemoModeBanner />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-zinc-50 tracking-tight">Job Tracker</h1>

@@ -1,0 +1,3847 @@
+{
+  "stats": {
+    "ts files": 129,
+    "ts lines": 19866,
+    "js files": 10,
+    "js lines": 948,
+    "py files": 82,
+    "py lines": 9667,
+    "Next.js routes": 49,
+    "API endpoints": 68
+  },
+  "files": [
+    {
+      "path": "backend/app/__init__.py",
+      "kind": "py",
+      "role": null,
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 1
+    },
+    {
+      "path": "backend/app/config.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "get_settings",
+        "Settings (class)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 40
+    },
+    {
+      "path": "backend/app/deps/jobs_auth.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "decode_supabase_user_sub",
+        "get_jobs_user_id",
+        "get_optional_user_id",
+        "jobs_use_supabase"
+      ],
+      "imports": [
+        "app.config"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 73
+    },
+    {
+      "path": "backend/app/main.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "health"
+      ],
+      "imports": [
+        "app.config",
+        "app.routers"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /api/v1/health"
+      ],
+      "line_count": 51
+    },
+    {
+      "path": "backend/app/models/__init__.py",
+      "kind": "py",
+      "role": null,
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 1
+    },
+    {
+      "path": "backend/app/models/schemas.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "AutomationRuleCreate (class)",
+        "AutomationRuleUpdate (class)",
+        "ChangeDeltaDetail (class)",
+        "CompensationCreate (class)",
+        "CompensationUpdate (class)",
+        "ContactCreate (class)",
+        "ContactUpdate (class)",
+        "CoverLetterRequest (class)",
+        "HallucinationCheckDetail (class)",
+        "HealthResponse (class)",
+        "InteractionCreate (class)",
+        "InterviewNoteCreate (class)",
+        "InterviewNoteUpdate (class)",
+        "InterviewPrepRequest (class)",
+        "JobSearchResult (class)",
+        "KeywordCoverageDetail (class)",
+        "OutreachGenerateRequest (class)",
+        "OutreachGenerateResponse (class)",
+        "ProfilePatch (class)",
+        "ProfileResponse (class)",
+        "ReminderCreate (class)",
+        "ReminderUpdate (class)",
+        "ResumeEvalRequest (class)",
+        "ResumeEvalResponse (class)",
+        "ResumeGenerateRequest (class)",
+        "ResumeGenerateResponse (class)",
+        "ResumeGenerateWithEvalResponse (class)",
+        "ResumeReviewRequest (class)",
+        "ResumeReviewResponse (class)",
+        "SavedGeneratedDocument (class)",
+        "SearchRequest (class)",
+        "TemplateCreate (class)",
+        "TemplateRenderRequest (class)",
+        "TemplateUpdate (class)",
+        "ThankYouRequest (class)",
+        "ThankYouResponse (class)",
+        "TimelineEventCreate (class)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 361
+    },
+    {
+      "path": "backend/app/prompts/__init__.py",
+      "kind": "py",
+      "role": null,
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 1
+    },
+    {
+      "path": "backend/app/prompts/outreach_prompt.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "build_outreach_prompt"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 147
+    },
+    {
+      "path": "backend/app/prompts/resume_prompt.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "build_resume_prompt",
+        "build_resume_review_prompt"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 71
+    },
+    {
+      "path": "backend/app/repositories/__init__.py",
+      "kind": "py",
+      "role": null,
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 2
+    },
+    {
+      "path": "backend/app/repositories/documents_supabase.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "delete_document",
+        "insert_tailored_resume",
+        "list_documents"
+      ],
+      "imports": [
+        "app.config"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 98
+    },
+    {
+      "path": "backend/app/repositories/jobs_memory.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "create_job",
+        "delete_job",
+        "find_job_by_url",
+        "get_job",
+        "list_jobs",
+        "patch_job",
+        "reorder_jobs",
+        "sorted_jobs"
+      ],
+      "imports": [
+        "app.utils.job_url"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 121
+    },
+    {
+      "path": "backend/app/repositories/jobs_supabase.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "create_job",
+        "delete_job",
+        "find_job_by_url",
+        "get_job",
+        "list_jobs",
+        "patch_job",
+        "reorder_jobs"
+      ],
+      "imports": [
+        "app.config",
+        "app.utils.job_url"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 207
+    },
+    {
+      "path": "backend/app/repositories/outreach_supabase.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "delete_message",
+        "insert_message",
+        "list_messages"
+      ],
+      "imports": [
+        "app.config"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 84
+    },
+    {
+      "path": "backend/app/repositories/profile_supabase.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "get_profile",
+        "patch_profile"
+      ],
+      "imports": [
+        "app.config"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 75
+    },
+    {
+      "path": "backend/app/repositories/resume_supabase.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "get_resume",
+        "insert_resume",
+        "list_resumes",
+        "user_has_any_resume"
+      ],
+      "imports": [
+        "app.config"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 91
+    },
+    {
+      "path": "backend/app/repositories/search_supabase.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "get_saved_results_for_run",
+        "list_search_history",
+        "persist_search_run"
+      ],
+      "imports": [
+        "app.config",
+        "app.models.schemas",
+        "app.utils.job_url"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 169
+    },
+    {
+      "path": "backend/app/repositories/user_session_memory.py",
+      "kind": "py",
+      "role": "Per-user in-memory stores for resume uploads and outreach when Postgres is not used for those domains.",
+      "exports": [
+        "automation_rules",
+        "compensations",
+        "contacts",
+        "cover_letters",
+        "interview_notes",
+        "job_store",
+        "outreach_messages",
+        "reminders",
+        "resume_store",
+        "templates",
+        "timeline_events"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 100
+    },
+    {
+      "path": "backend/app/routers/__init__.py",
+      "kind": "py",
+      "role": null,
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 1
+    },
+    {
+      "path": "backend/app/routers/analytics.py",
+      "kind": "py",
+      "role": "Analytics router \u2014 pipeline funnel, conversion rates, stage durations.",
+      "exports": [
+        "get_analytics"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.repositories",
+        "app.services.analytics_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /analytics"
+      ],
+      "line_count": 30
+    },
+    {
+      "path": "backend/app/routers/auth.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "get_me"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /auth/me"
+      ],
+      "line_count": 36
+    },
+    {
+      "path": "backend/app/routers/automation.py",
+      "kind": "py",
+      "role": "Automation router \u2014 rules management, evaluation, and stale job detection.",
+      "exports": [
+        "create_rule",
+        "delete_rule",
+        "evaluate_rules_handler",
+        "get_stale_jobs",
+        "list_rules",
+        "update_rule"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories",
+        "app.services.automation_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /automation/rules",
+        "POST /automation/rules",
+        "PATCH /automation/rules/{rule_id}",
+        "DELETE /automation/rules/{rule_id}",
+        "POST /automation/evaluate",
+        "GET /automation/stale"
+      ],
+      "line_count": 140
+    },
+    {
+      "path": "backend/app/routers/contacts.py",
+      "kind": "py",
+      "role": "Contacts CRM routes \u2014 CRUD for recruiter/hiring manager contacts + interactions.",
+      "exports": [
+        "create_contact",
+        "create_interaction",
+        "delete_contact",
+        "list_contacts",
+        "list_interactions",
+        "update_contact"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories.user_session_memory",
+        "app.services.contacts_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /contacts",
+        "POST /contacts",
+        "PATCH /contacts/{contact_id}",
+        "DELETE /contacts/{contact_id}",
+        "GET /contacts/{contact_id}/interactions",
+        "POST /contacts/{contact_id}/interactions"
+      ],
+      "line_count": 116
+    },
+    {
+      "path": "backend/app/routers/cover_letter.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "delete_cover_letter",
+        "generate_cover_letter_endpoint",
+        "list_cover_letter_history"
+      ],
+      "imports": [
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories.user_session_memory",
+        "app.services.cover_letter_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "POST /cover-letter/generate",
+        "GET /cover-letter/history",
+        "DELETE /cover-letter/{cl_id}"
+      ],
+      "line_count": 62
+    },
+    {
+      "path": "backend/app/routers/export.py",
+      "kind": "py",
+      "role": "Export router \u2014 CSV, JSON downloads and summary reports.",
+      "exports": [
+        "export_csv",
+        "export_json",
+        "export_report"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.repositories",
+        "app.services.export_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /export/csv",
+        "GET /export/json",
+        "GET /export/report"
+      ],
+      "line_count": 67
+    },
+    {
+      "path": "backend/app/routers/interview.py",
+      "kind": "py",
+      "role": "Interview prep & notes routes \u2014 CRUD + AI-generated prep material.",
+      "exports": [
+        "create_interview",
+        "create_prep",
+        "delete_interview",
+        "list_interviews",
+        "update_interview"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories.user_session_memory",
+        "app.services.interview_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "POST /interviews/prep",
+        "GET /interviews",
+        "POST /interviews",
+        "PATCH /interviews/{note_id}",
+        "DELETE /interviews/{note_id}"
+      ],
+      "line_count": 107
+    },
+    {
+      "path": "backend/app/routers/jobs.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "create_job",
+        "delete_job",
+        "get_job",
+        "JobCreate (class)",
+        "JobPatch (class)",
+        "list_jobs",
+        "patch_job",
+        "reorder_jobs",
+        "ReorderJobsBody (class)"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.repositories",
+        "app.services",
+        "app.utils.job_url"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "POST /jobs",
+        "GET /jobs",
+        "GET /jobs/{job_id}",
+        "PUT /jobs/reorder",
+        "PATCH /jobs/{job_id}",
+        "DELETE /jobs/{job_id}"
+      ],
+      "line_count": 201
+    },
+    {
+      "path": "backend/app/routers/match.py",
+      "kind": "py",
+      "role": "Match router \u2014 compute resume-job fit scores.",
+      "exports": [
+        "get_match_scores"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.repositories",
+        "app.services.match_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "POST /match/scores"
+      ],
+      "line_count": 37
+    },
+    {
+      "path": "backend/app/routers/notifications.py",
+      "kind": "py",
+      "role": "Notification & reminder routes \u2014 smart auto-reminders + custom CRUD.",
+      "exports": [
+        "create_reminder",
+        "delete_reminder",
+        "dismiss_reminder",
+        "list_reminders",
+        "mark_read",
+        "update_reminder"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories.user_session_memory",
+        "app.services.notification_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /notifications/reminders",
+        "POST /notifications/reminders",
+        "PATCH /notifications/reminders/{reminder_id}",
+        "DELETE /notifications/reminders/{reminder_id}",
+        "POST /notifications/reminders/{reminder_id}/read",
+        "POST /notifications/reminders/{reminder_id}/dismiss"
+      ],
+      "line_count": 116
+    },
+    {
+      "path": "backend/app/routers/outreach.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "create_outreach",
+        "create_thank_you",
+        "delete_outreach",
+        "list_outreach"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories",
+        "app.repositories.user_session_memory",
+        "app.services.outreach_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "POST /outreach/generate",
+        "POST /outreach/thank-you",
+        "GET /outreach",
+        "DELETE /outreach/{message_id}"
+      ],
+      "line_count": 172
+    },
+    {
+      "path": "backend/app/routers/profile.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "get_profile",
+        "patch_profile"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /profile",
+        "PATCH /profile"
+      ],
+      "line_count": 47
+    },
+    {
+      "path": "backend/app/routers/resume.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "delete_generated_resume",
+        "evaluate_resume",
+        "generate_resume",
+        "list_generated_resumes",
+        "list_resumes",
+        "review_resume",
+        "upload_resume"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories",
+        "app.repositories.user_session_memory",
+        "app.services.eval_service",
+        "app.services.resume_generator",
+        "app.services.resume_parser"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "POST /resumes/upload",
+        "GET /resumes",
+        "GET /resumes/generated",
+        "DELETE /resumes/generated/{doc_id}",
+        "POST /resumes/generate",
+        "POST /resumes/evaluate",
+        "POST /resumes/review"
+      ],
+      "line_count": 238
+    },
+    {
+      "path": "backend/app/routers/salary.py",
+      "kind": "py",
+      "role": "Salary & compensation routes \u2014 CRUD + comparison.",
+      "exports": [
+        "compare_compensations",
+        "create_compensation",
+        "delete_compensation",
+        "list_compensations",
+        "update_compensation"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories.user_session_memory",
+        "app.services.salary_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /salary",
+        "POST /salary",
+        "PATCH /salary/{comp_id}",
+        "DELETE /salary/{comp_id}",
+        "GET /salary/compare"
+      ],
+      "line_count": 93
+    },
+    {
+      "path": "backend/app/routers/search.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "get_cached_search_results",
+        "search_history",
+        "search_jobs"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories",
+        "app.services"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "POST /search",
+        "GET /search/history",
+        "GET /search/runs/{search_id}/results"
+      ],
+      "line_count": 80
+    },
+    {
+      "path": "backend/app/routers/templates.py",
+      "kind": "py",
+      "role": "Document templates routes \u2014 CRUD for resume and cover letter templates.",
+      "exports": [
+        "create_template",
+        "delete_template",
+        "list_templates",
+        "render_template_endpoint",
+        "update_template"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories",
+        "app.services.templates_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /templates",
+        "POST /templates",
+        "PATCH /templates/{template_id}",
+        "DELETE /templates/{template_id}",
+        "POST /templates/{template_id}/render"
+      ],
+      "line_count": 107
+    },
+    {
+      "path": "backend/app/routers/timeline.py",
+      "kind": "py",
+      "role": "Application Timeline routes \u2014 per-job activity feed + manual event CRUD.",
+      "exports": [
+        "create_timeline_event",
+        "delete_timeline_event",
+        "get_job_timeline"
+      ],
+      "imports": [
+        "app.config",
+        "app.deps.jobs_auth",
+        "app.models.schemas",
+        "app.repositories.user_session_memory",
+        "app.services.timeline_service"
+      ],
+      "next_route": null,
+      "api_routes": [
+        "GET /timeline/{job_id}",
+        "POST /timeline",
+        "DELETE /timeline/{event_id}"
+      ],
+      "line_count": 73
+    },
+    {
+      "path": "backend/app/services/__init__.py",
+      "kind": "py",
+      "role": null,
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 1
+    },
+    {
+      "path": "backend/app/services/analytics_service.py",
+      "kind": "py",
+      "role": "Analytics service \u2014 computes funnel metrics, stage durations, and activity stats from job data.",
+      "exports": [
+        "compute_analytics"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 190
+    },
+    {
+      "path": "backend/app/services/automation_service.py",
+      "kind": "py",
+      "role": "Automation service \u2014 automation rules, evaluation, and stale job detection.",
+      "exports": [
+        "evaluate_rules",
+        "find_stale_jobs",
+        "make_rule"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 180
+    },
+    {
+      "path": "backend/app/services/claude_service.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "generate_text"
+      ],
+      "imports": [
+        "app.config"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 43
+    },
+    {
+      "path": "backend/app/services/contacts_service.py",
+      "kind": "py",
+      "role": "Contacts CRM \u2014 track recruiters, hiring managers, and networking contacts.",
+      "exports": [
+        "add_interaction",
+        "make_contact"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 58
+    },
+    {
+      "path": "backend/app/services/cover_letter_service.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "generate_cover_letter"
+      ],
+      "imports": [
+        "app.config",
+        "app.services.claude_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 152
+    },
+    {
+      "path": "backend/app/services/eval_service.py",
+      "kind": "py",
+      "role": "Resume Eval Pipeline \u2014 Phase 1A of AutoAppli Deepening.",
+      "exports": [
+        "detect_hallucinations",
+        "EvalResult (class)",
+        "evaluate_tailored_resume",
+        "measure_change_delta",
+        "score_keyword_coverage"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 406
+    },
+    {
+      "path": "backend/app/services/export_service.py",
+      "kind": "py",
+      "role": "Export service \u2014 CSV, JSON, and summary report generation for jobs.",
+      "exports": [
+        "export_jobs_csv",
+        "export_jobs_json",
+        "generate_summary_report"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 118
+    },
+    {
+      "path": "backend/app/services/ingestion/__init__.py",
+      "kind": "py",
+      "role": "Pluggable job-ingestion sources.",
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 25
+    },
+    {
+      "path": "backend/app/services/ingestion/ashby.py",
+      "kind": "py",
+      "role": "Ashby public job-board ingestion.",
+      "exports": [
+        "AshbySource (class)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 175
+    },
+    {
+      "path": "backend/app/services/ingestion/base.py",
+      "kind": "py",
+      "role": "Base abstractions for job ingestion sources.",
+      "exports": [
+        "dedupe_jobs",
+        "JobSource (class)",
+        "list_sources",
+        "NormalizedJob (class)",
+        "register_source"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 81
+    },
+    {
+      "path": "backend/app/services/ingestion/greenhouse.py",
+      "kind": "py",
+      "role": "Greenhouse public job-board ingestion.",
+      "exports": [
+        "GreenhouseSource (class)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 135
+    },
+    {
+      "path": "backend/app/services/ingestion/lever.py",
+      "kind": "py",
+      "role": "Lever public job-board ingestion.",
+      "exports": [
+        "LeverSource (class)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 159
+    },
+    {
+      "path": "backend/app/services/interview_service.py",
+      "kind": "py",
+      "role": "Interview prep service \u2014 AI-generated talking points & CRUD for interview notes.",
+      "exports": [
+        "generate_interview_prep",
+        "make_interview_note"
+      ],
+      "imports": [
+        "app.services.claude_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 84
+    },
+    {
+      "path": "backend/app/services/match_service.py",
+      "kind": "py",
+      "role": "Job-resume match scoring \u2014 lightweight TF-IDF keyword overlap.",
+      "exports": [
+        "compute_batch_match_scores",
+        "compute_match_score"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 154
+    },
+    {
+      "path": "backend/app/services/match_v2.py",
+      "kind": "py",
+      "role": "Match scoring v2 \u2014 Python mirror of frontend/src/lib/match/score.ts.",
+      "exports": [
+        "CandidateProfile (class)",
+        "detect_remote_type",
+        "extract_skills",
+        "JobProfile (class)",
+        "MatchResult (class)",
+        "rank_jobs",
+        "result_to_dict",
+        "score_match",
+        "SignalContribution (class)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 392
+    },
+    {
+      "path": "backend/app/services/notification_service.py",
+      "kind": "py",
+      "role": "Notification & reminder generation \u2014 AI-powered follow-up nudges and interview reminders.",
+      "exports": [
+        "generate_auto_reminders",
+        "make_reminder"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 153
+    },
+    {
+      "path": "backend/app/services/outreach_service.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "generate_outreach",
+        "generate_thank_you"
+      ],
+      "imports": [
+        "app.prompts.outreach_prompt",
+        "app.services.claude_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 111
+    },
+    {
+      "path": "backend/app/services/resume_generator.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "generate_resume_pdf",
+        "generate_resume_pdf_from_sections",
+        "generate_resume_review",
+        "generate_tailored_resume"
+      ],
+      "imports": [
+        "app.models.schemas",
+        "app.services.resume_text"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 308
+    },
+    {
+      "path": "backend/app/services/resume_parser.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "extract_text_from_pdf"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 13
+    },
+    {
+      "path": "backend/app/services/resume_text.py",
+      "kind": "py",
+      "role": "Normalize model output and user-facing resume plain text.",
+      "exports": [
+        "parse_resume_review_json",
+        "sanitize_tailored_resume_text"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 61
+    },
+    {
+      "path": "backend/app/services/salary_service.py",
+      "kind": "py",
+      "role": "Salary & compensation tracking \u2014 create entries, compute comparisons.",
+      "exports": [
+        "compare_offers",
+        "make_compensation"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 59
+    },
+    {
+      "path": "backend/app/services/scraper_service.py",
+      "kind": "py",
+      "role": null,
+      "exports": [
+        "scrape_job_details",
+        "search_jobs"
+      ],
+      "imports": [
+        "app.models.schemas"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 188
+    },
+    {
+      "path": "backend/app/services/taxonomy.py",
+      "kind": "py",
+      "role": "Canonical skill taxonomy \u2014 Python mirror of frontend/src/lib/match/taxonomy.ts.",
+      "exports": [
+        "CanonicalSkill (class)",
+        "detect_seniority",
+        "get_skill",
+        "normalize_skill",
+        "normalize_skill_list",
+        "resolve_seniority"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 221
+    },
+    {
+      "path": "backend/app/services/templates_service.py",
+      "kind": "py",
+      "role": "Document templates \u2014 save and reuse cover letter & resume templates.",
+      "exports": [
+        "make_template",
+        "render_template"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 59
+    },
+    {
+      "path": "backend/app/services/timeline_service.py",
+      "kind": "py",
+      "role": "Application Timeline \u2014 aggregate all activity for a job into a chronological feed.",
+      "exports": [
+        "build_job_timeline",
+        "make_timeline_event"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 165
+    },
+    {
+      "path": "backend/app/utils/__init__.py",
+      "kind": "py",
+      "role": null,
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 1
+    },
+    {
+      "path": "backend/app/utils/job_url.py",
+      "kind": "py",
+      "role": "Normalize job listing URLs for storage and links.",
+      "exports": [
+        "normalize_job_url"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 23
+    },
+    {
+      "path": "backend/scripts/audit_sources.py",
+      "kind": "py",
+      "role": "Audit job-source slugs to see which boards are live.",
+      "exports": [
+        "main"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 233
+    },
+    {
+      "path": "backend/scripts/ingest.py",
+      "kind": "py",
+      "role": "Ingest jobs from external sources into Supabase.",
+      "exports": [
+        "main"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 129
+    },
+    {
+      "path": "backend/tests/test_analytics_service.py",
+      "kind": "py",
+      "role": "Tests for analytics_service.compute_analytics.",
+      "exports": [
+        "TestComputeAnalytics (class)"
+      ],
+      "imports": [
+        "app.services.analytics_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 129
+    },
+    {
+      "path": "backend/tests/test_automation_service.py",
+      "kind": "py",
+      "role": "Tests for automation_service.",
+      "exports": [
+        "TestDefaultRules (class)",
+        "TestEvaluateRules (class)",
+        "TestFindStaleJobs (class)",
+        "TestMakeRule (class)"
+      ],
+      "imports": [
+        "app.services.automation_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 204
+    },
+    {
+      "path": "backend/tests/test_contacts_service.py",
+      "kind": "py",
+      "role": "Tests for contacts_service \u2014 contact creation and interaction logging.",
+      "exports": [
+        "test_contact_custom_fields",
+        "test_contact_has_required_fields",
+        "test_contact_unique_ids",
+        "test_interaction_creation",
+        "test_interaction_custom_occurred_at",
+        "test_interaction_defaults",
+        "test_interaction_unique_ids"
+      ],
+      "imports": [
+        "app.services.contacts_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 71
+    },
+    {
+      "path": "backend/tests/test_cover_letter_service.py",
+      "kind": "py",
+      "role": "Tests for the cover letter generation service.",
+      "exports": [
+        "test_generate_cover_letter_all_tones",
+        "test_generate_cover_letter_empty_fields",
+        "test_generate_cover_letter_template_mode",
+        "test_generate_cover_letter_with_all_fields",
+        "test_generate_cover_letter_with_defaults",
+        "test_generate_cover_letter_with_special_instructions"
+      ],
+      "imports": [
+        "app.services.cover_letter_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 102
+    },
+    {
+      "path": "backend/tests/test_eval_service.py",
+      "kind": "py",
+      "role": "Tests for the resume eval pipeline.",
+      "exports": [
+        "test_change_delta_good",
+        "test_change_delta_minimal",
+        "test_full_eval_bad",
+        "test_full_eval_good",
+        "test_hallucination_bad",
+        "test_hallucination_good",
+        "test_keyword_coverage_bad",
+        "test_keyword_coverage_good",
+        "test_keyword_extraction",
+        "test_skill_extraction"
+      ],
+      "imports": [
+        "app.services.eval_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 252
+    },
+    {
+      "path": "backend/tests/test_export_service.py",
+      "kind": "py",
+      "role": "Tests for export_service \u2014 CSV, JSON, and report generation.",
+      "exports": [
+        "mock_jobs",
+        "test_export_jobs_csv_basic",
+        "test_export_jobs_csv_empty",
+        "test_export_jobs_json_basic",
+        "test_export_jobs_json_empty",
+        "test_generate_summary_report_avg_days_in_pipeline",
+        "test_generate_summary_report_company_breakdown",
+        "test_generate_summary_report_source_breakdown",
+        "test_generate_summary_report_status_breakdown",
+        "test_generate_summary_report_top_companies",
+        "test_generate_summary_report_weekly_activity"
+      ],
+      "imports": [
+        "app.services.export_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 169
+    },
+    {
+      "path": "backend/tests/test_ingestion_ashby.py",
+      "kind": "py",
+      "role": "Unit tests for the Ashby ingestion source.",
+      "exports": [
+        "test_ashby_dedupe",
+        "test_ashby_falls_back_to_html",
+        "test_ashby_normalizes",
+        "test_ashby_to_row_shape"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 142
+    },
+    {
+      "path": "backend/tests/test_ingestion_greenhouse.py",
+      "kind": "py",
+      "role": "Unit tests for the Greenhouse ingestion source.",
+      "exports": [
+        "test_dedupe_jobs",
+        "test_greenhouse_normalizes",
+        "test_to_row_shape"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 91
+    },
+    {
+      "path": "backend/tests/test_ingestion_lever.py",
+      "kind": "py",
+      "role": "Unit tests for the Lever ingestion source.",
+      "exports": [
+        "test_lever_dedupe",
+        "test_lever_handles_postings_wrapper",
+        "test_lever_normalizes",
+        "test_lever_to_row_shape"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 120
+    },
+    {
+      "path": "backend/tests/test_interview_service.py",
+      "kind": "py",
+      "role": "Tests for interview_service.py \u2014 unit tests for note creation and prep parsing.",
+      "exports": [
+        "test_generate_prep_handles_backtick_wrapper",
+        "test_generate_prep_invalid_json_raises",
+        "test_generate_prep_returns_dict",
+        "test_generate_prep_with_description_and_resume",
+        "test_note_custom_fields",
+        "test_note_default_round_name",
+        "test_note_has_required_fields",
+        "test_note_unique_ids",
+        "test_note_with_prep_material"
+      ],
+      "imports": [
+        "app.services.interview_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 130
+    },
+    {
+      "path": "backend/tests/test_match_service.py",
+      "kind": "py",
+      "role": "Tests for match_service \u2014 resume-job fit scoring.",
+      "exports": [
+        "TestBatchMatchScores (class)",
+        "TestComputeMatchScore (class)"
+      ],
+      "imports": [
+        "app.services.match_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 123
+    },
+    {
+      "path": "backend/tests/test_match_v2.py",
+      "kind": "py",
+      "role": "Tests for backend.app.services.match_v2.",
+      "exports": [
+        "test_breakdown_points_equal_raw_times_weight_times_100",
+        "test_default_weights_sum_to_one",
+        "test_detect_remote_type",
+        "test_extract_skills_canonical",
+        "test_hybrid_remote_partial",
+        "test_normalize_skill_aliases",
+        "test_rank_jobs_orders_best_first",
+        "test_recency_fresh_is_one",
+        "test_recency_stale_penalized",
+        "test_remote_exact_match",
+        "test_remote_onsite_vs_remote_penalized",
+        "test_salary_target_above_range_is_excellent",
+        "test_salary_target_far_above_ceiling_low",
+        "test_score_match_invalid_weights_raises",
+        "test_strong_candidate_scores_high",
+        "test_weak_candidate_scores_low"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 167
+    },
+    {
+      "path": "backend/tests/test_notification_service.py",
+      "kind": "py",
+      "role": "Tests for notification_service \u2014 reminder creation and auto-generation.",
+      "exports": [
+        "test_auto_reminders_follow_up_application",
+        "test_auto_reminders_interview_upcoming",
+        "test_auto_reminders_no_follow_up_recent",
+        "test_auto_reminders_no_interview_far_away",
+        "test_auto_reminders_offer_deadline",
+        "test_auto_reminders_post_interview_follow_up",
+        "test_reminder_custom_fields",
+        "test_reminder_default_title",
+        "test_reminder_has_required_fields",
+        "test_reminder_unique_ids"
+      ],
+      "imports": [
+        "app.services.notification_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 134
+    },
+    {
+      "path": "backend/tests/test_salary_service.py",
+      "kind": "py",
+      "role": "Tests for salary_service \u2014 compensation creation and comparison.",
+      "exports": [
+        "test_compare_average",
+        "test_compare_empty",
+        "test_compare_multiple",
+        "test_compare_single",
+        "test_compensation_custom_fields",
+        "test_compensation_defaults",
+        "test_compensation_has_required_fields",
+        "test_compensation_total_calculated",
+        "test_compensation_unique_ids"
+      ],
+      "imports": [
+        "app.services.salary_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 98
+    },
+    {
+      "path": "backend/tests/test_templates_service.py",
+      "kind": "py",
+      "role": "Tests for templates service.",
+      "exports": [
+        "test_categories_dict",
+        "test_render_template_basic",
+        "test_render_template_extra_vars",
+        "test_render_template_missing_var",
+        "test_template_custom_fields",
+        "test_template_default_values",
+        "test_template_has_required_fields",
+        "test_template_unique_ids"
+      ],
+      "imports": [
+        "app.services.templates_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 103
+    },
+    {
+      "path": "backend/tests/test_timeline_service.py",
+      "kind": "py",
+      "role": "Tests for timeline_service \u2014 event creation and timeline building.",
+      "exports": [
+        "test_event_custom_fields",
+        "test_event_has_required_fields",
+        "test_event_unique_ids",
+        "test_timeline_ignores_other_job_interviews",
+        "test_timeline_includes_applied",
+        "test_timeline_includes_contacts",
+        "test_timeline_includes_created",
+        "test_timeline_includes_interviews",
+        "test_timeline_includes_manual_events",
+        "test_timeline_offer_status",
+        "test_timeline_sorted_reverse_chronological"
+      ],
+      "imports": [
+        "app.services.timeline_service"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 139
+    },
+    {
+      "path": "extension/background.js",
+      "kind": "js",
+      "role": "AutoAppli Background Service Worker",
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 107
+    },
+    {
+      "path": "extension/content.js",
+      "kind": "js",
+      "role": "AutoAppli Content Script",
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 300
+    },
+    {
+      "path": "extension/parsers/generic.js",
+      "kind": "js",
+      "role": "Generic fallback parser for unknown job boards.",
+      "exports": [
+        "canParse",
+        "parse"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 101
+    },
+    {
+      "path": "extension/parsers/greenhouse.js",
+      "kind": "js",
+      "role": "Greenhouse job board parser.",
+      "exports": [
+        "canParse",
+        "parse"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 64
+    },
+    {
+      "path": "extension/parsers/indeed.js",
+      "kind": "js",
+      "role": "Indeed job page parser.",
+      "exports": [
+        "canParse",
+        "parse"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 59
+    },
+    {
+      "path": "extension/parsers/lever.js",
+      "kind": "js",
+      "role": "Lever job board parser.",
+      "exports": [
+        "canParse",
+        "parse"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 68
+    },
+    {
+      "path": "extension/parsers/linkedin.js",
+      "kind": "js",
+      "role": "LinkedIn job page parser.",
+      "exports": [
+        "canParse",
+        "parse"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 75
+    },
+    {
+      "path": "extension/popup.js",
+      "kind": "js",
+      "role": "AutoAppli Popup Script",
+      "exports": [],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 147
+    },
+    {
+      "path": "frontend/eslint.config.mjs",
+      "kind": "js",
+      "role": null,
+      "exports": [
+        "eslintConfig (default)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 19
+    },
+    {
+      "path": "frontend/next-env.d.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [],
+      "imports": [
+        "./.next/types/routes.d.ts"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 7
+    },
+    {
+      "path": "frontend/next.config.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "nextConfig (default)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 23
+    },
+    {
+      "path": "frontend/postcss.config.mjs",
+      "kind": "js",
+      "role": null,
+      "exports": [
+        "config (default)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 8
+    },
+    {
+      "path": "frontend/src/app/(auth)/auth/update-password/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "UpdatePasswordPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/lib/supabase/client"
+      ],
+      "next_route": "PAGE /auth/update-password",
+      "api_routes": [],
+      "line_count": 107
+    },
+    {
+      "path": "frontend/src/app/(auth)/forgot-password/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ForgotPasswordPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/lib/supabase/client"
+      ],
+      "next_route": "PAGE /forgot-password",
+      "api_routes": [],
+      "line_count": 84
+    },
+    {
+      "path": "frontend/src/app/(auth)/login/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "LoginPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/lib/demo-mode",
+        "@/lib/supabase/client"
+      ],
+      "next_route": "PAGE /login",
+      "api_routes": [],
+      "line_count": 113
+    },
+    {
+      "path": "frontend/src/app/(auth)/signup/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "SignupPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/lib/demo-mode",
+        "@/lib/supabase/client"
+      ],
+      "next_route": "PAGE /signup",
+      "api_routes": [],
+      "line_count": 121
+    },
+    {
+      "path": "frontend/src/app/analytics/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "AnalyticsPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/card",
+        "@/hooks/use-jobs",
+        "@/types"
+      ],
+      "next_route": "PAGE /analytics",
+      "api_routes": [],
+      "line_count": 851
+    },
+    {
+      "path": "frontend/src/app/api/ai/claude.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "generateText"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 42
+    },
+    {
+      "path": "frontend/src/app/api/ai/cover-letter/route.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "POST"
+      ],
+      "imports": [
+        "../claude"
+      ],
+      "next_route": "API /api/ai/cover-letter",
+      "api_routes": [],
+      "line_count": 66
+    },
+    {
+      "path": "frontend/src/app/api/ai/interview-prep/route.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "POST"
+      ],
+      "imports": [
+        "../claude"
+      ],
+      "next_route": "API /api/ai/interview-prep",
+      "api_routes": [],
+      "line_count": 64
+    },
+    {
+      "path": "frontend/src/app/api/ai/outreach/route.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "POST"
+      ],
+      "imports": [
+        "../claude"
+      ],
+      "next_route": "API /api/ai/outreach",
+      "api_routes": [],
+      "line_count": 81
+    },
+    {
+      "path": "frontend/src/app/api/ai/review-resume/route.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "POST"
+      ],
+      "imports": [
+        "../claude"
+      ],
+      "next_route": "API /api/ai/review-resume",
+      "api_routes": [],
+      "line_count": 73
+    },
+    {
+      "path": "frontend/src/app/api/ai/tailor-resume/route.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "POST"
+      ],
+      "imports": [
+        "../claude"
+      ],
+      "next_route": "API /api/ai/tailor-resume",
+      "api_routes": [],
+      "line_count": 47
+    },
+    {
+      "path": "frontend/src/app/api/ai/thank-you/route.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "POST"
+      ],
+      "imports": [
+        "../claude"
+      ],
+      "next_route": "API /api/ai/thank-you",
+      "api_routes": [],
+      "line_count": 57
+    },
+    {
+      "path": "frontend/src/app/api/health/route.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "GET"
+      ],
+      "imports": [],
+      "next_route": "API /api/health",
+      "api_routes": [],
+      "line_count": 15
+    },
+    {
+      "path": "frontend/src/app/auth/callback/route.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "GET"
+      ],
+      "imports": [],
+      "next_route": "API /auth/callback",
+      "api_routes": [],
+      "line_count": 51
+    },
+    {
+      "path": "frontend/src/app/automation/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "AutomationLayout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /automation",
+      "api_routes": [],
+      "line_count": 10
+    },
+    {
+      "path": "frontend/src/app/automation/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "AutomationPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": "PAGE /automation",
+      "api_routes": [],
+      "line_count": 530
+    },
+    {
+      "path": "frontend/src/app/contacts/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ContactsLayout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /contacts",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/contacts/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ContactsPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": "PAGE /contacts",
+      "api_routes": [],
+      "line_count": 302
+    },
+    {
+      "path": "frontend/src/app/cover-letter/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "CoverLetterLayout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /cover-letter",
+      "api_routes": [],
+      "line_count": 10
+    },
+    {
+      "path": "frontend/src/app/cover-letter/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "CoverLetterPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/select",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/lib/supabase/client",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": "PAGE /cover-letter",
+      "api_routes": [],
+      "line_count": 349
+    },
+    {
+      "path": "frontend/src/app/dashboard/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DashboardLayout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /dashboard",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/dashboard/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DashboardPage (default)"
+      ],
+      "imports": [
+        "@/components/dashboard/demo-mode-banner",
+        "@/components/dashboard/insights-cards",
+        "@/components/dashboard/kanban-board",
+        "@/components/dashboard/onboarding-tour",
+        "@/components/dashboard/pipeline-stats",
+        "@/components/dashboard/recommended-jobs",
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/dialog",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/components/ui/textarea",
+        "@/hooks/use-jobs",
+        "@/lib/api",
+        "@/lib/export-jobs-csv",
+        "@/lib/filter-jobs",
+        "@/lib/job-url",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": "PAGE /dashboard",
+      "api_routes": [],
+      "line_count": 459
+    },
+    {
+      "path": "frontend/src/app/error.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "GlobalError (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/lib/utils"
+      ],
+      "next_route": "ERROR /",
+      "api_routes": [],
+      "line_count": 44
+    },
+    {
+      "path": "frontend/src/app/export/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ExportLayout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /export",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/export/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ExportPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/hooks/use-jobs",
+        "@/types"
+      ],
+      "next_route": "PAGE /export",
+      "api_routes": [],
+      "line_count": 576
+    },
+    {
+      "path": "frontend/src/app/interviews/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Layout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /interviews",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/interviews/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "InterviewsPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": "PAGE /interviews",
+      "api_routes": [],
+      "line_count": 438
+    },
+    {
+      "path": "frontend/src/app/jobs/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Layout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /jobs",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/jobs/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "JobsPage (default)"
+      ],
+      "imports": [
+        "@/components/jobs/job-listing-card",
+        "@/components/jobs/job-search-form",
+        "@/components/jobs/search-accuracy/apply-filters",
+        "@/components/jobs/search-accuracy/fit-badge",
+        "@/components/jobs/search-accuracy/smart-filters",
+        "@/lib/api",
+        "@/lib/demo-data",
+        "@/lib/job-search",
+        "@/lib/match",
+        "@/lib/supabase/client",
+        "@/types"
+      ],
+      "next_route": "PAGE /jobs",
+      "api_routes": [],
+      "line_count": 236
+    },
+    {
+      "path": "frontend/src/app/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "RootLayout (default)"
+      ],
+      "imports": [
+        "./globals.css",
+        "@/lib/site"
+      ],
+      "next_route": "LAYOUT /",
+      "api_routes": [],
+      "line_count": 87
+    },
+    {
+      "path": "frontend/src/app/not-found.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "NotFound (default)"
+      ],
+      "imports": [],
+      "next_route": "404 /",
+      "api_routes": [],
+      "line_count": 20
+    },
+    {
+      "path": "frontend/src/app/notifications/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "NotificationsLayout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /notifications",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/notifications/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "NotificationsPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": "PAGE /notifications",
+      "api_routes": [],
+      "line_count": 346
+    },
+    {
+      "path": "frontend/src/app/opengraph-image.tsx",
+      "kind": "ts",
+      "role": "Dynamic Open Graph image for the marketing landing page.",
+      "exports": [
+        "alt",
+        "contentType",
+        "Image (default)",
+        "size"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 190
+    },
+    {
+      "path": "frontend/src/app/outreach/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Layout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /outreach",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/outreach/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "OutreachPage (default)"
+      ],
+      "imports": [
+        "@/components/outreach/message-preview",
+        "@/components/outreach/outreach-form",
+        "@/components/ui/button",
+        "@/lib/api",
+        "@/lib/demo-data",
+        "@/lib/supabase/client",
+        "@/lib/tracker-handoff",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": "PAGE /outreach",
+      "api_routes": [],
+      "line_count": 238
+    },
+    {
+      "path": "frontend/src/app/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Home (default)"
+      ],
+      "imports": [
+        "@/components/marketing/landing-page",
+        "@/lib/supabase/server"
+      ],
+      "next_route": "PAGE /",
+      "api_routes": [],
+      "line_count": 20
+    },
+    {
+      "path": "frontend/src/app/privacy/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "PrivacyPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/card"
+      ],
+      "next_route": "PAGE /privacy",
+      "api_routes": [],
+      "line_count": 57
+    },
+    {
+      "path": "frontend/src/app/resume/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Layout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /resume",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/resume/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ResumePage (default)"
+      ],
+      "imports": [
+        "@/components/resume/eval-score-card",
+        "@/components/resume/jd-input",
+        "@/components/resume/resume-preview",
+        "@/components/resume/resume-review-panel",
+        "@/components/resume/resume-upload",
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/lib/demo-data",
+        "@/lib/tracker-handoff",
+        "@/types"
+      ],
+      "next_route": "PAGE /resume",
+      "api_routes": [],
+      "line_count": 363
+    },
+    {
+      "path": "frontend/src/app/resume-templates/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Layout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /resume-templates",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/resume-templates/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ResumeTemplatesPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/badge",
+        "@/components/ui/button",
+        "@/components/ui/card"
+      ],
+      "next_route": "PAGE /resume-templates",
+      "api_routes": [],
+      "line_count": 226
+    },
+    {
+      "path": "frontend/src/app/robots.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "robots (default)"
+      ],
+      "imports": [
+        "@/lib/site"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 11
+    },
+    {
+      "path": "frontend/src/app/salary/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "SalaryLayout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /salary",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/salary/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "SalaryPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": "PAGE /salary",
+      "api_routes": [],
+      "line_count": 409
+    },
+    {
+      "path": "frontend/src/app/settings/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Layout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /settings",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/settings/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "SettingsPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": "PAGE /settings",
+      "api_routes": [],
+      "line_count": 113
+    },
+    {
+      "path": "frontend/src/app/sitemap.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "sitemap (default)"
+      ],
+      "imports": [
+        "@/lib/site"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 20
+    },
+    {
+      "path": "frontend/src/app/templates/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "TemplatesLayout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /templates",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/templates/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "TemplatesPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": "PAGE /templates",
+      "api_routes": [],
+      "line_count": 461
+    },
+    {
+      "path": "frontend/src/app/terms/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "TermsPage (default)"
+      ],
+      "imports": [
+        "@/components/ui/card"
+      ],
+      "next_route": "PAGE /terms",
+      "api_routes": [],
+      "line_count": 58
+    },
+    {
+      "path": "frontend/src/app/timeline/layout.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "TimelineLayout (default)"
+      ],
+      "imports": [
+        "@/components/layout/app-shell"
+      ],
+      "next_route": "LAYOUT /timeline",
+      "api_routes": [],
+      "line_count": 6
+    },
+    {
+      "path": "frontend/src/app/timeline/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "TimelinePage (default)"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": "PAGE /timeline",
+      "api_routes": [],
+      "line_count": 227
+    },
+    {
+      "path": "frontend/src/components/dashboard/demo-mode-banner.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DemoModeBanner"
+      ],
+      "imports": [
+        "@/lib/demo-mode"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 70
+    },
+    {
+      "path": "frontend/src/components/dashboard/insights-cards.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "InsightsCards"
+      ],
+      "imports": [
+        "@/components/ui/card",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 179
+    },
+    {
+      "path": "frontend/src/components/dashboard/job-card.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "JobCard"
+      ],
+      "imports": [
+        "@/components/ui/badge",
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/dialog",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/lib/job-url",
+        "@/lib/tracker-handoff",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 582
+    },
+    {
+      "path": "frontend/src/components/dashboard/kanban-board.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "KanbanBoard"
+      ],
+      "imports": [
+        "./kanban-column",
+        "@/components/ui/skeleton",
+        "@/hooks/use-jobs",
+        "@/hooks/use-match-scores",
+        "@/lib/filter-jobs",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 146
+    },
+    {
+      "path": "frontend/src/components/dashboard/kanban-column.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "KanbanColumn"
+      ],
+      "imports": [
+        "./job-card",
+        "@/components/ui/badge",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 70
+    },
+    {
+      "path": "frontend/src/components/dashboard/onboarding-tour.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "OnboardingTour"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 204
+    },
+    {
+      "path": "frontend/src/components/dashboard/pipeline-stats.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "PipelineStats"
+      ],
+      "imports": [
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 104
+    },
+    {
+      "path": "frontend/src/components/dashboard/recommended-jobs.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "PublicJobCandidate (type)",
+        "RecommendedJobs (default)",
+        "RecommendedJobsProps (type)"
+      ],
+      "imports": [
+        "@/lib/supabase/client"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 285
+    },
+    {
+      "path": "frontend/src/components/jobs/job-listing-card.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "JobListingCard"
+      ],
+      "imports": [
+        "@/components/ui/badge",
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 217
+    },
+    {
+      "path": "frontend/src/components/jobs/job-search-form.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "JobSearchForm"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/input",
+        "@/lib/api",
+        "@/lib/job-search",
+        "@/lib/supabase/client",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 170
+    },
+    {
+      "path": "frontend/src/components/jobs/search-accuracy/apply-filters.ts",
+      "kind": "ts",
+      "role": "Pure filter function that takes the smart-filter state + ranked jobs and",
+      "exports": [
+        "applySmartFilters",
+        "RankedJob (type)"
+      ],
+      "imports": [
+        "@/lib/match",
+        "@/lib/match/saved-searches"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 77
+    },
+    {
+      "path": "frontend/src/components/jobs/search-accuracy/fit-badge.tsx",
+      "kind": "ts",
+      "role": "FitBadge \u2014 a compact score chip that reveals the full breakdown on hover.",
+      "exports": [
+        "FitBadge (default)",
+        "FitBadgeProps (type)"
+      ],
+      "imports": [
+        "@/lib/match"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 107
+    },
+    {
+      "path": "frontend/src/components/jobs/search-accuracy/index.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "applySmartFilters",
+        "FitBadge",
+        "SmartFilters"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 7
+    },
+    {
+      "path": "frontend/src/components/jobs/search-accuracy/smart-filters.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "SmartFilters (default)",
+        "SmartFiltersProps (type)",
+        "SmartFilterState (type)"
+      ],
+      "imports": [
+        "@/lib/match",
+        "@/lib/match/saved-searches"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 484
+    },
+    {
+      "path": "frontend/src/components/layout/app-shell.tsx",
+      "kind": "ts",
+      "role": "Authenticated app chrome: dark sidebar, header, and a main area that respects global theme.",
+      "exports": [
+        "AppShell"
+      ],
+      "imports": [
+        "@/components/layout/header",
+        "@/components/layout/sidebar"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 20
+    },
+    {
+      "path": "frontend/src/components/layout/header.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Header"
+      ],
+      "imports": [
+        "@/components/ui/avatar",
+        "@/components/ui/dropdown-menu",
+        "@/hooks/use-api-health",
+        "@/hooks/use-user",
+        "@/lib/supabase/client",
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 88
+    },
+    {
+      "path": "frontend/src/components/layout/sidebar.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Sidebar"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 170
+    },
+    {
+      "path": "frontend/src/components/marketing/landing-page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "LandingPage"
+      ],
+      "imports": [
+        "@/components/marketing/try-demo-button"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 633
+    },
+    {
+      "path": "frontend/src/components/marketing/try-demo-button.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "TryDemoButton"
+      ],
+      "imports": [
+        "@/lib/demo-mode"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 53
+    },
+    {
+      "path": "frontend/src/components/outreach/message-preview.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "MessagePreview"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 35
+    },
+    {
+      "path": "frontend/src/components/outreach/outreach-form.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "OutreachForm"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/components/ui/textarea",
+        "@/lib/api",
+        "@/lib/tracker-handoff",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 93
+    },
+    {
+      "path": "frontend/src/components/resume/eval-score-card.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ChangeDelta (type)",
+        "EvalResult (type)",
+        "EvalScoreCard",
+        "HallucinationCheck (type)",
+        "KeywordCoverage (type)"
+      ],
+      "imports": [
+        "@/components/ui/badge",
+        "@/components/ui/card"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 269
+    },
+    {
+      "path": "frontend/src/components/resume/jd-input.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "JdInput"
+      ],
+      "imports": [
+        "@/components/ui/card",
+        "@/components/ui/textarea"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 16
+    },
+    {
+      "path": "frontend/src/components/resume/resume-formatted-view.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ResumeFormattedView"
+      ],
+      "imports": [
+        "@/lib/parse-resume-text",
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 114
+    },
+    {
+      "path": "frontend/src/components/resume/resume-preview.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ResumePreview"
+      ],
+      "imports": [
+        "@/components/resume/resume-formatted-view",
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/lib/resume-export-html",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 229
+    },
+    {
+      "path": "frontend/src/components/resume/resume-review-panel.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ResumeReviewPanel"
+      ],
+      "imports": [
+        "@/components/ui/badge",
+        "@/components/ui/button",
+        "@/components/ui/card",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 88
+    },
+    {
+      "path": "frontend/src/components/resume/resume-upload.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ResumeUpload"
+      ],
+      "imports": [
+        "@/components/ui/card",
+        "@/lib/api",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 54
+    },
+    {
+      "path": "frontend/src/components/ui/avatar.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Avatar",
+        "AvatarBadge",
+        "AvatarFallback",
+        "AvatarGroup",
+        "AvatarGroupCount",
+        "AvatarImage"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 110
+    },
+    {
+      "path": "frontend/src/components/ui/badge.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Badge",
+        "badgeVariants"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 53
+    },
+    {
+      "path": "frontend/src/components/ui/button.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Button",
+        "buttonVariants"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 61
+    },
+    {
+      "path": "frontend/src/components/ui/card.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Card",
+        "CardAction",
+        "CardContent",
+        "CardDescription",
+        "CardFooter",
+        "CardHeader",
+        "CardTitle"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 104
+    },
+    {
+      "path": "frontend/src/components/ui/dialog.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Dialog",
+        "DialogClose",
+        "DialogContent",
+        "DialogDescription",
+        "DialogFooter",
+        "DialogHeader",
+        "DialogOverlay",
+        "DialogPortal",
+        "DialogTitle",
+        "DialogTrigger"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 161
+    },
+    {
+      "path": "frontend/src/components/ui/dropdown-menu.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DropdownMenu",
+        "DropdownMenuCheckboxItem",
+        "DropdownMenuContent",
+        "DropdownMenuGroup",
+        "DropdownMenuItem",
+        "DropdownMenuLabel",
+        "DropdownMenuPortal",
+        "DropdownMenuRadioGroup",
+        "DropdownMenuRadioItem",
+        "DropdownMenuSeparator",
+        "DropdownMenuShortcut",
+        "DropdownMenuSub",
+        "DropdownMenuSubContent",
+        "DropdownMenuSubTrigger",
+        "DropdownMenuTrigger"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 269
+    },
+    {
+      "path": "frontend/src/components/ui/input.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Input"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 21
+    },
+    {
+      "path": "frontend/src/components/ui/label.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Label"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 21
+    },
+    {
+      "path": "frontend/src/components/ui/select.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Select",
+        "SelectContent",
+        "SelectGroup",
+        "SelectItem",
+        "SelectLabel",
+        "SelectScrollDownButton",
+        "SelectScrollUpButton",
+        "SelectSeparator",
+        "SelectTrigger",
+        "SelectValue"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 202
+    },
+    {
+      "path": "frontend/src/components/ui/separator.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Separator"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 26
+    },
+    {
+      "path": "frontend/src/components/ui/sheet.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Sheet",
+        "SheetClose",
+        "SheetContent",
+        "SheetDescription",
+        "SheetFooter",
+        "SheetHeader",
+        "SheetTitle",
+        "SheetTrigger"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 139
+    },
+    {
+      "path": "frontend/src/components/ui/skeleton.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Skeleton"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 14
+    },
+    {
+      "path": "frontend/src/components/ui/sonner.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Toaster"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 50
+    },
+    {
+      "path": "frontend/src/components/ui/tabs.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Tabs",
+        "TabsContent",
+        "TabsList",
+        "tabsListVariants",
+        "TabsTrigger"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 83
+    },
+    {
+      "path": "frontend/src/components/ui/textarea.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "Textarea"
+      ],
+      "imports": [
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 19
+    },
+    {
+      "path": "frontend/src/hooks/use-api-health.ts",
+      "kind": "ts",
+      "role": "Polls the FastAPI `/health` endpoint when `NEXT_PUBLIC_API_URL` is set.",
+      "exports": [
+        "ApiHealthState (type)",
+        "useApiHealth"
+      ],
+      "imports": [
+        "@/lib/api"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 43
+    },
+    {
+      "path": "frontend/src/hooks/use-jobs.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "useJobs"
+      ],
+      "imports": [
+        "@/lib/api",
+        "@/lib/demo-data",
+        "@/lib/kanban-reorder",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 188
+    },
+    {
+      "path": "frontend/src/hooks/use-match-scores.ts",
+      "kind": "ts",
+      "role": "Fetches match scores for all jobs against the user's primary resume.",
+      "exports": [
+        "useMatchScores"
+      ],
+      "imports": [
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 36
+    },
+    {
+      "path": "frontend/src/hooks/use-user.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "useUser"
+      ],
+      "imports": [
+        "@/lib/supabase/client"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 42
+    },
+    {
+      "path": "frontend/src/lib/api.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "apiDelete",
+        "apiGet",
+        "apiPatch",
+        "apiPost",
+        "apiPostFormData",
+        "apiPut",
+        "checkApiHealth",
+        "isJobsApiConfigured",
+        "isResumeApiConfigured"
+      ],
+      "imports": [
+        "@/lib/demo-data",
+        "@/lib/demo-mode",
+        "@/lib/job-url",
+        "@/lib/kanban-reorder",
+        "@/lib/supabase/client",
+        "@/lib/supabase/jobs",
+        "@/lib/supabase/search",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 1524
+    },
+    {
+      "path": "frontend/src/lib/demo-data.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "computeDemoExportReport",
+        "evaluateDemoRules",
+        "generateDemoCoverLetter",
+        "getDemoAutomationRules",
+        "getDemoCompensations",
+        "getDemoContacts",
+        "getDemoCoverLetters",
+        "getDemoGeneratedDocuments",
+        "getDemoInterviewNotes",
+        "getDemoJobs",
+        "getDemoJobSearchResults",
+        "getDemoOutreachMessages",
+        "getDemoProfile",
+        "getDemoReminders",
+        "getDemoResumes",
+        "getDemoTemplates",
+        "getDemoTimelineEvents",
+        "loadSampleResumesForBuilder",
+        "pushDemoAutomationRule",
+        "pushDemoCompensation",
+        "pushDemoContact",
+        "pushDemoCoverLetter",
+        "pushDemoGeneratedDocument",
+        "pushDemoInterviewNote",
+        "pushDemoOutreachMessage",
+        "pushDemoReminder",
+        "pushDemoTemplate",
+        "pushDemoTimelineEvent",
+        "removeDemoAutomationRule",
+        "removeDemoCompensation",
+        "removeDemoContact",
+        "removeDemoCoverLetter",
+        "removeDemoGeneratedDocument",
+        "removeDemoInterviewNote",
+        "removeDemoOutreachMessage",
+        "removeDemoReminder",
+        "removeDemoTemplate",
+        "removeDemoTimelineEvent",
+        "SAMPLE_JOB_DESCRIPTION_FOR_BUILDER",
+        "setDemoInterviewNotes",
+        "setDemoJobs",
+        "setDemoProfile",
+        "setDemoResumes",
+        "updateDemoAutomationRule",
+        "updateDemoCompensation",
+        "updateDemoContact",
+        "updateDemoReminder",
+        "updateDemoTemplate"
+      ],
+      "imports": [
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 1255
+    },
+    {
+      "path": "frontend/src/lib/demo-mode.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "disableDemoMode",
+        "enableDemoMode",
+        "isDemoMode"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 47
+    },
+    {
+      "path": "frontend/src/lib/export-jobs-csv.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "downloadJobsCsv",
+        "jobsToCsv"
+      ],
+      "imports": [
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 80
+    },
+    {
+      "path": "frontend/src/lib/filter-jobs.ts",
+      "kind": "ts",
+      "role": "Case-insensitive match on title, company, notes, description, source.",
+      "exports": [
+        "filterJobsByQuery"
+      ],
+      "imports": [
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 15
+    },
+    {
+      "path": "frontend/src/lib/job-search.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "JobSearchApiResponse (type)",
+        "normalizeJobSearchHistory",
+        "normalizeJobSearchResponse"
+      ],
+      "imports": [
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 63
+    },
+    {
+      "path": "frontend/src/lib/job-url.ts",
+      "kind": "ts",
+      "role": "Normalize user-entered job posting URLs so links work without requiring a scheme in the input.",
+      "exports": [
+        "normalizeJobUrl"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 14
+    },
+    {
+      "path": "frontend/src/lib/kanban-reorder.ts",
+      "kind": "ts",
+      "role": "Column order used for sorting the flat job list (matches Kanban left \u2192 right).",
+      "exports": [
+        "KANBAN_COLUMN_ORDER",
+        "reorderJobsWithinStatus",
+        "sortJobsKanbanOrder"
+      ],
+      "imports": [
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 48
+    },
+    {
+      "path": "frontend/src/lib/match/__tests__/score.test.ts",
+      "kind": "ts",
+      "role": "Unit tests for match scoring v2.",
+      "exports": [],
+      "imports": [
+        "../extract",
+        "../index",
+        "../resume-parser",
+        "../taxonomy",
+        "@/components/jobs/search-accuracy/apply-filters"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 396
+    },
+    {
+      "path": "frontend/src/lib/match/adapters.ts",
+      "kind": "ts",
+      "role": "Adapters from AutoAppli's existing domain types to the match-scoring",
+      "exports": [
+        "JobLike (type)",
+        "normalizeSkill",
+        "ProfileLike (type)",
+        "toCandidateProfile",
+        "toJobProfile"
+      ],
+      "imports": [
+        "./extract",
+        "./taxonomy",
+        "./types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 133
+    },
+    {
+      "path": "frontend/src/lib/match/extract.ts",
+      "kind": "ts",
+      "role": "Text extraction helpers for match scoring v2.",
+      "exports": [
+        "detectRemoteType",
+        "extractSkills",
+        "extractYearsOfExperience",
+        "normalizeSkillList",
+        "normalizeTitle",
+        "parseSalary",
+        "resolveSeniority",
+        "titleTokens"
+      ],
+      "imports": [
+        "./taxonomy"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 176
+    },
+    {
+      "path": "frontend/src/lib/match/index.ts",
+      "kind": "ts",
+      "role": "Public API for match scoring v2.",
+      "exports": [
+        "CandidateProfile",
+        "CanonicalSkill",
+        "DEFAULT_WEIGHTS",
+        "detectRemoteType",
+        "detectSeniority",
+        "extractSkills",
+        "extractYearsOfExperience",
+        "getSkill",
+        "groupByCategory",
+        "JobLike",
+        "JobProfile",
+        "MatchResult",
+        "normalizeSkill",
+        "normalizeSkillList",
+        "normalizeTitle",
+        "parseSalary",
+        "ProfileLike",
+        "rankJobs",
+        "resolveSeniority",
+        "scoreMatch",
+        "ScoringWeights",
+        "SENIORITY_RANK",
+        "SeniorityLevel",
+        "SignalContribution",
+        "SkillCategory",
+        "skillLabel",
+        "SKILLS",
+        "titleTokens",
+        "toCandidateProfile",
+        "toJobProfile",
+        "weightsValid"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 50
+    },
+    {
+      "path": "frontend/src/lib/match/resume-parser.ts",
+      "kind": "ts",
+      "role": "Upgraded resume parser that feeds the match scorer.",
+      "exports": [
+        "ParsedResume (type)",
+        "parseResume"
+      ],
+      "imports": [
+        "./extract",
+        "./taxonomy"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 143
+    },
+    {
+      "path": "frontend/src/lib/match/saved-searches.ts",
+      "kind": "ts",
+      "role": "Saved-search persistence layer.",
+      "exports": [
+        "deleteSavedSearch",
+        "getSavedSearch",
+        "listSavedSearches",
+        "SavedSearch (type)",
+        "SavedSearchFilters (type)",
+        "upsertSavedSearch"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 106
+    },
+    {
+      "path": "frontend/src/lib/match/score.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "rankJobs",
+        "scoreMatch"
+      ],
+      "imports": [
+        "./extract",
+        "./taxonomy",
+        "./types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 297
+    },
+    {
+      "path": "frontend/src/lib/match/taxonomy.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "CanonicalSkill (type)",
+        "detectSeniority",
+        "getSkill",
+        "groupByCategory",
+        "normalizeSkill",
+        "SENIORITY_RANK",
+        "SeniorityLevel (type)",
+        "SkillCategory (type)",
+        "skillLabel",
+        "SKILLS"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 252
+    },
+    {
+      "path": "frontend/src/lib/match/types.ts",
+      "kind": "ts",
+      "role": "Shared types for the match-scoring v2 pipeline.",
+      "exports": [
+        "CandidateProfile (type)",
+        "DEFAULT_WEIGHTS",
+        "JobProfile (type)",
+        "MatchResult (type)",
+        "ScoringWeights (type)",
+        "SignalContribution (type)",
+        "weightsValid"
+      ],
+      "imports": [
+        "./taxonomy"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 112
+    },
+    {
+      "path": "frontend/src/lib/parse-resume-text.ts",
+      "kind": "ts",
+      "role": "Parse tailored resume plain text into blocks for on-screen layout.",
+      "exports": [
+        "parseResumePlainText",
+        "ResumeBlock (type)",
+        "stripInlineMarkdown"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 128
+    },
+    {
+      "path": "frontend/src/lib/resume-export-html.ts",
+      "kind": "ts",
+      "role": "Standalone HTML document for download or print-from-new-window.",
+      "exports": [
+        "buildResumeHtmlDocument",
+        "downloadResumeHtml",
+        "openResumePrintWindow"
+      ],
+      "imports": [
+        "@/lib/parse-resume-text"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 107
+    },
+    {
+      "path": "frontend/src/lib/site.ts",
+      "kind": "ts",
+      "role": "Canonical site URL for metadata, sitemap, and robots.",
+      "exports": [
+        "getSiteUrl"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 13
+    },
+    {
+      "path": "frontend/src/lib/supabase/client.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "createClient",
+        "isSupabaseConfigured"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 16
+    },
+    {
+      "path": "frontend/src/lib/supabase/jobs.ts",
+      "kind": "ts",
+      "role": "Direct Supabase client operations for the `jobs` table.",
+      "exports": [
+        "createJob",
+        "CreateJobInput (type)",
+        "deleteJob",
+        "fetchJob",
+        "fetchJobs",
+        "reorderJobs",
+        "updateJob"
+      ],
+      "imports": [
+        "./client",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 197
+    },
+    {
+      "path": "frontend/src/lib/supabase/search.ts",
+      "kind": "ts",
+      "role": "Direct Supabase client operations for the `job_listings` table (search).",
+      "exports": [
+        "fetchSearchHistory",
+        "fetchSearchResults",
+        "searchListings"
+      ],
+      "imports": [
+        "./client",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 176
+    },
+    {
+      "path": "frontend/src/lib/supabase/server.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "createServerSupabaseClient"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 22
+    },
+    {
+      "path": "frontend/src/lib/tracker-handoff.ts",
+      "kind": "ts",
+      "role": "One-shot handoff from the job tracker (Kanban) to Resume or Outreach pages.",
+      "exports": [
+        "consumeOutreachHandoff",
+        "consumeResumeHandoff",
+        "outreachHandoffFromJob",
+        "storeOutreachHandoffFromJob",
+        "storeResumeHandoffFromJob",
+        "tailoringTextFromJob",
+        "TrackerOutreachHandoff (type)",
+        "TrackerResumeHandoff (type)"
+      ],
+      "imports": [
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 117
+    },
+    {
+      "path": "frontend/src/lib/utils.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "cn"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 7
+    },
+    {
+      "path": "frontend/src/middleware.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "config",
+        "middleware"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 59
+    },
+    {
+      "path": "frontend/src/types/index.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "AnalyticsConversions (type)",
+        "AnalyticsData (type)",
+        "AnalyticsDurations (type)",
+        "AnalyticsSummary (type)",
+        "AutomationAction (type)",
+        "AutomationRule (type)",
+        "AutomationSuggestion (type)",
+        "AutomationTrigger (type)",
+        "ChangeDelta (type)",
+        "Compensation (type)",
+        "CompensationComparison (type)",
+        "Contact (type)",
+        "ContactInteraction (type)",
+        "ContactRelationship (type)",
+        "CoverLetterTone (type)",
+        "CRMContact (type)",
+        "DocTemplate (type)",
+        "EvalResult (type)",
+        "ExperienceLevel (type)",
+        "FunnelStage (type)",
+        "GeneratedCoverLetter (type)",
+        "GeneratedDocument (type)",
+        "HallucinationCheck (type)",
+        "InterviewNote (type)",
+        "InterviewPrepMaterial (type)",
+        "Job (type)",
+        "JobSearchHistoryItem (type)",
+        "JobSearchResult (type)",
+        "JobStatus (type)",
+        "JobType (type)",
+        "KeywordCoverage (type)",
+        "MatchScore (type)",
+        "MatchScoresResponse (type)",
+        "OutreachMessage (type)",
+        "OutreachMessagePurpose (type)",
+        "Reminder (type)",
+        "ReminderType (type)",
+        "RemoteType (type)",
+        "Resume (type)",
+        "ResumeReview (type)",
+        "SavedTailoredDocument (type)",
+        "SourceBreakdown (type)",
+        "TemplateCategory (type)",
+        "TemplateType (type)",
+        "ThankYouResponse (type)",
+        "TimelineEvent (type)",
+        "TimelineEventType (type)",
+        "TopCompany (type)",
+        "UserProfile (type)",
+        "WeeklyActivity (type)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 427
+    }
+  ]
+}
