@@ -1,7 +1,14 @@
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { CommandPalette } from "@/components/layout/command-palette";
+import { ShortcutsHelp } from "@/components/layout/shortcuts-help";
 
-/** Authenticated app chrome: dark sidebar, header, and a main area that respects global theme. */
+/**
+ * Authenticated app chrome: dark sidebar, header, and a main area that
+ * respects the global theme. Also mounts global overlays — the ⌘K command
+ * palette and the `?` keyboard-shortcut help — so every authenticated
+ * page gets them "for free" without touching each page.
+ */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -14,6 +21,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+      {/* Global overlays — both self-open on their hotkeys. */}
+      <CommandPalette />
+      <ShortcutsHelp />
     </div>
   );
 }

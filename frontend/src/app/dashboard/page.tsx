@@ -5,6 +5,7 @@ import { InsightsCards } from "@/components/dashboard/insights-cards";
 import { PipelineStats } from "@/components/dashboard/pipeline-stats";
 import { DemoModeBanner } from "@/components/dashboard/demo-mode-banner";
 import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
+import { WeeklyDigest } from "@/components/dashboard/weekly-digest";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -19,12 +20,26 @@ import { useJobs } from "@/hooks/use-jobs";
 import type { Job } from "@/types";
 import { ChevronDown, ChevronUp, Download, LayoutGrid, ListFilter, Plus, Search, Send, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
+  // useSearchParams triggers a CSR bailout during static prerender —
+  // wrapping the real content in Suspense lets Next.js build the page
+  // without erroring, and the actual params resolve on the client.
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const { jobs, mutate, isLoading } = useJobs();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [boardSearch, setBoardSearch] = useState("");
@@ -33,6 +48,31 @@ export default function DashboardPage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+
+  // Prefill values when reaching /dashboard?add=1&url=...&title=...&company=...
+  // (Used by the command palette and /bookmarklet. Empty when absent.)
+  const prefill = useMemo(
+    () => ({
+      url: searchParams?.get("url") ?? "",
+      title: searchParams?.get("title") ?? "",
+      company: searchParams?.get("company") ?? "",
+      description: searchParams?.get("description") ?? "",
+    }),
+    [searchParams]
+  );
+
+  // Auto-open the Add Job dialog on ?add=1, then strip the params so the
+  // dialog doesn't reappear on a navigation/refresh.
+  useEffect(() => {
+    if (searchParams?.get("add") === "1") {
+      setOpen(true);
+      const url = new URL(window.location.href);
+      ["add", "url", "title", "company", "description"].forEach((k) => url.searchParams.delete(k));
+      router.replace(url.pathname + (url.search ? url.search : ""));
+    }
+    // Only run on initial render — searchParams change when we replace above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredJobs = useMemo(
     () => filterJobsByQuery(jobs, boardSearch),
@@ -148,11 +188,11 @@ export default function DashboardPage() {
               <form onSubmit={handleCreate} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
                 <div className="space-y-2">
                   <Label className="text-zinc-200">Company *</Label>
-                  <Input name="company" required className="bg-zinc-800 border-zinc-700 text-white" />
+                  <Input name="company" required defaultValue={prefill.company} className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-200">Job Title *</Label>
-                  <Input name="title" required className="bg-zinc-800 border-zinc-700 text-white" />
+                  <Input name="title" required defaultValue={prefill.title} className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-200">Job posting URL</Label>
@@ -161,6 +201,7 @@ export default function DashboardPage() {
                     type="text"
                     inputMode="url"
                     autoComplete="url"
+                    defaultValue={prefill.url}
                     placeholder="e.g. careers.acme.com/roles/123 or https://…"
                     className="bg-zinc-800 border-zinc-700 text-white"
                   />
@@ -258,7 +299,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-zinc-200">Job Description</Label>
-                  <Textarea name="description" rows={3} className="bg-zinc-800 border-zinc-700 text-white" />
+                  <Textarea name="description" rows={3} defaultValue={prefill.description} className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
 
                 {/* ── Advanced fields toggle ─────────── */}
@@ -385,6 +426,7 @@ export default function DashboardPage() {
         </p>
       ) : null}
 
+      <WeeklyDigest jobs={jobs} />
       <InsightsCards jobs={jobs} />
       <PipelineStats jobs={filteredJobs} allJobCount={jobs.length} />
       <RecommendedJobs userSkills={[]} remotePreference={null} displayCount={10} />

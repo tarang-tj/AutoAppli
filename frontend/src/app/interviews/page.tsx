@@ -375,20 +375,29 @@ export default function InterviewsPage() {
 
   return (
     <div className="mx-auto max-w-3xl py-8 px-4 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-zinc-100">Interview Prep</h1>
           <p className="text-sm text-zinc-400 mt-1">
             Track interview rounds, generate AI prep material, and keep notes
           </p>
         </div>
-        <NewInterviewForm
-          jobs={jobs || []}
-          onCreated={() => {
-            refreshInterviews();
-            mutate("/interviews");
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <a
+            href="/interviews/practice"
+            className="inline-flex items-center gap-1.5 rounded-md border border-violet-500/40 bg-violet-500/10 px-3 py-1.5 text-sm text-violet-200 hover:bg-violet-500/20 transition-colors no-underline"
+          >
+            <Sparkles className="h-4 w-4" />
+            Practice with AI
+          </a>
+          <NewInterviewForm
+            jobs={jobs || []}
+            onCreated={() => {
+              refreshInterviews();
+              mutate("/interviews");
+            }}
+          />
+        </div>
       </div>
 
       {/* Upcoming */}

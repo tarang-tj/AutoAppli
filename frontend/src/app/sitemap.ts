@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/forgot-password",
     "/privacy",
     "/terms",
+    "/bookmarklet",
   ];
   return paths.map((path) => ({
     url: `${base}${path}`,
