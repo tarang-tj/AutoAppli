@@ -14,7 +14,7 @@ import type { Job, Resume, GeneratedDocument, ResumeReview, SavedTailoredDocumen
 import { EvalScoreCard } from "@/components/resume/eval-score-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { FileStack, History, Info, Sparkles, Trash2, X } from "lucide-react";
+import { FileStack, History, Sparkles, Trash2 } from "lucide-react";
 import { Suspense, useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -43,17 +43,6 @@ function ResumeBuilderContent() {
 
   const searchParams = useSearchParams();
   const liveApi = isResumeApiConfigured();
-  const [demoHintDismissed, setDemoHintDismissed] = useState(false);
-
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem("autoappli-resume-demo-hint-dismissed") === "1") {
-        setDemoHintDismissed(true);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   useEffect(() => {
     if (resumes && resumes.length > 0 && !selectedResumeId) {
@@ -175,57 +164,6 @@ function ResumeBuilderContent() {
           Upload your resume and paste a job description. You’ll see a formatted preview, optional PDF
           preview, and downloads (PDF + HTML) when the API is connected.
         </p>
-        {!liveApi && !demoHintDismissed ? (
-          <div
-            className="mt-4 flex items-start gap-3 rounded-xl border-2 border-amber-500/80 bg-zinc-950 px-4 py-3 shadow-md ring-1 ring-amber-400/25"
-            role="status"
-          >
-            <Info className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" aria-hidden />
-            <div className="flex-1 min-w-0 space-y-2">
-              <p className="text-base font-semibold text-amber-200 tracking-tight">
-                Running without FastAPI
-              </p>
-              <p className="text-sm text-zinc-100 leading-relaxed">
-                AI tailoring and review still work — they run through the built-in Next.js routes and need{" "}
-                <code className="rounded-md border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-[13px] font-mono text-amber-200">
-                  ANTHROPIC_API_KEY
-                </code>{" "}
-                on the server, not a separate backend. What’s limited right now is{" "}
-                <strong className="text-zinc-50">PDF upload parsing</strong>: without{" "}
-                <code className="rounded-md border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-[13px] font-mono text-amber-200">
-                  NEXT_PUBLIC_API_URL
-                </code>{" "}
-                pointing at a FastAPI base URL (optional{" "}
-                <code className="rounded border border-zinc-600 bg-zinc-900 px-1 py-0.5 text-[12px] font-mono text-amber-200">
-                  /api/v1
-                </code>
-                ), uploaded PDFs aren’t text-extracted. Use <strong className="text-zinc-50">Load sample</strong>{" "}
-                below to explore full-fidelity output.
-              </p>
-              <p className="text-xs leading-snug text-zinc-300">
-                <span className="font-medium text-zinc-200">Local dev:</span>{" "}
-                <code className="rounded bg-zinc-900 px-1 py-0.5 font-mono text-zinc-100">frontend/.env.local</code>
-                <span className="mx-1.5 text-zinc-500">·</span>
-                <span className="font-medium text-zinc-200">Vercel:</span> Project → Settings → Environment Variables → redeploy
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                try {
-                  sessionStorage.setItem("autoappli-resume-demo-hint-dismissed", "1");
-                } catch {
-                  /* ignore */
-                }
-                setDemoHintDismissed(true);
-              }}
-              className="shrink-0 rounded-md p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white"
-              aria-label="Dismiss demo hint"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ) : null}
         <div className="flex flex-wrap gap-2 mt-4">
           <Button
             type="button"
