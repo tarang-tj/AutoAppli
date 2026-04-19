@@ -17,6 +17,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 |-------|------|----------------|
 | `404 /` | `frontend/src/app/not-found.tsx` | NotFound (default) |
 | `API /api/ai/cover-letter` | `frontend/src/app/api/ai/cover-letter/route.ts` |  |
+| `API /api/ai/interview-practice` | `frontend/src/app/api/ai/interview-practice/route.ts` |  |
 | `API /api/ai/interview-prep` | `frontend/src/app/api/ai/interview-prep/route.ts` |  |
 | `API /api/ai/outreach` | `frontend/src/app/api/ai/outreach/route.ts` |  |
 | `API /api/ai/review-resume` | `frontend/src/app/api/ai/review-resume/route.ts` |  |
@@ -45,12 +46,14 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 | `PAGE /analytics` | `frontend/src/app/analytics/page.tsx` | AnalyticsPage (default) |
 | `PAGE /auth/update-password` | `frontend/src/app/(auth)/auth/update-password/page.tsx` | UpdatePasswordPage (default) |
 | `PAGE /automation` | `frontend/src/app/automation/page.tsx` | AutomationPage (default) |
+| `PAGE /bookmarklet` | `frontend/src/app/bookmarklet/page.tsx` | BookmarkletPage (default) |
 | `PAGE /contacts` | `frontend/src/app/contacts/page.tsx` | ContactsPage (default) |
 | `PAGE /cover-letter` | `frontend/src/app/cover-letter/page.tsx` | CoverLetterPage (default) |
 | `PAGE /dashboard` | `frontend/src/app/dashboard/page.tsx` | DashboardPage (default) |
 | `PAGE /export` | `frontend/src/app/export/page.tsx` | ExportPage (default) |
 | `PAGE /forgot-password` | `frontend/src/app/(auth)/forgot-password/page.tsx` | ForgotPasswordPage (default) |
 | `PAGE /interviews` | `frontend/src/app/interviews/page.tsx` | InterviewsPage (default) |
+| `PAGE /interviews/practice` | `frontend/src/app/interviews/practice/page.tsx` | InterviewPracticePage (default) |
 | `PAGE /jobs` | `frontend/src/app/jobs/page.tsx` | JobsPage (default) |
 | `PAGE /login` | `frontend/src/app/(auth)/login/page.tsx` | LoginPage (default) |
 | `PAGE /notifications` | `frontend/src/app/notifications/page.tsx` | NotificationsPage (default) |
@@ -556,6 +559,9 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 **`frontend/src/app/`**
 
+- **`apple-icon.tsx`**
+  - exports: AppleIcon (default), contentType, size
+  - meta: 42 lines
 - **`error.tsx`**
   - exports: GlobalError (default)
   - imports: `@/components/ui/button`, `@/lib/utils`
@@ -564,6 +570,9 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: RootLayout (default)
   - imports: `./globals.css`, `@/lib/site`
   - meta: route `LAYOUT /`; 87 lines
+- **`manifest.ts`**
+  - exports: manifest (default)
+  - meta: 64 lines
 - **`not-found.tsx`**
   - exports: NotFound (default)
   - meta: route `404 /`; 20 lines
@@ -581,7 +590,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`sitemap.ts`**
   - exports: sitemap (default)
   - imports: `@/lib/site`
-  - meta: 20 lines
+  - meta: 21 lines
 
 **`frontend/src/app/(auth)/auth/update-password/`**
 
@@ -630,6 +639,12 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: POST
   - imports: `../claude`
   - meta: route `API /api/ai/cover-letter`; 66 lines
+
+**`frontend/src/app/api/ai/interview-practice/`**
+
+- **`route.ts`**
+  - exports: POST
+  - meta: route `API /api/ai/interview-practice`; 126 lines
 
 **`frontend/src/app/api/ai/interview-prep/`**
 
@@ -689,6 +704,16 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - imports: `@/components/ui/button`, `@/components/ui/card`, `@/lib/api`, `@/types`
   - meta: route `PAGE /automation`; 530 lines
 
+**`frontend/src/app/bookmarklet/`**
+
+- **`bookmarklet-client.tsx`**
+  - exports: BookmarkletClient
+  - meta: 170 lines
+- **`page.tsx`**
+  - exports: BookmarkletPage (default)
+  - imports: `./bookmarklet-client`, `@/lib/site`
+  - meta: route `PAGE /bookmarklet`; 41 lines
+
 **`frontend/src/app/contacts/`**
 
 - **`layout.tsx`**
@@ -719,8 +744,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - meta: route `LAYOUT /dashboard`; 6 lines
 - **`page.tsx`**
   - exports: DashboardPage (default)
-  - imports: `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs`, `@/components/ui/button`, `@/components/ui/card` (+11 more)
-  - meta: route `PAGE /dashboard`; 459 lines
+  - imports: `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs`, `@/components/dashboard/weekly-digest`, `@/components/ui/button` (+12 more)
+  - meta: route `PAGE /dashboard`; 501 lines
 
 **`frontend/src/app/export/`**
 
@@ -742,7 +767,14 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`page.tsx`**
   - exports: InterviewsPage (default)
   - imports: `@/components/ui/button`, `@/components/ui/card`, `@/components/ui/input`, `@/components/ui/textarea`, `@/lib/api`, `@/types`
-  - meta: route `PAGE /interviews`; 438 lines
+  - meta: route `PAGE /interviews`; 447 lines
+
+**`frontend/src/app/interviews/practice/`**
+
+- **`page.tsx`**
+  - exports: InterviewPracticePage (default)
+  - imports: `@/hooks/use-jobs`, `@/lib/api`, `@/types`
+  - meta: route `PAGE /interviews/practice`; 438 lines
 
 **`frontend/src/app/jobs/`**
 
@@ -890,6 +922,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: PublicJobCandidate (type), RecommendedJobs (default), RecommendedJobsProps (type)
   - imports: `@/lib/supabase/client`
   - meta: 285 lines
+- **`weekly-digest.tsx`**
+  - exports: WeeklyDigest
+  - imports: `@/types`
+  - meta: 231 lines
 
 **`frontend/src/components/jobs/`**
 
@@ -922,14 +958,21 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 **`frontend/src/components/layout/`**
 
-- **`app-shell.tsx`** — _Authenticated app chrome: dark sidebar, header, and a main area that respects global theme._
+- **`app-shell.tsx`**
   - exports: AppShell
-  - imports: `@/components/layout/header`, `@/components/layout/sidebar`
-  - meta: 20 lines
+  - imports: `@/components/layout/command-palette`, `@/components/layout/header`, `@/components/layout/shortcuts-help`, `@/components/layout/sidebar`
+  - meta: 30 lines
+- **`command-palette.tsx`**
+  - exports: CommandPalette
+  - imports: `@/lib/demo-mode`, `@/lib/supabase/client`
+  - meta: 369 lines
 - **`header.tsx`**
   - exports: Header
   - imports: `@/components/ui/avatar`, `@/components/ui/dropdown-menu`, `@/hooks/use-api-health`, `@/hooks/use-user`, `@/lib/supabase/client`, `@/lib/utils`
   - meta: 88 lines
+- **`shortcuts-help.tsx`**
+  - exports: ShortcutsHelp
+  - meta: 123 lines
 - **`sidebar.tsx`**
   - exports: Sidebar
   - imports: `@/components/ui/button`, `@/lib/utils`
@@ -1179,11 +1222,11 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 ## Stats
 
-- ts files: 129
-- ts lines: 19866
+- ts files: 138
+- ts lines: 21532
 - js files: 10
 - js lines: 948
 - py files: 82
 - py lines: 9667
-- Next.js routes: 49
+- Next.js routes: 52
 - API endpoints: 68

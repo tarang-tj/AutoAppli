@@ -1,12 +1,12 @@
 {
   "stats": {
-    "ts files": 129,
-    "ts lines": 19866,
+    "ts files": 138,
+    "ts lines": 21532,
     "js files": 10,
     "js lines": 948,
     "py files": 82,
     "py lines": 9667,
-    "Next.js routes": 49,
+    "Next.js routes": 52,
     "API endpoints": 68
   },
   "files": [
@@ -1747,6 +1747,18 @@
       "line_count": 66
     },
     {
+      "path": "frontend/src/app/api/ai/interview-practice/route.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "POST"
+      ],
+      "imports": [],
+      "next_route": "API /api/ai/interview-practice",
+      "api_routes": [],
+      "line_count": 126
+    },
+    {
       "path": "frontend/src/app/api/ai/interview-prep/route.ts",
       "kind": "ts",
       "role": null,
@@ -1829,6 +1841,20 @@
       "line_count": 15
     },
     {
+      "path": "frontend/src/app/apple-icon.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "AppleIcon (default)",
+        "contentType",
+        "size"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 42
+    },
+    {
       "path": "frontend/src/app/auth/callback/route.ts",
       "kind": "ts",
       "role": null,
@@ -1870,6 +1896,33 @@
       "next_route": "PAGE /automation",
       "api_routes": [],
       "line_count": 530
+    },
+    {
+      "path": "frontend/src/app/bookmarklet/bookmarklet-client.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "BookmarkletClient"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 170
+    },
+    {
+      "path": "frontend/src/app/bookmarklet/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "BookmarkletPage (default)"
+      ],
+      "imports": [
+        "./bookmarklet-client",
+        "@/lib/site"
+      ],
+      "next_route": "PAGE /bookmarklet",
+      "api_routes": [],
+      "line_count": 41
     },
     {
       "path": "frontend/src/app/contacts/layout.tsx",
@@ -1968,6 +2021,7 @@
         "@/components/dashboard/onboarding-tour",
         "@/components/dashboard/pipeline-stats",
         "@/components/dashboard/recommended-jobs",
+        "@/components/dashboard/weekly-digest",
         "@/components/ui/button",
         "@/components/ui/card",
         "@/components/ui/dialog",
@@ -1984,7 +2038,7 @@
       ],
       "next_route": "PAGE /dashboard",
       "api_routes": [],
-      "line_count": 459
+      "line_count": 501
     },
     {
       "path": "frontend/src/app/error.tsx",
@@ -2063,6 +2117,22 @@
       ],
       "next_route": "PAGE /interviews",
       "api_routes": [],
+      "line_count": 447
+    },
+    {
+      "path": "frontend/src/app/interviews/practice/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "InterviewPracticePage (default)"
+      ],
+      "imports": [
+        "@/hooks/use-jobs",
+        "@/lib/api",
+        "@/types"
+      ],
+      "next_route": "PAGE /interviews/practice",
+      "api_routes": [],
       "line_count": 438
     },
     {
@@ -2117,6 +2187,18 @@
       "next_route": "LAYOUT /",
       "api_routes": [],
       "line_count": 87
+    },
+    {
+      "path": "frontend/src/app/manifest.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "manifest (default)"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 64
     },
     {
       "path": "frontend/src/app/not-found.tsx",
@@ -2405,7 +2487,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 20
+      "line_count": 21
     },
     {
       "path": "frontend/src/app/templates/layout.tsx",
@@ -2621,6 +2703,20 @@
       "line_count": 285
     },
     {
+      "path": "frontend/src/components/dashboard/weekly-digest.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "WeeklyDigest"
+      ],
+      "imports": [
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 231
+    },
+    {
       "path": "frontend/src/components/jobs/job-listing-card.tsx",
       "kind": "ts",
       "role": null,
@@ -2723,17 +2819,34 @@
     {
       "path": "frontend/src/components/layout/app-shell.tsx",
       "kind": "ts",
-      "role": "Authenticated app chrome: dark sidebar, header, and a main area that respects global theme.",
+      "role": null,
       "exports": [
         "AppShell"
       ],
       "imports": [
+        "@/components/layout/command-palette",
         "@/components/layout/header",
+        "@/components/layout/shortcuts-help",
         "@/components/layout/sidebar"
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 20
+      "line_count": 30
+    },
+    {
+      "path": "frontend/src/components/layout/command-palette.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "CommandPalette"
+      ],
+      "imports": [
+        "@/lib/demo-mode",
+        "@/lib/supabase/client"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 369
     },
     {
       "path": "frontend/src/components/layout/header.tsx",
@@ -2753,6 +2866,18 @@
       "next_route": null,
       "api_routes": [],
       "line_count": 88
+    },
+    {
+      "path": "frontend/src/components/layout/shortcuts-help.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ShortcutsHelp"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 123
     },
     {
       "path": "frontend/src/components/layout/sidebar.tsx",
