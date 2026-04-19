@@ -3,6 +3,18 @@ export type RemoteType = "remote" | "hybrid" | "onsite" | "unknown";
 export type JobType = "full_time" | "part_time" | "contract" | "internship" | "freelance";
 export type ExperienceLevel = "intern" | "entry" | "mid" | "senior" | "lead" | "director" | "vp" | "c_level";
 
+/**
+ * Why an application reached a terminal state. Persisted to
+ * jobs.closed_reason; nullable until the user marks the job as closed.
+ */
+export type ClosedReason =
+  | "rejected_by_company"
+  | "withdrew"
+  | "no_response"
+  | "offer_accepted"
+  | "offer_declined"
+  | "role_closed";
+
 export interface Job {
   id: string;
   company: string;
@@ -46,6 +58,14 @@ export interface Job {
   next_step?: string | null;
   next_step_date?: string | null;
   tags?: string[];
+
+  // ── Outcome tracking (20260419130000) ─────────────────────
+  /** Timestamp when this application reached a terminal state. */
+  closed_at?: string | null;
+  /** Why this application ended (rejected_by_company, withdrew, ...). */
+  closed_reason?: ClosedReason | null;
+  /** Soft-hide from the default kanban view without deleting. */
+  archived?: boolean;
 }
 
 export interface Resume {
@@ -246,6 +266,36 @@ export interface InterviewPrepMaterial {
   likely_questions: string[];
   questions_to_ask: string[];
   tips: string[];
+}
+
+// ── Interview practice session types (20260419120000) ──────────────
+
+export type InterviewPracticeRole = "user" | "assistant";
+
+export interface InterviewPracticeMessage {
+  role: InterviewPracticeRole;
+  content: string;
+  /** Client-generated millisecond epoch — used only for display ordering. */
+  ts: number;
+}
+
+/**
+ * One persisted mock-interview transcript. Created on the first AI reply,
+ * updated on every subsequent turn, marked `ended=true` when the user
+ * clicks "End & debrief".
+ */
+export interface InterviewPracticeSession {
+  id: string;
+  job_id: string | null;
+  job_title: string;
+  company: string;
+  job_description: string | null;
+  resume_snapshot: string | null;
+  messages: InterviewPracticeMessage[];
+  turn_count: number;
+  ended: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface InterviewNote {

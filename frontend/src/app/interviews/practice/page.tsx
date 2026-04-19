@@ -4,16 +4,21 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import useSWR from "swr";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiGet } from "@/lib/api";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
+import * as sbInterviewPractice from "@/lib/supabase/interview-practice";
 import { useJobs } from "@/hooks/use-jobs";
-import type { Job, Resume } from "@/types";
+import type { InterviewPracticeMessage, InterviewPracticeSession, Job, Resume } from "@/types";
 import {
   ArrowLeft,
   Briefcase,
+  History,
   Loader2,
+  MessageSquare,
   RotateCcw,
   Send,
   Sparkles,
   StopCircle,
+  Trash2,
   User,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -21,28 +26,36 @@ import { toast } from "sonner";
 /**
  * /interviews/practice — live, in-character interview practice with Claude.
  *
- * Two-phase UX:
- *   1. Setup: pick a saved job (or paste a JD), confirm resume, click Start.
- *   2. Chat: turn-taking with the AI interviewer. Feedback is rendered
- *      inline as part of each assistant turn.
+ * Three phases:
+ *   1. "setup"   — pick a saved job (or paste a JD), confirm resume, click Start.
+ *                  Also shows the last N persisted sessions as a history panel
+ *                  with replay / delete buttons.
+ *   2. "chat"    — live turn-taking with the AI interviewer. Each successful
+ *                  reply is persisted to Supabase (RLS, per-user). The session
+ *                  row is upserted on first reply and patched on every turn.
+ *   3. "viewing" — read-only replay of a past session. Reached by clicking a
+ *                  history row or landing on ?sessionId=X. No input box;
+ *                  a "Back to setup" button leaves the phase.
  *
- * State is kept entirely client-side — we don't persist transcripts yet.
- * The "Start over" button resets without leaving the page; "End & debrief"
- * sends a magic `end` message that the system prompt recognizes as the
- * cue to produce a summary.
+ * Persistence is Supabase-direct (see CLAUDE.md — FastAPI is optional).
+ * If Supabase env vars are missing, sessions aren't persisted and the
+ * history panel simply stays empty.
  */
 
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-  ts: number;
-};
+type ChatMessage = InterviewPracticeMessage;
+type Phase = "setup" | "chat" | "viewing";
 
-type Phase = "setup" | "chat";
+const KICKOFF_CONTENT = "Let's begin.";
+
+/** Messages we persist and display — drop the synthetic kickoff turn. */
+function stripKickoff(msgs: ChatMessage[]): ChatMessage[] {
+  return msgs.filter(
+    (m, i) => !(i === 0 && m.role === "user" && m.content === KICKOFF_CONTENT)
+  );
+}
 
 export default function InterviewPracticePage() {
-  // Wrap the content in Suspense so useSearchParams doesn't bail out
-  // of prerender during `next build`.
+  // Wrap in Suspense so useSearchParams doesn't bail out of prerender.
   return (
     <Suspense fallback={null}>
       <InterviewPracticeContent />
@@ -62,7 +75,11 @@ function InterviewPracticeContent() {
   );
   const primaryResume = resumes?.find((r) => r.is_primary) ?? resumes?.[0];
 
+  const persistEnabled = useMemo(() => isSupabaseConfigured(), []);
+
   const initialJobId = searchParams?.get("jobId") ?? "";
+  const initialSessionId = searchParams?.get("sessionId") ?? "";
+
   const [jobId, setJobId] = useState(initialJobId);
   const [customJD, setCustomJD] = useState("");
   const [customTitle, setCustomTitle] = useState("");
@@ -72,15 +89,28 @@ function InterviewPracticeContent() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pending, setPending] = useState(false);
   const [draft, setDraft] = useState("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // The session being replayed in "viewing" phase. Separate from the
+  // live context so switching back to setup doesn't leak state.
+  const [viewingSession, setViewingSession] = useState<InterviewPracticeSession | null>(null);
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // If the page opens with ?jobId=X, auto-kick to the chat phase once
-  // jobs have loaded — saves the user a click.
+  // ── Persisted history ─────────────────────────────────────────────
+  const { data: history, mutate: mutateHistory } = useSWR<InterviewPracticeSession[]>(
+    persistEnabled ? "/interview-practice/sessions" : null,
+    () => sbInterviewPractice.fetchSessions(25),
+    { revalidateOnFocus: false }
+  );
+
+  // ── Auto-kick to chat when ?jobId is set ─────────────────────────
   const autoStartedRef = useRef(false);
   useEffect(() => {
     if (
       !autoStartedRef.current &&
+      !initialSessionId &&
       initialJobId &&
       jobs.find((j) => j.id === initialJobId)
     ) {
@@ -88,26 +118,51 @@ function InterviewPracticeContent() {
       start();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobs, initialJobId]);
+  }, [jobs, initialJobId, initialSessionId]);
 
-  // Scroll the transcript to the bottom when new messages arrive.
+  // ── Load session for ?sessionId= into viewing phase ──────────────
+  useEffect(() => {
+    if (!initialSessionId || !persistEnabled) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const s = await sbInterviewPractice.fetchSession(initialSessionId);
+        if (cancelled) return;
+        setViewingSession(s);
+        setPhase("viewing");
+      } catch (err) {
+        if (!cancelled) {
+          toast.error(
+            err instanceof Error ? err.message : "Could not load that session"
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialSessionId, persistEnabled]);
+
+  // ── Scroll transcript on update ───────────────────────────────────
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, pending]);
+  }, [messages, pending, viewingSession]);
 
   // Resolve the active job context (saved job OR pasted JD fallback).
   const activeContext = useMemo(() => {
     const job = jobs.find((j) => j.id === jobId);
     if (job) {
       return {
+        job_id: job.id as string | null,
         job_title: job.title,
         company: job.company,
         job_description: job.description ?? "",
       };
     }
     return {
+      job_id: null as string | null,
       job_title: customTitle || "the role",
       company: customCompany || "the company",
       job_description: customJD,
@@ -118,16 +173,50 @@ function InterviewPracticeContent() {
     jobId || (customTitle.trim() && customCompany.trim())
   );
 
+  // Persist the session on first reply (insert), or patch in place.
+  // Silent on failure — persistence is a nice-to-have, never a blocker.
+  const persistSession = useCallback(
+    async (nextMessages: ChatMessage[], opts: { ended?: boolean } = {}) => {
+      if (!persistEnabled) return;
+      const cleaned = stripKickoff(nextMessages);
+      if (cleaned.length === 0) return;
+
+      try {
+        if (!sessionId) {
+          const row = await sbInterviewPractice.createSession({
+            job_id: activeContext.job_id,
+            job_title: activeContext.job_title,
+            company: activeContext.company,
+            job_description: activeContext.job_description || null,
+            resume_snapshot: primaryResume?.parsed_text ?? null,
+            messages: cleaned,
+          });
+          setSessionId(row.id);
+          void mutateHistory();
+        } else {
+          await sbInterviewPractice.updateSession(sessionId, {
+            messages: cleaned,
+            ended: opts.ended,
+          });
+          void mutateHistory();
+        }
+      } catch (err) {
+        // Log silently — don't interrupt the live chat flow.
+        // eslint-disable-next-line no-console
+        console.warn("Interview session persist failed:", err);
+      }
+    },
+    [persistEnabled, sessionId, activeContext, primaryResume, mutateHistory]
+  );
+
   const start = useCallback(async () => {
     setPending(true);
     setMessages([]);
+    setSessionId(null);
     setPhase("chat");
-    // The first turn is generated by sending a "system kickoff" user
-    // message — Anthropic's API requires at least one user message.
-    // The opener phrasing doesn't appear to the candidate.
     const kickoff: ChatMessage = {
       role: "user",
-      content: "Let's begin.",
+      content: KICKOFF_CONTENT,
       ts: Date.now(),
     };
     try {
@@ -136,17 +225,21 @@ function InterviewPracticeContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [{ role: "user", content: kickoff.content }],
-          ...activeContext,
+          job_title: activeContext.job_title,
+          company: activeContext.company,
+          job_description: activeContext.job_description,
           resume_text: primaryResume?.parsed_text ?? "",
         }),
       });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = (await res.json()) as { reply?: string; error?: string };
       if (data.error) throw new Error(data.error);
-      setMessages([
+      const nextMessages: ChatMessage[] = [
         kickoff,
         { role: "assistant", content: data.reply ?? "(no reply)", ts: Date.now() },
-      ]);
+      ];
+      setMessages(nextMessages);
+      void persistSession(nextMessages);
       setTimeout(() => inputRef.current?.focus(), 50);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to start");
@@ -154,14 +247,14 @@ function InterviewPracticeContent() {
     } finally {
       setPending(false);
     }
-  }, [activeContext, primaryResume]);
+  }, [activeContext, primaryResume, persistSession]);
 
   const send = useCallback(
     async (text: string) => {
       if (!text.trim() || pending) return;
       const next: ChatMessage = { role: "user", content: text.trim(), ts: Date.now() };
-      const nextMessages = [...messages, next];
-      setMessages(nextMessages);
+      const afterUser = [...messages, next];
+      setMessages(afterUser);
       setDraft("");
       setPending(true);
       try {
@@ -169,25 +262,34 @@ function InterviewPracticeContent() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
-            ...activeContext,
+            messages: afterUser.map((m) => ({ role: m.role, content: m.content })),
+            job_title: activeContext.job_title,
+            company: activeContext.company,
+            job_description: activeContext.job_description,
             resume_text: primaryResume?.parsed_text ?? "",
           }),
         });
         if (!res.ok) throw new Error(`${res.status}`);
         const data = (await res.json()) as { reply?: string; error?: string };
         if (data.error) throw new Error(data.error);
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: data.reply ?? "(no reply)", ts: Date.now() },
-        ]);
+        const reply: ChatMessage = {
+          role: "assistant",
+          content: data.reply ?? "(no reply)",
+          ts: Date.now(),
+        };
+        const afterReply = [...afterUser, reply];
+        setMessages(afterReply);
+        // Detect debrief turn by the magic "end" send, so we can close out
+        // the row with ended=true when that debrief assistant reply lands.
+        const isEndDebrief = text.trim().toLowerCase() === "end";
+        void persistSession(afterReply, { ended: isEndDebrief });
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Network error");
       } finally {
         setPending(false);
       }
     },
-    [messages, activeContext, primaryResume, pending]
+    [messages, activeContext, primaryResume, pending, persistSession]
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -205,9 +307,100 @@ function InterviewPracticeContent() {
   const reset = useCallback(() => {
     setMessages([]);
     setDraft("");
+    setSessionId(null);
     setPhase("setup");
     autoStartedRef.current = false;
   }, []);
+
+  const openSession = useCallback(
+    async (id: string) => {
+      if (!persistEnabled) return;
+      try {
+        const s = await sbInterviewPractice.fetchSession(id);
+        setViewingSession(s);
+        setPhase("viewing");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Could not load session");
+      }
+    },
+    [persistEnabled]
+  );
+
+  const deleteSession = useCallback(
+    async (id: string) => {
+      if (!persistEnabled) return;
+      try {
+        await sbInterviewPractice.deleteSession(id);
+        void mutateHistory();
+        toast.success("Session deleted");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Could not delete");
+      }
+    },
+    [persistEnabled, mutateHistory]
+  );
+
+  const exitViewing = useCallback(() => {
+    setViewingSession(null);
+    setPhase("setup");
+    // Strip ?sessionId from the URL so the effect doesn't kick us back in.
+    if (initialSessionId) {
+      router.replace("/interviews/practice");
+    }
+  }, [router, initialSessionId]);
+
+  // ── Viewing phase ────────────────────────────────────────────────
+  if (phase === "viewing" && viewingSession) {
+    const rendered = stripKickoff(viewingSession.messages);
+    return (
+      <div className="flex flex-col h-[calc(100vh-8rem)]">
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <div className="min-w-0">
+            <button
+              type="button"
+              onClick={exitViewing}
+              className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200 mb-1"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back to setup
+            </button>
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <Briefcase className="h-3 w-3" />
+              <span className="truncate">
+                {viewingSession.job_title} · {viewingSession.company}
+              </span>
+            </div>
+            <h1 className="text-lg font-semibold text-white truncate">
+              Past practice session
+            </h1>
+          </div>
+          <div className="text-[11px] text-zinc-500 shrink-0">
+            {new Date(viewingSession.created_at).toLocaleString()}
+            {viewingSession.ended && (
+              <span className="ml-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-emerald-200">
+                debriefed
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4"
+        >
+          {rendered.length === 0 ? (
+            <p className="text-sm text-zinc-500">No messages recorded.</p>
+          ) : (
+            rendered.map((m, i) => <MessageBubble key={i} message={m} />)
+          )}
+        </div>
+
+        <div className="mt-3 text-[11px] text-zinc-500 text-center">
+          Viewing past session — replay only. Start a new session to continue practicing.
+        </div>
+      </div>
+    );
+  }
 
   // ── Setup phase ──────────────────────────────────────────────────
   if (phase === "setup") {
@@ -234,90 +427,160 @@ function InterviewPracticeContent() {
             Pick a role and we&apos;ll play the hiring manager — warm-up
             question, follow-ups, inline feedback after each answer, then a
             short debrief when you&apos;re done.
+            {persistEnabled && " Sessions are saved so you can revisit them later."}
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-5 max-w-2xl">
-          <div>
-            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
-              Use a saved job
-            </label>
-            {jobs.length > 0 ? (
-              <select
-                value={jobId}
-                onChange={(e) => setJobId(e.target.value)}
-                className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2"
-              >
-                <option value="">— Pick a role —</option>
-                {jobs.map((j: Job) => (
-                  <option key={j.id} value={j.id}>
-                    {j.title} · {j.company}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-xs text-zinc-500">
-                No saved roles yet. Add one on the Dashboard, or paste the
-                details below.
-              </p>
-            )}
-          </div>
-
-          {!jobId && (
-            <div className="border-t border-zinc-800 pt-5 space-y-3">
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-                Or describe a role manually
+        <div className="grid gap-5 lg:grid-cols-[1fr_320px] max-w-5xl">
+          {/* Setup form */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-5">
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
+                Use a saved job
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  value={customTitle}
-                  onChange={(e) => setCustomTitle(e.target.value)}
-                  placeholder="Job title"
-                  className="rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2 placeholder:text-zinc-500"
-                />
-                <input
-                  type="text"
-                  value={customCompany}
-                  onChange={(e) => setCustomCompany(e.target.value)}
-                  placeholder="Company"
-                  className="rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2 placeholder:text-zinc-500"
+              {jobs.length > 0 ? (
+                <select
+                  value={jobId}
+                  onChange={(e) => setJobId(e.target.value)}
+                  className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2"
+                >
+                  <option value="">— Pick a role —</option>
+                  {jobs.map((j: Job) => (
+                    <option key={j.id} value={j.id}>
+                      {j.title} · {j.company}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-xs text-zinc-500">
+                  No saved roles yet. Add one on the Dashboard, or paste the
+                  details below.
+                </p>
+              )}
+            </div>
+
+            {!jobId && (
+              <div className="border-t border-zinc-800 pt-5 space-y-3">
+                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+                  Or describe a role manually
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    value={customTitle}
+                    onChange={(e) => setCustomTitle(e.target.value)}
+                    placeholder="Job title"
+                    className="rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2 placeholder:text-zinc-500"
+                  />
+                  <input
+                    type="text"
+                    value={customCompany}
+                    onChange={(e) => setCustomCompany(e.target.value)}
+                    placeholder="Company"
+                    className="rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2 placeholder:text-zinc-500"
+                  />
+                </div>
+                <textarea
+                  value={customJD}
+                  onChange={(e) => setCustomJD(e.target.value)}
+                  rows={5}
+                  placeholder="Paste the job description (optional but improves question quality)"
+                  className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2 placeholder:text-zinc-500 resize-y"
                 />
               </div>
-              <textarea
-                value={customJD}
-                onChange={(e) => setCustomJD(e.target.value)}
-                rows={5}
-                placeholder="Paste the job description (optional but improves question quality)"
-                className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2 placeholder:text-zinc-500 resize-y"
-              />
-            </div>
-          )}
+            )}
 
-          <div className="border-t border-zinc-800 pt-4 flex items-center justify-between gap-2">
-            <div className="text-xs text-zinc-500">
-              {primaryResume
-                ? `Using primary resume: ${primaryResume.file_name}`
-                : "No resume uploaded — feedback will be generic."}
+            <div className="border-t border-zinc-800 pt-4 flex items-center justify-between gap-2">
+              <div className="text-xs text-zinc-500">
+                {primaryResume
+                  ? `Using primary resume: ${primaryResume.file_name}`
+                  : "No resume uploaded — feedback will be generic."}
+              </div>
+              <button
+                type="button"
+                disabled={!canStart || pending}
+                onClick={() => void start()}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-600/20"
+              >
+                {pending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Starting…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Start practice
+                  </>
+                )}
+              </button>
             </div>
-            <button
-              type="button"
-              disabled={!canStart || pending}
-              onClick={() => void start()}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-600/20"
-            >
-              {pending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Starting…
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Start practice
-                </>
-              )}
-            </button>
+          </div>
+
+          {/* History panel */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <History className="h-4 w-4 text-zinc-400" aria-hidden />
+              <h2 className="text-sm font-semibold text-white">Past sessions</h2>
+            </div>
+            {!persistEnabled ? (
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                Connect Supabase to save transcripts. Without it, each session
+                is ephemeral and won&apos;t appear here.
+              </p>
+            ) : !history ? (
+              <div className="flex items-center gap-2 text-xs text-zinc-500">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading…
+              </div>
+            ) : history.length === 0 ? (
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                No sessions yet. Once you finish a practice run, it&apos;ll
+                show up here so you can revisit the transcript.
+              </p>
+            ) : (
+              <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1 -mr-1">
+                {history.map((s) => (
+                  <li
+                    key={s.id}
+                    className="group flex items-stretch rounded-lg border border-zinc-800 bg-zinc-950/60 overflow-hidden"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => void openSession(s.id)}
+                      className="flex-1 min-w-0 text-left px-3 py-2 hover:bg-zinc-900/80 transition-colors"
+                    >
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <MessageSquare className="h-3 w-3 text-zinc-500 shrink-0" aria-hidden />
+                        <p className="text-sm text-zinc-100 truncate">
+                          {s.job_title} · {s.company}
+                        </p>
+                      </div>
+                      <p className="text-[11px] text-zinc-500">
+                        {new Date(s.created_at).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                        {" · "}
+                        {s.turn_count} turn{s.turn_count === 1 ? "" : "s"}
+                        {s.ended && " · debriefed"}
+                      </p>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Delete session"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void deleteSession(s.id);
+                      }}
+                      className="shrink-0 px-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-900 border-l border-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>
@@ -364,13 +627,9 @@ function InterviewPracticeContent() {
         ref={scrollRef}
         className="flex-1 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4"
       >
-        {messages
-          // Hide the synthetic "Let's begin." kickoff so the user sees a
-          // clean transcript that starts with the interviewer.
-          .filter((m, i) => !(i === 0 && m.role === "user" && m.content === "Let's begin."))
-          .map((m, i) => (
-            <MessageBubble key={i} message={m} />
-          ))}
+        {stripKickoff(messages).map((m, i) => (
+          <MessageBubble key={i} message={m} />
+        ))}
         {pending && (
           <div className="flex items-center gap-2 text-xs text-zinc-500 pl-11">
             <Loader2 className="h-3 w-3 animate-spin" />
