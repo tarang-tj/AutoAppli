@@ -108,6 +108,8 @@ export function RecommendedJobs({
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState<string | null>(null)
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  // Default to collapsed so the kanban stays the main focus of the dashboard.
+  const [expanded, setExpanded] = useState(false)
 
   // Stable key for useEffect dependency (skills array identity changes on every render)
   const skillsKey = useMemo(() => userSkills.slice().sort().join('|'), [userSkills])
@@ -171,9 +173,8 @@ export function RecommendedJobs({
 
   if (rows === null) {
     return (
-      <section className="rounded-lg border bg-card p-4">
-        <h3 className="mb-2 text-base font-semibold">Recommended for you</h3>
-        <p className="text-sm text-muted-foreground">Loading recommendations…</p>
+      <section className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900 p-3">
+        <p className="text-sm text-zinc-400">Loading recommendations…</p>
       </section>
     )
   }
@@ -184,10 +185,37 @@ export function RecommendedJobs({
   }
 
   return (
-    <section className="rounded-lg border bg-card p-4">
+    <section className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900">
+      <button
+        type="button"
+        onClick={() => setExpanded(e => !e)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-zinc-800/50"
+        aria-expanded={expanded}
+      >
+        <span className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-zinc-50">Recommended for you</span>
+          <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300">
+            {rows.length}
+          </span>
+        </span>
+        <span className="flex items-center gap-2 text-xs text-zinc-400">
+          <span className="hidden sm:inline">
+            Ranked by fit{remotePreference ? ` + ${remotePreference}` : ''}
+          </span>
+          <svg
+            className={`h-4 w-4 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </span>
+      </button>
+
+      {expanded && (
+      <div className="border-t border-zinc-700 p-4">
       <div className="mb-3 flex items-baseline justify-between">
-        <h3 className="text-base font-semibold">Recommended for you</h3>
-        <span className="text-xs text-muted-foreground">
+        <h3 className="sr-only">Recommended for you</h3>
+        <span className="text-xs text-zinc-400">
           Ranked by fit against your skills {remotePreference ? `+ ${remotePreference} preference` : ''}
         </span>
       </div>
@@ -247,6 +275,8 @@ export function RecommendedJobs({
           )
         })}
       </ul>
+      </div>
+      )}
     </section>
   )
 }
