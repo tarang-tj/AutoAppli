@@ -1,17 +1,18 @@
 "use client";
 
 import { ResumeFormattedView } from "@/components/resume/resume-formatted-view";
+import { ResumeDiffView } from "@/components/resume/resume-diff-view";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadResumeHtml, openResumePrintWindow } from "@/lib/resume-export-html";
 import type { GeneratedDocument } from "@/types";
-import { Copy, Download, FileText, LayoutTemplate, Printer, ScrollText } from "lucide-react";
+import { Copy, Download, FileText, GitCompareArrows, LayoutTemplate, Printer, ScrollText } from "lucide-react";
 import { toast } from "sonner";
 import type { ReactNode } from "react";
 import { startTransition, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-type PreviewTab = "formatted" | "pdf" | "source";
+type PreviewTab = "formatted" | "pdf" | "source" | "diff";
 
 function base64ToBlobUrl(b64: string): string | null {
   try {
@@ -27,7 +28,18 @@ function base64ToBlobUrl(b64: string): string | null {
   }
 }
 
-export function ResumePreview({ document: doc }: { document: GeneratedDocument | null }) {
+export function ResumePreview({
+  document: doc,
+  originalText,
+}: {
+  document: GeneratedDocument | null;
+  /**
+   * Source resume text used as the "before" side of the diff view. If
+   * omitted, the Diff tab is disabled (e.g. when browsing a saved doc
+   * without knowing which resume produced it).
+   */
+  originalText?: string;
+}) {
   const [tab, setTab] = useState<PreviewTab>("formatted");
   const [pdfObjectUrl, setPdfObjectUrl] = useState<string | null>(null);
 
@@ -187,6 +199,12 @@ export function ResumePreview({ document: doc }: { document: GeneratedDocument |
             !pdfIframeSrc
           )}
           {tabBtn("source", "Plain text", <ScrollText className="h-4 w-4" />, !content)}
+          {tabBtn(
+            "diff",
+            "Diff",
+            <GitCompareArrows className="h-4 w-4" />,
+            !content || !originalText?.trim()
+          )}
         </div>
 
         {tab === "formatted" && content ? (
@@ -214,6 +232,10 @@ export function ResumePreview({ document: doc }: { document: GeneratedDocument |
               {content}
             </pre>
           </div>
+        ) : null}
+
+        {tab === "diff" && content && originalText?.trim() ? (
+          <ResumeDiffView original={originalText} tailored={content} />
         ) : null}
 
         {!content && !pdfIframeSrc ? (

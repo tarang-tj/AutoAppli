@@ -337,7 +337,12 @@ function ResumeBuilderContent() {
           ) : null}
         </div>
         <div className="space-y-6">
-          <ResumePreview document={generated} />
+          <ResumePreview
+            document={generated}
+            originalText={
+              resumes?.find((r) => r.id === selectedResumeId)?.parsed_text
+            }
+          />
           {generated?.eval_result && (
             <EvalScoreCard eval_result={generated.eval_result} />
           )}
