@@ -1,7 +1,7 @@
 {
   "stats": {
-    "ts files": 140,
-    "ts lines": 22400,
+    "ts files": 141,
+    "ts lines": 22805,
     "js files": 10,
     "js lines": 948,
     "py files": 82,
@@ -2033,12 +2033,13 @@
         "@/lib/export-jobs-csv",
         "@/lib/filter-jobs",
         "@/lib/job-url",
+        "@/lib/supabase/client",
         "@/lib/utils",
         "@/types"
       ],
       "next_route": "PAGE /dashboard",
       "api_routes": [],
-      "line_count": 501
+      "line_count": 514
     },
     {
       "path": "frontend/src/app/error.tsx",
@@ -2129,11 +2130,13 @@
       "imports": [
         "@/hooks/use-jobs",
         "@/lib/api",
+        "@/lib/supabase/client",
+        "@/lib/supabase/interview-practice",
         "@/types"
       ],
       "next_route": "PAGE /interviews/practice",
       "api_routes": [],
-      "line_count": 438
+      "line_count": 697
     },
     {
       "path": "frontend/src/app/jobs/layout.tsx",
@@ -2362,7 +2365,7 @@
       ],
       "next_route": "PAGE /resume",
       "api_routes": [],
-      "line_count": 368
+      "line_count": 317
     },
     {
       "path": "frontend/src/app/resume-templates/layout.tsx",
@@ -3844,6 +3847,26 @@
       "line_count": 16
     },
     {
+      "path": "frontend/src/lib/supabase/interview-practice.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "createSession",
+        "CreateSessionInput (type)",
+        "deleteSession",
+        "fetchSession",
+        "fetchSessions",
+        "updateSession"
+      ],
+      "imports": [
+        "./client",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 134
+    },
+    {
       "path": "frontend/src/lib/supabase/jobs.ts",
       "kind": "ts",
       "role": "Direct Supabase client operations for the `jobs` table.",
@@ -3953,6 +3976,7 @@
         "AutomationSuggestion (type)",
         "AutomationTrigger (type)",
         "ChangeDelta (type)",
+        "ClosedReason (type)",
         "Compensation (type)",
         "CompensationComparison (type)",
         "Contact (type)",
@@ -3968,6 +3992,9 @@
         "GeneratedDocument (type)",
         "HallucinationCheck (type)",
         "InterviewNote (type)",
+        "InterviewPracticeMessage (type)",
+        "InterviewPracticeRole (type)",
+        "InterviewPracticeSession (type)",
         "InterviewPrepMaterial (type)",
         "Job (type)",
         "JobSearchHistoryItem (type)",
@@ -3998,7 +4025,7 @@
       "imports": [],
       "next_route": null,
       "api_routes": [],
-      "line_count": 427
+      "line_count": 477
     }
   ]
 }

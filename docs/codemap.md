@@ -744,8 +744,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - meta: route `LAYOUT /dashboard`; 6 lines
 - **`page.tsx`**
   - exports: DashboardPage (default)
-  - imports: `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs`, `@/components/dashboard/weekly-digest`, `@/components/ui/button` (+12 more)
-  - meta: route `PAGE /dashboard`; 501 lines
+  - imports: `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs`, `@/components/dashboard/weekly-digest`, `@/components/ui/button` (+13 more)
+  - meta: route `PAGE /dashboard`; 514 lines
 
 **`frontend/src/app/export/`**
 
@@ -773,8 +773,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 - **`page.tsx`**
   - exports: InterviewPracticePage (default)
-  - imports: `@/hooks/use-jobs`, `@/lib/api`, `@/types`
-  - meta: route `PAGE /interviews/practice`; 438 lines
+  - imports: `@/hooks/use-jobs`, `@/lib/api`, `@/lib/supabase/client`, `@/lib/supabase/interview-practice`, `@/types`
+  - meta: route `PAGE /interviews/practice`; 697 lines
 
 **`frontend/src/app/jobs/`**
 
@@ -825,7 +825,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`page.tsx`**
   - exports: ResumePage (default)
   - imports: `@/components/resume/eval-score-card`, `@/components/resume/jd-input`, `@/components/resume/resume-preview`, `@/components/resume/resume-review-panel`, `@/components/resume/resume-upload`, `@/components/ui/button`, `@/components/ui/card`, `@/components/ui/textarea` (+4 more)
-  - meta: route `PAGE /resume`; 368 lines
+  - meta: route `PAGE /resume`; 317 lines
 
 **`frontend/src/app/resume-templates/`**
 
@@ -1209,6 +1209,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`client.ts`**
   - exports: createClient, isSupabaseConfigured
   - meta: 16 lines
+- **`interview-practice.ts`**
+  - exports: createSession, CreateSessionInput (type), deleteSession, fetchSession, fetchSessions, updateSession
+  - imports: `./client`, `@/types`
+  - meta: 134 lines
 - **`jobs.ts`** — _Direct Supabase client operations for the `jobs` table._
   - exports: createJob, CreateJobInput (type), deleteJob, fetchJob, fetchJobs, reorderJobs (+1 more)
   - imports: `./client`, `@/types`
@@ -1224,13 +1228,13 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 **`frontend/src/types/`**
 
 - **`index.ts`**
-  - exports: AnalyticsConversions (type), AnalyticsData (type), AnalyticsDurations (type), AnalyticsSummary (type), AutomationAction (type), AutomationRule (type) (+44 more)
-  - meta: 427 lines
+  - exports: AnalyticsConversions (type), AnalyticsData (type), AnalyticsDurations (type), AnalyticsSummary (type), AutomationAction (type), AutomationRule (type) (+48 more)
+  - meta: 477 lines
 
 ## Stats
 
-- ts files: 140
-- ts lines: 22400
+- ts files: 141
+- ts lines: 22805
 - js files: 10
 - js lines: 948
 - py files: 82
