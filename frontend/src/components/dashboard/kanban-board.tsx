@@ -2,7 +2,7 @@
 import { useJobs } from "@/hooks/use-jobs";
 import { useMatchScores } from "@/hooks/use-match-scores";
 import { filterJobsByQuery } from "@/lib/filter-jobs";
-import { Job, JobStatus } from "@/types";
+import { ClosedReason, Job, JobStatus } from "@/types";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useMemo } from "react";
 import { KanbanColumn } from "./kanban-column";
@@ -18,7 +18,16 @@ const COLUMNS: { id: JobStatus; label: string; color: string }[] = [
   { id: "ghosted", label: "Ghosted", color: "bg-zinc-600" },
 ];
 
-export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
+interface KanbanBoardProps {
+  searchQuery?: string;
+  /** When true, archived jobs are shown (otherwise filtered out). */
+  showArchived?: boolean;
+}
+
+export function KanbanBoard({
+  searchQuery = "",
+  showArchived = false,
+}: KanbanBoardProps) {
   const {
     jobs,
     isLoading,
@@ -27,14 +36,16 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
     persistColumnOrder,
     deleteJob,
     patchJob,
+    closeOutJob,
+    archiveJob,
   } = useJobs();
 
   const { scores: matchScores } = useMatchScores();
 
-  const visibleJobs = useMemo(
-    () => filterJobsByQuery(jobs, searchQuery),
-    [jobs, searchQuery]
-  );
+  const visibleJobs = useMemo(() => {
+    const queried = filterJobsByQuery(jobs, searchQuery);
+    return showArchived ? queried : queried.filter((j) => !j.archived);
+  }, [jobs, searchQuery, showArchived]);
 
   const handleSaveNotes = async (jobId: string, notes: string) => {
     try {
@@ -51,6 +62,28 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
       toast.success("Removed from tracker");
     } catch {
       toast.error("Could not remove job.");
+    }
+  };
+
+  const handleCloseOut = async (jobId: string, reason: ClosedReason | null) => {
+    try {
+      await closeOutJob(jobId, reason);
+      if (reason) {
+        toast.success("Closed out");
+      } else {
+        toast.success("Re-opened");
+      }
+    } catch {
+      toast.error("Could not update close-out.");
+    }
+  };
+
+  const handleArchive = async (jobId: string, archived: boolean) => {
+    try {
+      await archiveJob(jobId, archived);
+      toast.success(archived ? "Archived" : "Restored to board");
+    } catch {
+      toast.error("Could not update archive state.");
     }
   };
 
@@ -135,6 +168,8 @@ export function KanbanBoard({ searchQuery = "" }: { searchQuery?: string }) {
                 matchScores={matchScores}
                 onRemoveJob={handleRemoveJob}
                 onSaveNotes={handleSaveNotes}
+                onCloseOut={handleCloseOut}
+                onArchive={handleArchive}
               />
             </div>
           );

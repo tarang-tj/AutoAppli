@@ -1,5 +1,5 @@
 "use client";
-import { Job, MatchScore } from "@/types";
+import { ClosedReason, Job, MatchScore } from "@/types";
 import { Droppable } from "@hello-pangea/dnd";
 import { JobCard } from "./job-card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,8 @@ interface KanbanColumnProps {
   matchScores?: Record<string, MatchScore>;
   onRemoveJob?: (jobId: string) => void | Promise<void>;
   onSaveNotes?: (jobId: string, notes: string) => void | Promise<void>;
+  onCloseOut?: (jobId: string, reason: ClosedReason | null) => void | Promise<void>;
+  onArchive?: (jobId: string, archived: boolean) => void | Promise<void>;
 }
 
 export function KanbanColumn({
@@ -23,6 +25,8 @@ export function KanbanColumn({
   matchScores,
   onRemoveJob,
   onSaveNotes,
+  onCloseOut,
+  onArchive,
 }: KanbanColumnProps) {
   return (
     <div className="flex flex-col flex-1 min-h-[min(420px,55vh)]">
@@ -57,6 +61,14 @@ export function KanbanColumn({
                 onRemove={onRemoveJob ? () => onRemoveJob(job.id) : undefined}
                 onSaveNotes={
                   onSaveNotes ? (notes) => onSaveNotes(job.id, notes) : undefined
+                }
+                onCloseOut={
+                  onCloseOut ? (reason) => onCloseOut(job.id, reason) : undefined
+                }
+                onArchive={
+                  onArchive
+                    ? (archived) => onArchive(job.id, archived)
+                    : undefined
                 }
               />
             ))}

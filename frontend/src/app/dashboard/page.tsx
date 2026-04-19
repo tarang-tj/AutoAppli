@@ -44,7 +44,13 @@ function DashboardContent() {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [boardSearch, setBoardSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const archivedCount = useMemo(
+    () => jobs.filter((j) => j.archived).length,
+    [jobs]
+  );
   const [skillInput, setSkillInput] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -392,18 +398,34 @@ function DashboardContent() {
       </div>
 
       {jobs.length > 0 ? (
-        <div className="relative mb-4 max-w-md">
-          <ListFilter
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 pointer-events-none"
-            aria-hidden
-          />
-          <Input
-            value={boardSearch}
-            onChange={(e) => setBoardSearch(e.target.value)}
-            placeholder="Filter board by title, company, notes…"
-            aria-label="Filter jobs on board"
-            className="bg-zinc-900 border-zinc-600 pl-9 text-zinc-50 placeholder:text-zinc-500"
-          />
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <div className="relative max-w-md flex-1">
+            <ListFilter
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 pointer-events-none"
+              aria-hidden
+            />
+            <Input
+              value={boardSearch}
+              onChange={(e) => setBoardSearch(e.target.value)}
+              placeholder="Filter board by title, company, notes…"
+              aria-label="Filter jobs on board"
+              className="bg-zinc-900 border-zinc-600 pl-9 text-zinc-50 placeholder:text-zinc-500"
+            />
+          </div>
+          {archivedCount > 0 ? (
+            <label className="inline-flex items-center gap-2 text-sm text-zinc-200 select-none cursor-pointer rounded-md border border-zinc-700 bg-zinc-900/60 px-3 py-2 hover:bg-zinc-800">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-zinc-600 bg-zinc-950 accent-amber-400"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+              />
+              Show archived
+              <span className="text-xs text-zinc-400 tabular-nums">
+                ({archivedCount})
+              </span>
+            </label>
+          ) : null}
         </div>
       ) : null}
 
@@ -507,7 +529,7 @@ function DashboardContent() {
         </Card>
       ) : null}
 
-      <KanbanBoard searchQuery={boardSearch} />
+      <KanbanBoard searchQuery={boardSearch} showArchived={showArchived} />
     </div>
   );
 }

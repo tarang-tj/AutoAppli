@@ -1045,7 +1045,13 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
     if (jobIndex === -1) {
       throw new Error("Job not found");
     }
-    const b = body as { status?: Job["status"]; notes?: string | null };
+    const b = body as {
+      status?: Job["status"];
+      notes?: string | null;
+      closed_at?: string | null;
+      closed_reason?: Job["closed_reason"];
+      archived?: boolean;
+    };
     const row = { ...jobs[jobIndex] };
     const now = new Date().toISOString();
     if (b.status !== undefined) {
@@ -1063,6 +1069,15 @@ function handleDemoPatch(path: string, body?: unknown): unknown {
     }
     if (b.notes !== undefined) {
       row.notes = b.notes === null || b.notes === "" ? undefined : b.notes;
+    }
+    if (b.closed_at !== undefined) {
+      row.closed_at = b.closed_at;
+    }
+    if (b.closed_reason !== undefined) {
+      row.closed_reason = b.closed_reason;
+    }
+    if (b.archived !== undefined) {
+      row.archived = b.archived;
     }
     row.updated_at = now;
     jobs[jobIndex] = row;

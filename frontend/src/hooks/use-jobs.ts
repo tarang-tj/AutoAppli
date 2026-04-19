@@ -2,7 +2,7 @@
 import { apiDelete, apiGet, apiPatch, apiPut, isJobsApiConfigured } from "@/lib/api";
 import { getDemoJobs } from "@/lib/demo-data";
 import { reorderJobsWithinStatus, sortJobsKanbanOrder } from "@/lib/kanban-reorder";
-import type { Job, JobStatus } from "@/types";
+import type { ClosedReason, Job, JobStatus } from "@/types";
 import useSWR from "swr";
 
 export function useJobs(status?: string) {
@@ -161,9 +161,21 @@ export function useJobs(status?: string) {
     await mutate();
   };
 
+  /**
+   * Patch arbitrary fields on a job. Used for notes, close-out
+   * (`closed_at` / `closed_reason`), the `archived` toggle, and any
+   * other partial update that should write through to Supabase / API
+   * and be reflected in the SWR cache.
+   */
   const patchJob = async (
     jobId: string,
-    patch: { status?: JobStatus; notes?: string | null }
+    patch: {
+      status?: JobStatus;
+      notes?: string | null;
+      closed_at?: string | null;
+      closed_reason?: ClosedReason | null;
+      archived?: boolean;
+    }
   ) => {
     const updated = await apiPatch<Job>(`/jobs/${jobId}`, patch);
     await mutate(
@@ -171,6 +183,22 @@ export function useJobs(status?: string) {
         sortJobsKanbanOrder((c ?? []).map((j) => (j.id === jobId ? updated : j))),
       { revalidate: false }
     );
+  };
+
+  /**
+   * Stamp close-out fields on a job. Pass `reason=null` to clear a
+   * previous close-out (re-open).
+   */
+  const closeOutJob = async (jobId: string, reason: ClosedReason | null) => {
+    await patchJob(jobId, {
+      closed_reason: reason,
+      closed_at: reason ? new Date().toISOString() : null,
+    });
+  };
+
+  /** Soft-hide a job from the default kanban view (or restore it). */
+  const archiveJob = async (jobId: string, archived: boolean) => {
+    await patchJob(jobId, { archived });
   };
 
   return {
@@ -183,5 +211,7 @@ export function useJobs(status?: string) {
     persistColumnOrder,
     deleteJob,
     patchJob,
+    closeOutJob,
+    archiveJob,
   };
 }

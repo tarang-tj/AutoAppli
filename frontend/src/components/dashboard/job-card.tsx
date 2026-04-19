@@ -1,5 +1,5 @@
 "use client";
-import type { Job, ThankYouResponse, MatchScore } from "@/types";
+import type { ClosedReason, Job, ThankYouResponse, MatchScore } from "@/types";
 import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +19,11 @@ import { apiPost, isJobsApiConfigured } from "@/lib/api";
 import { normalizeJobUrl } from "@/lib/job-url";
 import { cn } from "@/lib/utils";
 import {
+  Archive,
+  ArchiveRestore,
   Building2,
   Calendar,
+  CircleSlash,
   Clock,
   Copy,
   DollarSign,
@@ -30,6 +33,7 @@ import {
   Laptop,
   Loader2,
   MapPin,
+  RotateCcw,
   Send,
   Sparkles,
   Star,
@@ -51,7 +55,29 @@ interface JobCardProps {
   matchScore?: MatchScore;
   onRemove?: () => void | Promise<void>;
   onSaveNotes?: (notes: string) => void | Promise<void>;
+  onCloseOut?: (reason: ClosedReason | null) => void | Promise<void>;
+  onArchive?: (archived: boolean) => void | Promise<void>;
 }
+
+/** Human-readable labels for the 6 close-out reasons. */
+const CLOSED_REASON_LABELS: Record<ClosedReason, string> = {
+  rejected_by_company: "Rejected by company",
+  withdrew: "I withdrew",
+  no_response: "No response / ghosted",
+  offer_accepted: "Offer accepted",
+  offer_declined: "Offer declined",
+  role_closed: "Role was closed",
+};
+
+/** Tailwind classes for the close-out badge on the card. */
+const CLOSED_REASON_STYLES: Record<ClosedReason, string> = {
+  rejected_by_company: "text-red-300 bg-red-500/15 border-red-500/30",
+  withdrew: "text-zinc-300 bg-zinc-500/15 border-zinc-500/30",
+  no_response: "text-amber-300 bg-amber-500/15 border-amber-500/30",
+  offer_accepted: "text-emerald-300 bg-emerald-500/15 border-emerald-500/30",
+  offer_declined: "text-sky-300 bg-sky-500/15 border-sky-500/30",
+  role_closed: "text-zinc-300 bg-zinc-700/40 border-zinc-600",
+};
 
 function MatchBadge({ score }: { score: number }) {
   if (score <= 0) return null;
@@ -100,7 +126,15 @@ function PriorityStars({ count }: { count: number }) {
   );
 }
 
-export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCardProps) {
+export function JobCard({
+  job,
+  index,
+  matchScore,
+  onRemove,
+  onSaveNotes,
+  onCloseOut,
+  onArchive,
+}: JobCardProps) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
@@ -112,6 +146,27 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
   const [thankYouResult, setThankYouResult] = useState<ThankYouResponse | null>(null);
   const [thankYouWho, setThankYouWho] = useState("");
   const [thankYouNotes, setThankYouNotes] = useState("");
+  // Close-out dialog state
+  const [closeOutOpen, setCloseOutOpen] = useState(false);
+  const [closeOutChoice, setCloseOutChoice] = useState<ClosedReason | "">(
+    (job.closed_reason as ClosedReason | null) ?? ""
+  );
+  const [closeOutAlsoArchive, setCloseOutAlsoArchive] = useState(true);
+  const [closingOut, setClosingOut] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
+  // Re-sync the picker when the dialog opens, so it reflects the current row.
+  useEffect(() => {
+    if (closeOutOpen) {
+      setCloseOutChoice((job.closed_reason as ClosedReason | null) ?? "");
+      setCloseOutAlsoArchive(!job.archived);
+    }
+  }, [closeOutOpen, job.closed_reason, job.archived]);
+
+  const isArchived = Boolean(job.archived);
+  const closedReasonLabel = job.closed_reason
+    ? CLOSED_REASON_LABELS[job.closed_reason]
+    : null;
 
   const thankYouEligible =
     job.status === "interviewing" || job.status === "offer";
@@ -174,6 +229,48 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
     }
   };
 
+  const handleCloseOutSubmit = async () => {
+    if (!onCloseOut) return;
+    const reason = (closeOutChoice || null) as ClosedReason | null;
+    setClosingOut(true);
+    try {
+      await onCloseOut(reason);
+      // If they opted to also archive and we have the handler, toggle that too.
+      if (reason && closeOutAlsoArchive && onArchive && !job.archived) {
+        await onArchive(true);
+      }
+      setCloseOutOpen(false);
+    } finally {
+      setClosingOut(false);
+    }
+  };
+
+  const handleReopen = async () => {
+    if (!onCloseOut) return;
+    setClosingOut(true);
+    try {
+      await onCloseOut(null);
+      // Reopening should also restore from archive if the user does it from the
+      // close-out dialog explicitly.
+      if (onArchive && job.archived) {
+        await onArchive(false);
+      }
+      setCloseOutOpen(false);
+    } finally {
+      setClosingOut(false);
+    }
+  };
+
+  const handleToggleArchive = async () => {
+    if (!onArchive) return;
+    setArchiving(true);
+    try {
+      await onArchive(!isArchived);
+    } finally {
+      setArchiving(false);
+    }
+  };
+
   const runThankYou = async () => {
     setThankYouLoading(true);
     try {
@@ -203,7 +300,8 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
             {...provided.dragHandleProps}
             style={provided.draggableProps.style}
             className={cn(
-              "bg-zinc-900 border-zinc-800 cursor-grab touch-manipulation active:cursor-grabbing select-none",
+              "bg-zinc-900 border-zinc-800 cursor-grab touch-manipulation active:cursor-grabbing select-none transition-opacity",
+              isArchived && "opacity-60 hover:opacity-90",
               snapshot.isDragging &&
                 "shadow-xl shadow-black/30 ring-1 ring-blue-500/30 opacity-[0.97] z-10"
             )}
@@ -293,6 +391,55 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   ) : null}
+                  {onCloseOut ? (
+                    <button
+                      type="button"
+                      title={
+                        job.closed_reason
+                          ? `Closed: ${CLOSED_REASON_LABELS[job.closed_reason]}`
+                          : "Close out this role"
+                      }
+                      aria-label={
+                        job.closed_reason ? "Edit close-out" : "Close out role"
+                      }
+                      className={cn(
+                        "p-1 -m-1 rounded hover:bg-zinc-800/80",
+                        job.closed_reason
+                          ? "text-amber-400/90 hover:text-amber-300"
+                          : "text-zinc-400 hover:text-amber-400"
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCloseOutOpen(true);
+                      }}
+                    >
+                      <CircleSlash className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                  {onArchive ? (
+                    <button
+                      type="button"
+                      title={isArchived ? "Restore to board" : "Archive"}
+                      aria-label={isArchived ? "Restore to board" : "Archive"}
+                      className={cn(
+                        "p-1 -m-1 rounded hover:bg-zinc-800/80 disabled:opacity-50",
+                        isArchived
+                          ? "text-emerald-400 hover:text-emerald-300"
+                          : "text-zinc-400 hover:text-zinc-100"
+                      )}
+                      disabled={archiving}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleToggleArchive();
+                      }}
+                    >
+                      {isArchived ? (
+                        <ArchiveRestore className="h-3.5 w-3.5" />
+                      ) : (
+                        <Archive className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  ) : null}
                   {onRemove ? (
                     <button
                       type="button"
@@ -309,7 +456,7 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
                 </div>
               </div>
               {/* ── Rich-field badges row ─────────────── */}
-              {(salaryStr || job.location || remoteInfo || job.priority) ? (
+              {(salaryStr || job.location || remoteInfo || job.priority || closedReasonLabel || isArchived) ? (
                 <div className="flex flex-wrap items-center gap-1 mt-2">
                   {job.priority ? <PriorityStars count={job.priority} /> : null}
                   {salaryStr ? (
@@ -325,6 +472,22 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
                   {remoteInfo ? (
                     <span className={cn("inline-flex items-center gap-0.5 rounded border px-1.5 py-px text-[10px] font-medium", remoteInfo.cls)}>
                       <Laptop className="h-2.5 w-2.5" />{remoteInfo.label}
+                    </span>
+                  ) : null}
+                  {closedReasonLabel && job.closed_reason ? (
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-0.5 rounded border px-1.5 py-px text-[10px] font-medium",
+                        CLOSED_REASON_STYLES[job.closed_reason]
+                      )}
+                    >
+                      <CircleSlash className="h-2.5 w-2.5" />
+                      {closedReasonLabel}
+                    </span>
+                  ) : null}
+                  {isArchived ? (
+                    <span className="inline-flex items-center gap-0.5 rounded border border-zinc-600 bg-zinc-800/60 px-1.5 py-px text-[10px] text-zinc-400">
+                      <Archive className="h-2.5 w-2.5" />Archived
                     </span>
                   ) : null}
                 </div>
@@ -541,6 +704,108 @@ export function JobCard({ job, index, matchScore, onRemove, onSaveNotes }: JobCa
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {onCloseOut ? (
+        <Dialog open={closeOutOpen} onOpenChange={setCloseOutOpen}>
+          <DialogContent
+            className="bg-zinc-900 border-zinc-800 text-zinc-100 sm:max-w-md"
+            showCloseButton
+          >
+            <DialogHeader>
+              <DialogTitle className="text-white">Close out this role</DialogTitle>
+              <DialogDescription className="text-zinc-300">
+                {job.title} · {job.company}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              {(Object.keys(CLOSED_REASON_LABELS) as ClosedReason[]).map(
+                (reason) => {
+                  const selected = closeOutChoice === reason;
+                  return (
+                    <button
+                      key={reason}
+                      type="button"
+                      onClick={() => setCloseOutChoice(reason)}
+                      className={cn(
+                        "w-full text-left rounded-lg border px-3 py-2 text-sm transition-colors",
+                        selected
+                          ? "border-amber-400/60 bg-amber-500/10 text-amber-100"
+                          : "border-zinc-700 bg-zinc-950/50 text-zinc-200 hover:bg-zinc-800/60"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "inline-block h-3 w-3 rounded-full border",
+                            selected
+                              ? "border-amber-300 bg-amber-400"
+                              : "border-zinc-500 bg-transparent"
+                          )}
+                          aria-hidden
+                        />
+                        <span>{CLOSED_REASON_LABELS[reason]}</span>
+                      </div>
+                    </button>
+                  );
+                }
+              )}
+            </div>
+            {onArchive ? (
+              <label className="mt-2 flex items-center gap-2 text-sm text-zinc-300">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-zinc-600 bg-zinc-950 accent-amber-400"
+                  checked={closeOutAlsoArchive}
+                  onChange={(e) => setCloseOutAlsoArchive(e.target.checked)}
+                />
+                Also archive (hide from default board view)
+              </label>
+            ) : null}
+            <DialogFooter className="border-zinc-800 bg-zinc-900/80 sm:justify-between gap-2 flex-col sm:flex-row">
+              <div className="flex gap-2 order-2 sm:order-1">
+                {job.closed_reason ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+                    disabled={closingOut}
+                    onClick={() => void handleReopen()}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1.5" />
+                    Re-open
+                  </Button>
+                ) : null}
+              </div>
+              <div className="flex gap-2 order-1 sm:order-2 sm:ml-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-zinc-600 text-zinc-200"
+                  onClick={() => setCloseOutOpen(false)}
+                  disabled={closingOut}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                  disabled={closingOut || !closeOutChoice}
+                  onClick={() => void handleCloseOutSubmit()}
+                >
+                  {closingOut ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    "Close out"
+                  )}
+                </Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : null}
 
       {onRemove ? (
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
