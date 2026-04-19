@@ -1,7 +1,7 @@
 {
   "stats": {
     "ts files": 140,
-    "ts lines": 22058,
+    "ts lines": 22400,
     "js files": 10,
     "js lines": 948,
     "py files": 82,
@@ -3007,7 +3007,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 317
+      "line_count": 587
     },
     {
       "path": "frontend/src/components/resume/resume-formatted-view.tsx",
@@ -3042,7 +3042,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 251
+      "line_count": 323
     },
     {
       "path": "frontend/src/components/resume/resume-review-panel.tsx",

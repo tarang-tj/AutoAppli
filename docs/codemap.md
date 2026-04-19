@@ -1013,7 +1013,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`resume-diff-view.tsx`**
   - exports: ResumeDiffView
   - imports: `@/lib/resume-diff`, `@/lib/utils`
-  - meta: 317 lines
+  - meta: 587 lines
 - **`resume-formatted-view.tsx`**
   - exports: ResumeFormattedView
   - imports: `@/lib/parse-resume-text`, `@/lib/utils`
@@ -1021,7 +1021,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`resume-preview.tsx`**
   - exports: ResumePreview
   - imports: `@/components/resume/resume-diff-view`, `@/components/resume/resume-formatted-view`, `@/components/ui/button`, `@/components/ui/card`, `@/lib/resume-export-html`, `@/lib/utils`, `@/types`
-  - meta: 251 lines
+  - meta: 323 lines
 - **`resume-review-panel.tsx`**
   - exports: ResumeReviewPanel
   - imports: `@/components/ui/badge`, `@/components/ui/button`, `@/components/ui/card`, `@/types`
@@ -1230,7 +1230,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 ## Stats
 
 - ts files: 140
-- ts lines: 22058
+- ts lines: 22400
 - js files: 10
 - js lines: 948
 - py files: 82
