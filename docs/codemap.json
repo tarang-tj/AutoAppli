@@ -1,7 +1,7 @@
 {
   "stats": {
-    "ts files": 152,
-    "ts lines": 26066,
+    "ts files": 155,
+    "ts lines": 26746,
     "js files": 10,
     "js lines": 948,
     "py files": 86,
@@ -2101,6 +2101,7 @@
       "imports": [
         "@/components/discover/discover-card",
         "@/components/discover/discover-filters",
+        "@/components/discover/recommendations-rail",
         "@/components/ui/button",
         "@/hooks/use-cached-jobs",
         "@/lib/supabase/client",
@@ -2110,7 +2111,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 472
+      "line_count": 493
     },
     {
       "path": "frontend/src/app/discover/page.tsx",
@@ -2878,6 +2879,25 @@
       "line_count": 302
     },
     {
+      "path": "frontend/src/components/discover/recommendations-rail.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "RecommendationsRail"
+      ],
+      "imports": [
+        "@/components/ui/badge",
+        "@/components/ui/button",
+        "@/hooks/use-recommended-jobs",
+        "@/lib/recommend",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 269
+    },
+    {
       "path": "frontend/src/components/interviews/practice-history-panel.tsx",
       "kind": "ts",
       "role": null,
@@ -3596,6 +3616,24 @@
       "line_count": 36
     },
     {
+      "path": "frontend/src/hooks/use-recommended-jobs.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "useRecommendedJobs",
+        "UseRecommendedJobsResult (type)"
+      ],
+      "imports": [
+        "@/hooks/use-cached-jobs",
+        "@/lib/api",
+        "@/lib/recommend",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 121
+    },
+    {
       "path": "frontend/src/hooks/use-stale-jobs.ts",
       "kind": "ts",
       "role": "LocalStorage key holding the user's chosen ghost threshold (days).",
@@ -4009,6 +4047,25 @@
       "line_count": 128
     },
     {
+      "path": "frontend/src/lib/recommend.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "rankCachedJobs",
+        "RecommendationBreakdown (type)",
+        "RecommendedJob (type)",
+        "RecommendInput (type)",
+        "RemotePreference (type)",
+        "scoreOne"
+      ],
+      "imports": [
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 249
+    },
+    {
       "path": "frontend/src/lib/resume-diff.ts",
       "kind": "ts",
       "role": null,
@@ -4266,7 +4323,7 @@
       "imports": [],
       "next_route": null,
       "api_routes": [],
-      "line_count": 506
+      "line_count": 526
     }
   ]
 }

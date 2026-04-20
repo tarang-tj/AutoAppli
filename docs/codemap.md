@@ -764,8 +764,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 - **`discover-client.tsx`**
   - exports: DiscoverClient
-  - imports: `@/components/discover/discover-card`, `@/components/discover/discover-filters`, `@/components/ui/button`, `@/hooks/use-cached-jobs`, `@/lib/supabase/client`, `@/lib/supabase/jobs`, `@/lib/utils`, `@/types`
-  - meta: 472 lines
+  - imports: `@/components/discover/discover-card`, `@/components/discover/discover-filters`, `@/components/discover/recommendations-rail`, `@/components/ui/button`, `@/hooks/use-cached-jobs`, `@/lib/supabase/client`, `@/lib/supabase/jobs`, `@/lib/utils` (+1 more)
+  - meta: 493 lines
 - **`page.tsx`**
   - exports: DiscoverPage (default)
   - imports: `./discover-client`
@@ -969,6 +969,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: DISCOVER_DEFAULT_FILTERS, DiscoverFilters (type), DiscoverFiltersPanel
   - imports: `@/components/ui/button`, `@/components/ui/input`, `@/components/ui/label`, `@/lib/supabase/cached-jobs`, `@/lib/utils`
   - meta: 302 lines
+- **`recommendations-rail.tsx`**
+  - exports: RecommendationsRail
+  - imports: `@/components/ui/badge`, `@/components/ui/button`, `@/hooks/use-recommended-jobs`, `@/lib/recommend`, `@/lib/utils`, `@/types`
+  - meta: 269 lines
 
 **`frontend/src/components/interviews/`**
 
@@ -1164,6 +1168,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: useMatchScores
   - imports: `@/lib/api`, `@/types`
   - meta: 36 lines
+- **`use-recommended-jobs.ts`**
+  - exports: useRecommendedJobs, UseRecommendedJobsResult (type)
+  - imports: `@/hooks/use-cached-jobs`, `@/lib/api`, `@/lib/recommend`, `@/types`
+  - meta: 121 lines
 - **`use-stale-jobs.ts`** — _LocalStorage key holding the user's chosen ghost threshold (days)._
   - exports: STALE_DISMISSED_AT_KEY, STALE_THRESHOLD_DEFAULT, STALE_THRESHOLD_KEY, useStaleJobs
   - imports: `@/lib/api`, `@/types`
@@ -1208,6 +1216,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`parse-resume-text.ts`** — _Parse tailored resume plain text into blocks for on-screen layout._
   - exports: parseResumePlainText, ResumeBlock (type), stripInlineMarkdown
   - meta: 128 lines
+- **`recommend.ts`**
+  - exports: rankCachedJobs, RecommendationBreakdown (type), RecommendedJob (type), RecommendInput (type), RemotePreference (type), scoreOne
+  - imports: `@/types`
+  - meta: 249 lines
 - **`resume-diff.ts`**
   - exports: DiffChunk (type), DiffOp (type), diffResumes, DiffStats (type), diffWords
   - meta: 182 lines
@@ -1294,12 +1306,12 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 - **`index.ts`**
   - exports: AnalyticsConversions (type), AnalyticsData (type), AnalyticsDurations (type), AnalyticsSummary (type), AutomationAction (type), AutomationRule (type) (+49 more)
-  - meta: 506 lines
+  - meta: 526 lines
 
 ## Stats
 
-- ts files: 152
-- ts lines: 26066
+- ts files: 155
+- ts lines: 26746
 - js files: 10
 - js lines: 948
 - py files: 86
