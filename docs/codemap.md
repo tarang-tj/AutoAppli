@@ -773,8 +773,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 - **`page.tsx`**
   - exports: InterviewPracticePage (default)
-  - imports: `@/hooks/use-jobs`, `@/lib/api`, `@/lib/supabase/client`, `@/lib/supabase/interview-practice`, `@/types`
-  - meta: route `PAGE /interviews/practice`; 697 lines
+  - imports: `@/components/interviews/practice-history-panel`, `@/components/interviews/viewing-toolbar`, `@/hooks/use-jobs`, `@/lib/api`, `@/lib/supabase/client`, `@/lib/supabase/interview-practice`, `@/types`
+  - meta: route `PAGE /interviews/practice`; 714 lines
 
 **`frontend/src/app/jobs/`**
 
@@ -934,6 +934,16 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: WeeklyDigest
   - imports: `@/components/dashboard/stale-jobs-nudge`, `@/types`
   - meta: 244 lines
+
+**`frontend/src/components/interviews/`**
+
+- **`practice-history-panel.tsx`**
+  - exports: PracticeHistoryPanel
+  - imports: `@/types`
+  - meta: 506 lines
+- **`viewing-toolbar.tsx`**
+  - exports: ViewingToolbar
+  - meta: 82 lines
 
 **`frontend/src/components/jobs/`**
 
@@ -1245,8 +1255,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 ## Stats
 
-- ts files: 144
-- ts lines: 24113
+- ts files: 146
+- ts lines: 24718
 - js files: 10
 - js lines: 948
 - py files: 82
