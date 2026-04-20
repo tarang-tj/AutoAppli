@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { FeedbackWidget } from "@/components/layout/feedback-widget";
 
 type NavItem = { href: string; label: string; icon: React.ElementType };
 type NavGroup = { title: string; items: NavItem[] };
@@ -138,7 +139,8 @@ export function Sidebar() {
           ))}
         </nav>
 
-        <div className="shrink-0 px-4 py-3 border-t border-zinc-800">
+        <div className="shrink-0 px-4 py-3 border-t border-zinc-800 space-y-2">
+          <FeedbackWidget />
           <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-zinc-500">
             <Link
               href="/privacy"

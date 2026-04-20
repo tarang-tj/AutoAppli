@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { logClientError } from "@/lib/supabase/error-log";
 
 export default function GlobalError({
   error,
@@ -14,6 +15,11 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error(error);
+    // Pre-Sprint-9 — ship anything that hit this boundary up to Supabase so
+    // we can triage during user testing. Fire-and-forget; never rethrows.
+    logClientError(error, {
+      context: { source: "error-boundary", digest: error.digest ?? null },
+    });
   }, [error]);
 
   return (

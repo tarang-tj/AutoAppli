@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/site";
 import { Toaster } from "sonner";
+import { GlobalErrorListener } from "@/components/layout/global-error-listener";
 
 const siteUrl = getSiteUrl();
 
@@ -78,6 +79,7 @@ export default function RootLayout({
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
         }}
       >
+        <GlobalErrorListener />
         {children}
         <Toaster theme="dark" richColors position="top-center" />
       </body>
