@@ -12,6 +12,9 @@ from .base import JobSource, NormalizedJob, list_sources, register_source
 from .greenhouse import GreenhouseSource
 from .lever import LeverSource
 from .ashby import AshbySource
+from .workable import WorkableSource
+from .smartrecruiters import SmartRecruitersSource
+from .weworkremotely import WeWorkRemotelySource
 
 __all__ = [
     "JobSource",
@@ -19,6 +22,9 @@ __all__ = [
     "GreenhouseSource",
     "LeverSource",
     "AshbySource",
+    "WorkableSource",
+    "SmartRecruitersSource",
+    "WeWorkRemotelySource",
     "list_sources",
     "register_source",
 ]

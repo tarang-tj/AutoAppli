@@ -52,6 +52,20 @@ PRESET_SLUGS: dict[str, list[str]] = {
     "greenhouse": ["airbnb", "stripe", "anthropic", "openai", "gitlab", "dropbox"],
     "lever": ["lever", "mixpanel", "mux", "attentive", "gopuff", "whatnot"],
     "ashby": ["ramp", "linear", "notion", "mercury", "retool", "posthog", "vercel"],
+    # Sprint 3 additions. Workable subdomains map 1:1 to companies; the slugs
+    # below are examples known to have public boards — replace with your own
+    # target companies before running the nightly cron for real.
+    "workable": ["remote", "andela", "depop", "quickbooks"],
+    # SmartRecruiters company slugs are case-sensitive in their URL paths.
+    "smartrecruiters": ["Bosch", "Visa", "SamsungElectronics", "Publicis"],
+    # WeWorkRemotely identifiers are CATEGORY slugs, not companies — each
+    # feeds its own RSS file. Categories, not single employers.
+    "weworkremotely": [
+        "remote-programming-jobs",
+        "remote-product-jobs",
+        "remote-design-jobs",
+        "remote-devops-sysadmin-jobs",
+    ],
 }
 
 
