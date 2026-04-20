@@ -11,17 +11,16 @@ import type { InterviewPracticeMessage, InterviewPracticeSession, Job, Resume } 
 import {
   ArrowLeft,
   Briefcase,
-  History,
   Loader2,
-  MessageSquare,
   RotateCcw,
   Send,
   Sparkles,
   StopCircle,
-  Trash2,
   User,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PracticeHistoryPanel } from "@/components/interviews/practice-history-panel";
+import { ViewingToolbar } from "@/components/interviews/viewing-toolbar";
 
 /**
  * /interviews/practice — live, in-character interview practice with Claude.
@@ -99,9 +98,12 @@ function InterviewPracticeContent() {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   // ── Persisted history ─────────────────────────────────────────────
+  // Bumped 25 → 200 so the upgraded panel (search + group-by-date/company
+  // + per-bucket headers) has enough rows to be meaningful. Sessions
+  // stay small (a few KB of JSONB each), so 200 is still cheap.
   const { data: history, mutate: mutateHistory } = useSWR<InterviewPracticeSession[]>(
     persistEnabled ? "/interview-practice/sessions" : null,
-    () => sbInterviewPractice.fetchSessions(25),
+    () => sbInterviewPractice.fetchSessions(200),
     { revalidateOnFocus: false }
   );
 
@@ -349,6 +351,70 @@ function InterviewPracticeContent() {
     }
   }, [router, initialSessionId]);
 
+  // ── Sprint 2 actions: replay context, copy, share ────────────────
+
+  /**
+   * Pre-fill the setup form with a past session's job context so the
+   * user can launch a fresh practice run for the same role with one
+   * more click. We deliberately don't auto-start — the user gets to
+   * see what's loaded and tweak if they want, which avoids surprise.
+   */
+  const replayWithContext = useCallback(
+    (s: InterviewPracticeSession) => {
+      // If the original job is still in their kanban, prefer the
+      // saved-job path (richer context, lives across resume edits).
+      // Otherwise fall back to the snapshot fields on the session row.
+      const savedJob = s.job_id ? jobs.find((j) => j.id === s.job_id) : null;
+      if (savedJob) {
+        setJobId(savedJob.id);
+        setCustomTitle("");
+        setCustomCompany("");
+        setCustomJD("");
+      } else {
+        setJobId("");
+        setCustomTitle(s.job_title);
+        setCustomCompany(s.company);
+        setCustomJD(s.job_description ?? "");
+      }
+      setViewingSession(null);
+      setPhase("setup");
+      autoStartedRef.current = true; // suppress the ?jobId auto-kick
+      if (initialSessionId) {
+        router.replace("/interviews/practice");
+      }
+      toast.success(`Loaded ${s.company} — press Start to begin`);
+    },
+    [jobs, initialSessionId, router]
+  );
+
+  const copyTranscript = useCallback(async (s: InterviewPracticeSession) => {
+    const lines = stripKickoff(s.messages).map((m) => {
+      const speaker = m.role === "user" ? "Me" : "Interviewer";
+      return `${speaker}:\n${m.content}`;
+    });
+    const header = `${s.job_title} · ${s.company}\n${new Date(
+      s.created_at
+    ).toLocaleString()}\n\n`;
+    const text = header + lines.join("\n\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Transcript copied");
+    } catch {
+      toast.error("Could not copy — clipboard blocked");
+    }
+  }, []);
+
+  const shareSession = useCallback(async (s: InterviewPracticeSession) => {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/interviews/practice?sessionId=${s.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied — anyone on your account can open it");
+    } catch {
+      toast.error("Could not copy link");
+    }
+  }, []);
+
   // ── Viewing phase ────────────────────────────────────────────────
   if (phase === "viewing" && viewingSession) {
     const rendered = stripKickoff(viewingSession.messages);
@@ -384,6 +450,12 @@ function InterviewPracticeContent() {
           </div>
         </div>
 
+        <ViewingToolbar
+          onReplay={() => replayWithContext(viewingSession)}
+          onCopy={() => void copyTranscript(viewingSession)}
+          onShare={() => void shareSession(viewingSession)}
+        />
+
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4"
@@ -396,7 +468,7 @@ function InterviewPracticeContent() {
         </div>
 
         <div className="mt-3 text-[11px] text-zinc-500 text-center">
-          Viewing past session — replay only. Start a new session to continue practicing.
+          Viewing past session — replay only. Use &quot;Practice again&quot; to start a new one with the same role.
         </div>
       </div>
     );
@@ -517,71 +589,16 @@ function InterviewPracticeContent() {
             </div>
           </div>
 
-          {/* History panel */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <History className="h-4 w-4 text-zinc-400" aria-hidden />
-              <h2 className="text-sm font-semibold text-white">Past sessions</h2>
-            </div>
-            {!persistEnabled ? (
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                Connect Supabase to save transcripts. Without it, each session
-                is ephemeral and won&apos;t appear here.
-              </p>
-            ) : !history ? (
-              <div className="flex items-center gap-2 text-xs text-zinc-500">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Loading…
-              </div>
-            ) : history.length === 0 ? (
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                No sessions yet. Once you finish a practice run, it&apos;ll
-                show up here so you can revisit the transcript.
-              </p>
-            ) : (
-              <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1 -mr-1">
-                {history.map((s) => (
-                  <li
-                    key={s.id}
-                    className="group flex items-stretch rounded-lg border border-zinc-800 bg-zinc-950/60 overflow-hidden"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => void openSession(s.id)}
-                      className="flex-1 min-w-0 text-left px-3 py-2 hover:bg-zinc-900/80 transition-colors"
-                    >
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <MessageSquare className="h-3 w-3 text-zinc-500 shrink-0" aria-hidden />
-                        <p className="text-sm text-zinc-100 truncate">
-                          {s.job_title} · {s.company}
-                        </p>
-                      </div>
-                      <p className="text-[11px] text-zinc-500">
-                        {new Date(s.created_at).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                        {" · "}
-                        {s.turn_count} turn{s.turn_count === 1 ? "" : "s"}
-                        {s.ended && " · debriefed"}
-                      </p>
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Delete session"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void deleteSession(s.id);
-                      }}
-                      className="shrink-0 px-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-900 border-l border-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {/* History panel — search, group-by, per-row actions */}
+          <PracticeHistoryPanel
+            sessions={history}
+            persistEnabled={persistEnabled}
+            onOpen={(id) => void openSession(id)}
+            onReplay={replayWithContext}
+            onCopy={(s) => void copyTranscript(s)}
+            onShare={(s) => void shareSession(s)}
+            onDelete={(id) => void deleteSession(id)}
+          />
         </div>
       </div>
     );
