@@ -373,7 +373,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 - **`__init__.py`** — _Pluggable job-ingestion sources._
   - exports: —
-  - meta: 25 lines
+  - meta: 31 lines
 - **`ashby.py`** — _Ashby public job-board ingestion._
   - exports: AshbySource (class)
   - meta: 175 lines
@@ -386,6 +386,15 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`lever.py`** — _Lever public job-board ingestion._
   - exports: LeverSource (class)
   - meta: 159 lines
+- **`smartrecruiters.py`** — _SmartRecruiters public job-board ingestion._
+  - exports: SmartRecruitersSource (class)
+  - meta: 219 lines
+- **`weworkremotely.py`** — _WeWorkRemotely RSS-based job ingestion._
+  - exports: WeWorkRemotelySource (class)
+  - meta: 205 lines
+- **`workable.py`** — _Workable public job-board ingestion._
+  - exports: WorkableSource (class)
+  - meta: 185 lines
 
 **`backend/app/utils/`**
 
@@ -402,7 +411,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 - **`audit_sources.py`** — _Audit job-source slugs to see which boards are live._
   - exports: main
-  - meta: 233 lines
+  - meta: 247 lines
 - **`ingest.py`** — _Ingest jobs from external sources into Supabase._
   - exports: main
   - meta: 129 lines
@@ -1259,7 +1268,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - ts lines: 24718
 - js files: 10
 - js lines: 948
-- py files: 82
-- py lines: 9667
+- py files: 85
+- py lines: 10296
 - Next.js routes: 52
 - API endpoints: 68
