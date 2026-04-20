@@ -31,6 +31,7 @@ import {
   DISCOVER_DEFAULT_FILTERS,
   type DiscoverFilters,
 } from "@/components/discover/discover-filters";
+import { RecommendationsRail } from "@/components/discover/recommendations-rail";
 import {
   useCachedJobs,
   useCachedJobCompanies,
@@ -153,6 +154,17 @@ export function DiscoverClient() {
   const { companies } = useCachedJobCompanies();
 
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // The Recommendations rail only shows on the unfiltered default view. The
+  // moment a user tweaks a filter, the page becomes about "what they asked
+  // for", not "what we'd suggest" — stacking both would feel conflicting.
+  const filtersAreDefault =
+    !filters.search.trim() &&
+    filters.skills.length === 0 &&
+    !filters.remoteType &&
+    !filters.company.trim() &&
+    filters.postedWithinDays === 0;
+  const showRail = filtersAreDefault && page === 1;
 
   // ── Signed-in state (used to gate Save + show "On your board") ──
   const [userId, setUserId] = useState<string | null>(null);
@@ -328,6 +340,15 @@ export function DiscoverClient() {
         <div className="mb-6 rounded-xl border border-red-800/50 bg-red-950/30 p-4 text-sm text-red-200">
           Couldn&apos;t load jobs: {error instanceof Error ? error.message : String(error)}
         </div>
+      )}
+
+      {/* Personalized rail — default view only */}
+      {showRail && (
+        <RecommendationsRail
+          savedByUrl={savedByUrl}
+          savingIds={savingIds}
+          onSave={handleSave}
+        />
       )}
 
       {/* Filters + results */}

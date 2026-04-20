@@ -149,10 +149,30 @@ export interface ThankYouResponse {
   saved_outreach_id?: string | null;
 }
 
+/**
+ * Profile shape returned by `GET /profile` and accepted by `PATCH /profile`.
+ *
+ * The backend's Pydantic models (ProfileResponse / ProfilePatch) accept the
+ * full extended shape; CLAUDE.md is the source of truth for what's allowed.
+ * Any new profile field MUST be added here and to the backend in lockstep.
+ *
+ * `remote_preference` was added in 20260416120000_profile_remote_preference.sql
+ * and is the input for the recommendations rail's remote-fit bonus.
+ */
 export interface UserProfile {
   display_name: string;
   headline: string;
   linkedin_url: string;
+
+  // Extended fields (Sprint 6+). All optional on response; PATCH drops unknown
+  // keys, so missing → "user hasn't filled this in yet."
+  phone?: string | null;
+  location?: string | null;
+  portfolio_url?: string | null;
+  bio?: string | null;
+  /** "remote" | "hybrid" | "onsite" | null. Drives recommendations remote bonus. */
+  remote_preference?: "remote" | "hybrid" | "onsite" | null;
+
   updated_at?: string | null;
 }
 
