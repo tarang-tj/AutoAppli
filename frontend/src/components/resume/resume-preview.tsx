@@ -2,9 +2,16 @@
 
 import { ResumeFormattedView } from "@/components/resume/resume-formatted-view";
 import { ResumeDiffView } from "@/components/resume/resume-diff-view";
+import { TemplatePicker } from "@/components/resume/template-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadResumeHtml, openResumePrintWindow } from "@/lib/resume-export-html";
+import {
+  DEFAULT_TEMPLATE_ID,
+  loadTemplatePreference,
+  saveTemplatePreference,
+  type ResumeTemplateId,
+} from "@/lib/resume-templates";
 import type { GeneratedDocument } from "@/types";
 import {
   Copy,
@@ -52,6 +59,16 @@ export function ResumePreview({
 }) {
   const [tab, setTab] = useState<PreviewTab>("formatted");
   const [pdfObjectUrl, setPdfObjectUrl] = useState<string | null>(null);
+  // Sprint 7 — persisted template choice. Lazy init reads localStorage
+  // once on first render; writes happen in the setter below.
+  const [templateId, setTemplateIdState] = useState<ResumeTemplateId>(DEFAULT_TEMPLATE_ID);
+  useEffect(() => {
+    setTemplateIdState(loadTemplatePreference());
+  }, []);
+  const setTemplateId = (id: ResumeTemplateId) => {
+    setTemplateIdState(id);
+    saveTemplatePreference(id);
+  };
   // Cherry-picked hybrid text (set from the Diff tab via Apply hybrid).
   // When non-null, the Formatted/Plain-text views and the Copy/HTML/Print
   // actions all use this instead of the raw tailored content. The PDF tab
@@ -193,7 +210,8 @@ export function ResumePreview({
                 onClick={() =>
                   downloadResumeHtml(
                     effectiveContent,
-                    `${hybridActive ? "hybrid" : "tailored"}-resume-${doc.id}.html`
+                    `${hybridActive ? "hybrid" : "tailored"}-resume-${doc.id}.html`,
+                    templateId,
                   )
                 }
               >
@@ -204,7 +222,7 @@ export function ResumePreview({
                 variant="outline"
                 size="sm"
                 className="border-zinc-600 text-zinc-100 bg-zinc-800/80 hover:bg-zinc-800"
-                onClick={() => openResumePrintWindow(effectiveContent)}
+                onClick={() => openResumePrintWindow(effectiveContent, templateId)}
               >
                 <Printer className="h-4 w-4 mr-2" />
                 Print
@@ -251,30 +269,36 @@ export function ResumePreview({
           </div>
         ) : null}
 
-        <div
-          className="flex flex-wrap gap-1 rounded-lg bg-zinc-950/80 p-1 border border-zinc-800"
-          role="tablist"
-          aria-label="Resume preview mode"
-        >
-          {tabBtn("formatted", "Formatted", <LayoutTemplate className="h-4 w-4" />)}
-          {tabBtn(
-            "pdf",
-            "PDF preview",
-            <FileText className="h-4 w-4" />,
-            !pdfIframeSrc
-          )}
-          {tabBtn("source", "Plain text", <ScrollText className="h-4 w-4" />, !effectiveContent)}
-          {tabBtn(
-            "diff",
-            "Diff",
-            <GitCompareArrows className="h-4 w-4" />,
-            !content || !originalText?.trim()
-          )}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div
+            className="flex flex-wrap gap-1 rounded-lg bg-zinc-950/80 p-1 border border-zinc-800"
+            role="tablist"
+            aria-label="Resume preview mode"
+          >
+            {tabBtn("formatted", "Formatted", <LayoutTemplate className="h-4 w-4" />)}
+            {tabBtn(
+              "pdf",
+              "PDF preview",
+              <FileText className="h-4 w-4" />,
+              !pdfIframeSrc
+            )}
+            {tabBtn("source", "Plain text", <ScrollText className="h-4 w-4" />, !effectiveContent)}
+            {tabBtn(
+              "diff",
+              "Diff",
+              <GitCompareArrows className="h-4 w-4" />,
+              !content || !originalText?.trim()
+            )}
+          </div>
+          {/* Template picker — only meaningful for the Formatted tab, but we
+              keep it always-visible so users can switch and then flip to
+              Formatted to see the result. Disabling it would feel jumpy. */}
+          <TemplatePicker value={templateId} onChange={setTemplateId} compact />
         </div>
 
         {tab === "formatted" && effectiveContent ? (
           <div className="max-h-[min(72vh,880px)] overflow-y-auto rounded-md bg-zinc-950 p-4">
-            <ResumeFormattedView text={effectiveContent} />
+            <ResumeFormattedView text={effectiveContent} templateId={templateId} />
           </div>
         ) : null}
 

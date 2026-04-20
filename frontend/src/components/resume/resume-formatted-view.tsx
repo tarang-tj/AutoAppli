@@ -4,8 +4,16 @@ import type { ReactNode } from "react";
 import { parseResumePlainText, type ResumeBlock } from "@/lib/parse-resume-text";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import {
+  DEFAULT_TEMPLATE_ID,
+  getTemplate,
+  type ResumeTemplateId,
+} from "@/lib/resume-templates";
 
-function renderBlocks(blocks: ResumeBlock[]): ReactNode[] {
+function renderBlocks(
+  blocks: ResumeBlock[],
+  styles: ReturnType<typeof getTemplate>["preview"],
+): ReactNode[] {
   const out: ReactNode[] = [];
   let bulletRun: string[] = [];
   let key = 0;
@@ -13,14 +21,11 @@ function renderBlocks(blocks: ResumeBlock[]): ReactNode[] {
   const flushBullets = () => {
     if (bulletRun.length === 0) return;
     out.push(
-      <ul
-        key={`ul-${key++}`}
-        className="my-1 ml-4 list-disc space-y-0.5 pl-1 text-[10pt] text-zinc-800 marker:text-zinc-500"
-      >
+      <ul key={`ul-${key++}`} className={styles.bullet}>
         {bulletRun.map((t, i) => (
           <li key={i}>{t}</li>
         ))}
-      </ul>
+      </ul>,
     );
     bulletRun = [];
   };
@@ -30,35 +35,29 @@ function renderBlocks(blocks: ResumeBlock[]): ReactNode[] {
       case "name":
         flushBullets();
         out.push(
-          <h2
-            key={key++}
-            className="text-center text-[18pt] font-bold leading-tight tracking-tight text-zinc-950"
-          >
+          <h2 key={key++} className={styles.name}>
             {b.text}
-          </h2>
+          </h2>,
         );
         break;
       case "contact":
         flushBullets();
         out.push(
-          <p key={key++} className="mt-1 text-center text-[10pt] text-zinc-600">
+          <p key={key++} className={styles.contact}>
             {b.text}
-          </p>
+          </p>,
         );
         break;
       case "divider":
         flushBullets();
-        out.push(<hr key={key++} className="my-3 border-0 border-t border-zinc-300" />);
+        out.push(<hr key={key++} className={cn("border-0", styles.divider)} />);
         break;
       case "section":
         flushBullets();
         out.push(
-          <h3
-            key={key++}
-            className="mt-4 border-b border-zinc-200 pb-0.5 text-[11pt] font-bold text-[#2c3e50] first:mt-0"
-          >
+          <h3 key={key++} className={styles.section}>
             {b.text}
-          </h3>
+          </h3>,
         );
         break;
       case "bullet":
@@ -67,9 +66,9 @@ function renderBlocks(blocks: ResumeBlock[]): ReactNode[] {
       case "paragraph":
         flushBullets();
         out.push(
-          <p key={key++} className="mt-1 text-[10pt] text-zinc-800">
+          <p key={key++} className={styles.paragraph}>
             {b.text}
-          </p>
+          </p>,
         );
         break;
       default:
@@ -81,32 +80,33 @@ function renderBlocks(blocks: ResumeBlock[]): ReactNode[] {
 }
 
 /**
- * On-screen “paper” preview matching the structured PDF layout (name, contact, sections, bullets).
+ * On-screen "paper" preview matching the structured PDF/HTML layout.
+ *
+ * Sprint 7 — accepts a `templateId` so the paper, typography, and section
+ * heading style all switch in lockstep with the exported HTML version.
+ * Falls back to the Harvard template when omitted (most-common default,
+ * matches the previous hard-coded look).
  */
 export function ResumeFormattedView({
   text,
   className,
   id,
+  templateId,
 }: {
   text: string;
   className?: string;
   id?: string;
+  templateId?: ResumeTemplateId;
 }) {
+  const template = getTemplate(templateId ?? DEFAULT_TEMPLATE_ID);
+
   const nodes = useMemo(() => {
     const blocks = parseResumePlainText(text);
-    return renderBlocks(blocks);
-  }, [text]);
+    return renderBlocks(blocks, template.preview);
+  }, [text, template]);
 
   return (
-    <div
-      id={id}
-      className={cn(
-        "rounded-lg border border-zinc-600 bg-white text-zinc-900 shadow-xl shadow-black/25",
-        "mx-auto w-full max-w-[8.5in] min-h-[11in] px-[0.75in] py-[0.55in]",
-        "font-serif text-[10pt] leading-[1.35]",
-        className
-      )}
-    >
+    <div id={id} className={cn(template.preview.container, className)}>
       {nodes}
     </div>
   );

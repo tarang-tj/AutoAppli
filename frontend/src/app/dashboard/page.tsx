@@ -5,6 +5,7 @@ import { InsightsCards } from "@/components/dashboard/insights-cards";
 import { PipelineStats } from "@/components/dashboard/pipeline-stats";
 import { DemoModeBanner } from "@/components/dashboard/demo-mode-banner";
 import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
+import { ActivationChecklist } from "@/components/dashboard/activation-checklist";
 import { WeeklyDigest } from "@/components/dashboard/weekly-digest";
 import { OutcomesBreakdown } from "@/components/dashboard/outcomes-breakdown";
 import { StaleJobsNudge } from "@/components/dashboard/stale-jobs-nudge";
@@ -156,6 +157,7 @@ function DashboardContent() {
     <div>
       <OnboardingTour />
       <DemoModeBanner />
+      <ActivationChecklist />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-zinc-50 tracking-tight">Job Tracker</h1>

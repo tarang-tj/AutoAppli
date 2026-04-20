@@ -1,4 +1,9 @@
 import { parseResumePlainText, stripInlineMarkdown } from "@/lib/parse-resume-text";
+import {
+  DEFAULT_TEMPLATE_ID,
+  getTemplate,
+  type ResumeTemplateId,
+} from "@/lib/resume-templates";
 
 function esc(s: string): string {
   return s
@@ -8,8 +13,19 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Standalone HTML document for download or print-from-new-window. */
-export function buildResumeHtmlDocument(plainText: string, title = "Tailored resume"): string {
+/**
+ * Standalone HTML document for download or print-from-new-window.
+ *
+ * Sprint 7 — accepts a `templateId` so the exported file's CSS matches
+ * whatever the user was previewing on screen. The template registry in
+ * `resume-templates.ts` is the single source of truth for styling.
+ */
+export function buildResumeHtmlDocument(
+  plainText: string,
+  title = "Tailored resume",
+  templateId: ResumeTemplateId = DEFAULT_TEMPLATE_ID,
+): string {
+  const template = getTemplate(templateId);
   const blocks = parseResumePlainText(plainText);
   const chunks: string[] = [];
   let bulletBuf: string[] = [];
@@ -17,7 +33,7 @@ export function buildResumeHtmlDocument(plainText: string, title = "Tailored res
   const flushBullets = () => {
     if (bulletBuf.length === 0) return;
     chunks.push(
-      `<ul class="bullets">\n${bulletBuf.map((t) => `  <li class="bullet">${esc(t)}</li>`).join("\n")}\n</ul>`
+      `<ul class="bullets">\n${bulletBuf.map((t) => `  <li class="bullet">${esc(t)}</li>`).join("\n")}\n</ul>`,
     );
     bulletBuf = [];
   };
@@ -62,15 +78,7 @@ export function buildResumeHtmlDocument(plainText: string, title = "Tailored res
   <title>${esc(title)}</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: Georgia, 'Times New Roman', serif; max-width: 8.5in; margin: 0 auto; padding: 0.6in 0.75in; color: #1a1a1a; line-height: 1.35; }
-    .name { font-size: 18pt; text-align: center; margin: 0 0 0.15em; font-weight: 700; }
-    .contact { font-size: 10pt; text-align: center; color: #444; margin: 0 0 1em; }
-    .rule { border: none; border-top: 1px solid #ccc; margin: 0 0 0.75em; }
-    .section { font-size: 11pt; font-weight: 700; color: #2c3e50; margin: 1em 0 0.35em; border-bottom: 1px solid #ddd; padding-bottom: 2px; }
-    .body { font-size: 10pt; margin: 0 0 0.35em; }
-    .bullets { margin: 0.25em 0 0.5em 1.1em; padding: 0; }
-    .bullet { font-size: 10pt; margin-bottom: 0.2em; }
-    @media print { body { padding: 0.5in; } }
+    ${template.exportCss.trim()}
   </style>
 </head>
 <body>
@@ -79,8 +87,16 @@ ${bodyInner}
 </html>`;
 }
 
-export function downloadResumeHtml(plainText: string, filename = "tailored-resume.html"): void {
-  const html = buildResumeHtmlDocument(stripInlineMarkdown(plainText));
+export function downloadResumeHtml(
+  plainText: string,
+  filename = "tailored-resume.html",
+  templateId: ResumeTemplateId = DEFAULT_TEMPLATE_ID,
+): void {
+  const html = buildResumeHtmlDocument(
+    stripInlineMarkdown(plainText),
+    "Tailored resume",
+    templateId,
+  );
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -90,8 +106,11 @@ export function downloadResumeHtml(plainText: string, filename = "tailored-resum
   URL.revokeObjectURL(url);
 }
 
-export function openResumePrintWindow(plainText: string): void {
-  const html = buildResumeHtmlDocument(plainText);
+export function openResumePrintWindow(
+  plainText: string,
+  templateId: ResumeTemplateId = DEFAULT_TEMPLATE_ID,
+): void {
+  const html = buildResumeHtmlDocument(plainText, "Tailored resume", templateId);
   const w = window.open("", "_blank", "noopener,noreferrer");
   if (!w) return;
   w.document.open();
