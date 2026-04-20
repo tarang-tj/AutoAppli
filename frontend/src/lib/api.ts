@@ -2,6 +2,8 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { isDemoMode } from "@/lib/demo-mode";
 import * as sbJobs from "@/lib/supabase/jobs";
 import * as sbSearch from "@/lib/supabase/search";
+import * as sbProfile from "@/lib/supabase/profile";
+import * as sbResumes from "@/lib/supabase/resumes";
 import {
   getDemoJobs,
   setDemoJobs,
@@ -1180,7 +1182,41 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
       }
     }
 
-    if (path === "/profile") return getDemoProfile() as T;
+    // Profile → Supabase for signed-in users, demo for anon
+    if (path === "/profile") {
+      if (useSupabase) {
+        try {
+          return (await sbProfile.fetchProfile()) as T;
+        } catch {
+          // Not signed in, RLS mismatch, or transient — degrade to demo
+          // instead of breaking the entire page render.
+          return getDemoProfile() as T;
+        }
+      }
+      return getDemoProfile() as T;
+    }
+
+    // Resumes + tailored-doc history → Supabase for signed-in users, demo for anon
+    if (path === "/resumes") {
+      if (useSupabase) {
+        try {
+          return (await sbResumes.fetchResumes()) as T;
+        } catch {
+          return getDemoResumes() as T;
+        }
+      }
+      return getDemoResumes() as T;
+    }
+    if (path === "/resumes/generated") {
+      if (useSupabase) {
+        try {
+          return (await sbResumes.fetchGeneratedDocuments()) as T;
+        } catch {
+          return getDemoGeneratedDocuments() as T;
+        }
+      }
+      return getDemoGeneratedDocuments() as T;
+    }
 
     // Search → Supabase when configured
     if (useSupabase) {
@@ -1198,15 +1234,28 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
         return { results: [], search_id: null, from_cache: true, persisted: false } as T;
       }
     }
-    if (path === "/resumes") return getDemoResumes() as T;
-    if (path === "/resumes/generated") return getDemoGeneratedDocuments() as T;
     // All other paths fall through to the generic demo handler
     return handleDemoGet(path) as T;
   }
 
   // ── FastAPI backend IS configured ──
 
-  if (path === "/profile") return fetchBackend<T>(path);
+  if (path === "/profile") {
+    try {
+      return await fetchBackend<T>(path);
+    } catch {
+      // Sprint 8 — same fallback reasoning as /resumes below: real data
+      // beats a stack trace if FastAPI is down for a moment.
+      if (isSupabaseConfigured()) {
+        try {
+          return (await sbProfile.fetchProfile()) as T;
+        } catch {
+          /* fall through to demo */
+        }
+      }
+      return getDemoProfile() as T;
+    }
+  }
 
   if (path === "/search/history" || path.startsWith("/search/history?")) return fetchBackend<T>(path);
 
@@ -1216,6 +1265,20 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     try {
       return await fetchBackend<T>(path);
     } catch {
+      // Sprint 8 — when FastAPI is configured but unreachable (cold start,
+      // ngrok down, etc.), prefer Supabase-direct over an empty array so
+      // the dashboard, recommendations rail, and activation checklist still
+      // show real data instead of the seeded demo state.
+      if (isSupabaseConfigured()) {
+        try {
+          if (path === "/resumes") return (await sbResumes.fetchResumes()) as T;
+          if (path === "/resumes/generated") {
+            return (await sbResumes.fetchGeneratedDocuments()) as T;
+          }
+        } catch {
+          /* fall through to demo */
+        }
+      }
       if (path === "/resumes") return getDemoResumes() as T;
       if (path === "/resumes/generated") return [] as T;
       throw new Error("Resume API unreachable. Verify NEXT_PUBLIC_API_URL and API health.");
@@ -1381,6 +1444,20 @@ export async function apiPatch<T = unknown>(path: string, body: unknown): Promis
 
   if (path === "/profile") {
     if (noBackend) {
+      // Sprint 8 — supabase-direct write so a signed-in user's edits actually
+      // persist instead of dropping into the demo store and disappearing on
+      // reload. Anon visitors and demo mode keep the in-memory behavior.
+      if (isSupabaseConfigured() && !demo) {
+        try {
+          return (await sbProfile.updateProfile(
+            body as Partial<UserProfile>,
+          )) as T;
+        } catch {
+          // Auth missing / RLS mismatch — at least keep the local demo write
+          // so the form doesn't appear to silently fail in dev.
+          return handleDemoPatch(path, body) as T;
+        }
+      }
       return handleDemoPatch(path, body) as T;
     }
     return fetchBackend<T>(path, {
