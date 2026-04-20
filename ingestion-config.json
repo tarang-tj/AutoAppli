@@ -1,0 +1,69 @@
+{
+  "_comment": [
+    "Source slug registry consumed by backend/scripts/ingest_all.py.",
+    "Each top-level key is a registered source name (must match the string",
+    "passed to register_source(...) inside backend/app/services/ingestion).",
+    "Each value is the list of identifiers fed to source.fetch().",
+    "",
+    "ATS sources (greenhouse/lever/ashby/workable/smartrecruiters) take",
+    "company-board slugs. WeWorkRemotely takes RSS category slugs because",
+    "it is an aggregator with no per-company board.",
+    "",
+    "Verify a slug before adding it: ATS migrations happen monthly. Run",
+    "  python -m backend.scripts.audit_sources --source <name> --ids <slug>",
+    "first; only commit slugs that returned >0 jobs.",
+    "",
+    "Lines starting with `_` are ignored by the orchestrator."
+  ],
+
+  "sources": {
+    "greenhouse": [
+      "airbnb",
+      "stripe",
+      "anthropic",
+      "openai",
+      "gitlab",
+      "dropbox"
+    ],
+
+    "lever": [
+      "lever",
+      "mixpanel",
+      "mux",
+      "attentive",
+      "gopuff",
+      "whatnot"
+    ],
+
+    "ashby": [
+      "ramp",
+      "linear",
+      "notion",
+      "mercury",
+      "retool",
+      "posthog",
+      "vercel"
+    ],
+
+    "workable": [
+      "remote",
+      "andela",
+      "depop",
+      "quickbooks"
+    ],
+
+    "smartrecruiters": [
+      "Bosch",
+      "Visa",
+      "SamsungElectronics",
+      "Publicis"
+    ],
+
+    "weworkremotely": [
+      "remote-programming-jobs",
+      "remote-product-jobs",
+      "remote-design-jobs",
+      "remote-devops-sysadmin-jobs"
+    ]
+  }
+}

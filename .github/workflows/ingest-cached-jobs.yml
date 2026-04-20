@@ -1,0 +1,88 @@
+name: Ingest Cached Jobs
+
+# Job DB Phase B — nightly orchestrator that walks every configured source
+# (greenhouse / lever / ashby / workable / smartrecruiters / weworkremotely)
+# and upserts normalized rows into `public.cached_jobs`, then sweeps stale
+# rows as inactive.
+#
+# The older `ingest-jobs.yml` workflow targets the `public.jobs` table
+# (user-tied kanban). This workflow targets the separate `cached_jobs`
+# firehose (read by the Discover page and the recommendation engine).
+# Both run in parallel for now — the old workflow will be retired once
+# the Discover surface is live.
+#
+# Required repo secrets:
+#   SUPABASE_URL                 — e.g. https://abc.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY    — service-role key (server-only)
+#
+# Manual run:
+#   gh workflow run "Ingest Cached Jobs"                     # all sources
+#   gh workflow run "Ingest Cached Jobs" -f source=lever     # one source
+#   gh workflow run "Ingest Cached Jobs" -f dry_run=true     # no writes
+
+on:
+  schedule:
+    # Daily at 09:00 UTC ≈ 05:00 ET. Staggered 3h after `ingest-jobs.yml`
+    # so the two workflows don't contend for Supabase connection slots.
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Restrict to a single source (e.g. "lever"). Blank = all.'
+        required: false
+        default: ''
+      dry_run:
+        description: 'If "true", skip Supabase writes'
+        required: false
+        default: 'false'
+      no_deactivate:
+        description: 'If "true", skip the post-run sweep'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+
+jobs:
+  ingest-all:
+    name: ingest-all
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run orchestrator
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          ONLY_SOURCE: ${{ github.event.inputs.source || '' }}
+          NO_DEACTIVATE: ${{ github.event.inputs.no_deactivate || 'false' }}
+        run: |
+          args=( "--summary-out" "run-summary.json" )
+          if [ "$DRY_RUN" = "true" ]; then
+            args+=( "--dry-run" )
+          fi
+          if [ "$NO_DEACTIVATE" = "true" ]; then
+            args+=( "--no-deactivate" )
+          fi
+          if [ -n "$ONLY_SOURCE" ]; then
+            args+=( "--source" "$ONLY_SOURCE" )
+          fi
+          python -m backend.scripts.ingest_all "${args[@]}"
+
+      - name: Upload run summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cached-jobs-run-summary
+          path: run-summary.json
+          if-no-files-found: ignore
+          retention-days: 30
