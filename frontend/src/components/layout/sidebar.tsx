@@ -21,6 +21,7 @@ import {
   PenTool,
   FileDown,
   Download,
+  Compass,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -33,6 +34,7 @@ const navGroups: NavGroup[] = [
     title: "Core",
     items: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/discover", label: "Discover", icon: Compass },
       { href: "/jobs", label: "Job Search", icon: Search },
     ],
   },

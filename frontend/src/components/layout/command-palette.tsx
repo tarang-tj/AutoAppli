@@ -10,6 +10,7 @@ import {
   Briefcase,
   CalendarCheck,
   Clock,
+  Compass,
   CornerDownLeft,
   DollarSign,
   Download,
@@ -64,6 +65,7 @@ type Command = {
 const STATIC_COMMANDS: Omit<Command, "run">[] = [
   // Navigate
   { id: "nav-dashboard", label: "Go to Dashboard", icon: LayoutDashboard, group: "Navigate", href: "/dashboard", keywords: ["home", "kanban", "board", "tracker"] },
+  { id: "nav-discover", label: "Discover Jobs", icon: Compass, group: "Navigate", href: "/discover", keywords: ["firehose", "browse", "feed", "cached", "openings"] },
   { id: "nav-jobs", label: "Search Jobs", icon: Search, group: "Navigate", href: "/jobs", keywords: ["find", "discover", "openings"] },
   { id: "nav-resume", label: "Resume Builder", icon: FileText, group: "Navigate", href: "/resume", keywords: ["cv", "upload"] },
   { id: "nav-cover", label: "Cover Letters", icon: PenTool, group: "Navigate", href: "/cover-letter", keywords: ["letter", "draft"] },

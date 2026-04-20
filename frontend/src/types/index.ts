@@ -298,6 +298,35 @@ export interface InterviewPracticeSession {
   updated_at: string;
 }
 
+/**
+ * A row out of the public.cached_jobs firehose (Sprint 4). Read-only from
+ * the browser — only the nightly ingestion cron writes here.
+ *
+ * `remote_type` here is a stricter subset than Job.remote_type because the
+ * ingestion layer never emits "unknown"; if the source didn't specify, the
+ * field comes back as null.
+ */
+export interface CachedJob {
+  id: string;
+  source: string;
+  external_id: string;
+  title: string;
+  company: string;
+  url: string;
+  description: string;
+  location: string | null;
+  remote_type: "remote" | "hybrid" | "onsite" | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  skills: string[];
+  tags: string[];
+  posted_at: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
+  /** When non-null, the row wasn't returned by the most recent ingestion run. */
+  inactive_at: string | null;
+}
+
 export interface InterviewNote {
   id: string;
   job_id: string;
