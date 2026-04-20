@@ -1,7 +1,7 @@
 {
   "stats": {
-    "ts files": 155,
-    "ts lines": 26746,
+    "ts files": 158,
+    "ts lines": 27321,
     "js files": 10,
     "js lines": 948,
     "py files": 86,
@@ -2063,6 +2063,7 @@
         "DashboardPage (default)"
       ],
       "imports": [
+        "@/components/dashboard/activation-checklist",
         "@/components/dashboard/demo-mode-banner",
         "@/components/dashboard/insights-cards",
         "@/components/dashboard/kanban-board",
@@ -2089,7 +2090,7 @@
       ],
       "next_route": "PAGE /dashboard",
       "api_routes": [],
-      "line_count": 544
+      "line_count": 546
     },
     {
       "path": "frontend/src/app/discover/discover-client.tsx",
@@ -2661,6 +2662,24 @@
       "line_count": 227
     },
     {
+      "path": "frontend/src/components/dashboard/activation-checklist.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "ActivationChecklist"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/hooks/use-jobs",
+        "@/lib/api",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 268
+    },
+    {
       "path": "frontend/src/components/dashboard/demo-mode-banner.tsx",
       "kind": "ts",
       "role": null,
@@ -3225,6 +3244,7 @@
       ],
       "imports": [
         "@/lib/parse-resume-text",
+        "@/lib/resume-templates",
         "@/lib/utils"
       ],
       "next_route": null,
@@ -3241,15 +3261,17 @@
       "imports": [
         "@/components/resume/resume-diff-view",
         "@/components/resume/resume-formatted-view",
+        "@/components/resume/template-picker",
         "@/components/ui/button",
         "@/components/ui/card",
         "@/lib/resume-export-html",
+        "@/lib/resume-templates",
         "@/lib/utils",
         "@/types"
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 323
+      "line_count": 347
     },
     {
       "path": "frontend/src/components/resume/resume-review-panel.tsx",
@@ -3284,6 +3306,21 @@
       "next_route": null,
       "api_routes": [],
       "line_count": 54
+    },
+    {
+      "path": "frontend/src/components/resume/template-picker.tsx",
+      "kind": "ts",
+      "role": "Sprint 7 \u2014 compact template picker shown in the ResumePreview header.",
+      "exports": [
+        "TemplatePicker"
+      ],
+      "imports": [
+        "@/lib/resume-templates",
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 58
     },
     {
       "path": "frontend/src/components/ui/avatar.tsx",
@@ -4084,18 +4121,37 @@
     {
       "path": "frontend/src/lib/resume-export-html.ts",
       "kind": "ts",
-      "role": "Standalone HTML document for download or print-from-new-window.",
+      "role": null,
       "exports": [
         "buildResumeHtmlDocument",
         "downloadResumeHtml",
         "openResumePrintWindow"
       ],
       "imports": [
-        "@/lib/parse-resume-text"
+        "@/lib/parse-resume-text",
+        "@/lib/resume-templates"
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 107
+      "line_count": 126
+    },
+    {
+      "path": "frontend/src/lib/resume-templates.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DEFAULT_TEMPLATE_ID",
+        "getTemplate",
+        "loadTemplatePreference",
+        "RESUME_TEMPLATES",
+        "ResumeTemplate (type)",
+        "ResumeTemplateId (type)",
+        "saveTemplatePreference"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 204
     },
     {
       "path": "frontend/src/lib/site.ts",

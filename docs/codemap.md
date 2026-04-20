@@ -757,8 +757,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - meta: route `LAYOUT /dashboard`; 6 lines
 - **`page.tsx`**
   - exports: DashboardPage (default)
-  - imports: `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/outcomes-breakdown`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs`, `@/components/dashboard/stale-jobs-nudge` (+15 more)
-  - meta: route `PAGE /dashboard`; 544 lines
+  - imports: `@/components/dashboard/activation-checklist`, `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/outcomes-breakdown`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs` (+16 more)
+  - meta: route `PAGE /dashboard`; 546 lines
 
 **`frontend/src/app/discover/`**
 
@@ -915,6 +915,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 **`frontend/src/components/dashboard/`**
 
+- **`activation-checklist.tsx`**
+  - exports: ActivationChecklist
+  - imports: `@/components/ui/button`, `@/hooks/use-jobs`, `@/lib/api`, `@/lib/utils`, `@/types`
+  - meta: 268 lines
 - **`demo-mode-banner.tsx`**
   - exports: DemoModeBanner
   - imports: `@/lib/demo-mode`
@@ -1073,12 +1077,12 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - meta: 587 lines
 - **`resume-formatted-view.tsx`**
   - exports: ResumeFormattedView
-  - imports: `@/lib/parse-resume-text`, `@/lib/utils`
+  - imports: `@/lib/parse-resume-text`, `@/lib/resume-templates`, `@/lib/utils`
   - meta: 114 lines
 - **`resume-preview.tsx`**
   - exports: ResumePreview
-  - imports: `@/components/resume/resume-diff-view`, `@/components/resume/resume-formatted-view`, `@/components/ui/button`, `@/components/ui/card`, `@/lib/resume-export-html`, `@/lib/utils`, `@/types`
-  - meta: 323 lines
+  - imports: `@/components/resume/resume-diff-view`, `@/components/resume/resume-formatted-view`, `@/components/resume/template-picker`, `@/components/ui/button`, `@/components/ui/card`, `@/lib/resume-export-html`, `@/lib/resume-templates`, `@/lib/utils` (+1 more)
+  - meta: 347 lines
 - **`resume-review-panel.tsx`**
   - exports: ResumeReviewPanel
   - imports: `@/components/ui/badge`, `@/components/ui/button`, `@/components/ui/card`, `@/types`
@@ -1087,6 +1091,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: ResumeUpload
   - imports: `@/components/ui/card`, `@/lib/api`, `@/lib/utils`, `@/types`
   - meta: 54 lines
+- **`template-picker.tsx`** — _Sprint 7 — compact template picker shown in the ResumePreview header._
+  - exports: TemplatePicker
+  - imports: `@/lib/resume-templates`, `@/lib/utils`
+  - meta: 58 lines
 
 **`frontend/src/components/ui/`**
 
@@ -1223,10 +1231,13 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`resume-diff.ts`**
   - exports: DiffChunk (type), DiffOp (type), diffResumes, DiffStats (type), diffWords
   - meta: 182 lines
-- **`resume-export-html.ts`** — _Standalone HTML document for download or print-from-new-window._
+- **`resume-export-html.ts`**
   - exports: buildResumeHtmlDocument, downloadResumeHtml, openResumePrintWindow
-  - imports: `@/lib/parse-resume-text`
-  - meta: 107 lines
+  - imports: `@/lib/parse-resume-text`, `@/lib/resume-templates`
+  - meta: 126 lines
+- **`resume-templates.ts`**
+  - exports: DEFAULT_TEMPLATE_ID, getTemplate, loadTemplatePreference, RESUME_TEMPLATES, ResumeTemplate (type), ResumeTemplateId (type) (+1 more)
+  - meta: 204 lines
 - **`site.ts`** — _Canonical site URL for metadata, sitemap, and robots._
   - exports: getSiteUrl
   - meta: 13 lines
@@ -1310,8 +1321,8 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 ## Stats
 
-- ts files: 155
-- ts lines: 26746
+- ts files: 158
+- ts lines: 27321
 - js files: 10
 - js lines: 948
 - py files: 86
