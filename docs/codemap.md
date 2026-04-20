@@ -415,6 +415,9 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`ingest.py`** — _Ingest jobs from external sources into Supabase._
   - exports: main
   - meta: 129 lines
+- **`ingest_all.py`** — _Run every configured ingestion source and upsert into `cached_jobs`._
+  - exports: main
+  - meta: 423 lines
 
 ### `backend/tests`
 
@@ -1268,7 +1271,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - ts lines: 24718
 - js files: 10
 - js lines: 948
-- py files: 85
-- py lines: 10296
+- py files: 86
+- py lines: 10719
 - Next.js routes: 52
 - API endpoints: 68

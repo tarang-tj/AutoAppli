@@ -4,8 +4,8 @@
     "ts lines": 24718,
     "js files": 10,
     "js lines": 948,
-    "py files": 85,
-    "py lines": 10296,
+    "py files": 86,
+    "py lines": 10719,
     "Next.js routes": 52,
     "API endpoints": 68
   },
@@ -1207,6 +1207,18 @@
       "next_route": null,
       "api_routes": [],
       "line_count": 129
+    },
+    {
+      "path": "backend/scripts/ingest_all.py",
+      "kind": "py",
+      "role": "Run every configured ingestion source and upsert into `cached_jobs`.",
+      "exports": [
+        "main"
+      ],
+      "imports": [],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 423
     },
     {
       "path": "backend/tests/test_analytics_service.py",
