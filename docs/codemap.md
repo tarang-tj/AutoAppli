@@ -50,6 +50,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 | `PAGE /contacts` | `frontend/src/app/contacts/page.tsx` | ContactsPage (default) |
 | `PAGE /cover-letter` | `frontend/src/app/cover-letter/page.tsx` | CoverLetterPage (default) |
 | `PAGE /dashboard` | `frontend/src/app/dashboard/page.tsx` | DashboardPage (default) |
+| `PAGE /discover` | `frontend/src/app/discover/page.tsx` | DiscoverPage (default) |
 | `PAGE /export` | `frontend/src/app/export/page.tsx` | ExportPage (default) |
 | `PAGE /forgot-password` | `frontend/src/app/(auth)/forgot-password/page.tsx` | ForgotPasswordPage (default) |
 | `PAGE /interviews` | `frontend/src/app/interviews/page.tsx` | InterviewsPage (default) |
@@ -602,7 +603,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`sitemap.ts`**
   - exports: sitemap (default)
   - imports: `@/lib/site`
-  - meta: 21 lines
+  - meta: 22 lines
 
 **`frontend/src/app/(auth)/auth/update-password/`**
 
@@ -758,6 +759,17 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: DashboardPage (default)
   - imports: `@/components/dashboard/demo-mode-banner`, `@/components/dashboard/insights-cards`, `@/components/dashboard/kanban-board`, `@/components/dashboard/onboarding-tour`, `@/components/dashboard/outcomes-breakdown`, `@/components/dashboard/pipeline-stats`, `@/components/dashboard/recommended-jobs`, `@/components/dashboard/stale-jobs-nudge` (+15 more)
   - meta: route `PAGE /dashboard`; 544 lines
+
+**`frontend/src/app/discover/`**
+
+- **`discover-client.tsx`**
+  - exports: DiscoverClient
+  - imports: `@/components/discover/discover-card`, `@/components/discover/discover-filters`, `@/components/ui/button`, `@/hooks/use-cached-jobs`, `@/lib/supabase/client`, `@/lib/supabase/jobs`, `@/lib/utils`, `@/types`
+  - meta: 472 lines
+- **`page.tsx`**
+  - exports: DiscoverPage (default)
+  - imports: `./discover-client`
+  - meta: route `PAGE /discover`; 61 lines
 
 **`frontend/src/app/export/`**
 
@@ -947,6 +959,17 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - imports: `@/components/dashboard/stale-jobs-nudge`, `@/types`
   - meta: 244 lines
 
+**`frontend/src/components/discover/`**
+
+- **`discover-card.tsx`**
+  - exports: DiscoverCard
+  - imports: `@/components/ui/badge`, `@/components/ui/button`, `@/lib/utils`, `@/types`
+  - meta: 178 lines
+- **`discover-filters.tsx`**
+  - exports: DISCOVER_DEFAULT_FILTERS, DiscoverFilters (type), DiscoverFiltersPanel
+  - imports: `@/components/ui/button`, `@/components/ui/input`, `@/components/ui/label`, `@/lib/supabase/cached-jobs`, `@/lib/utils`
+  - meta: 302 lines
+
 **`frontend/src/components/interviews/`**
 
 - **`practice-history-panel.tsx`**
@@ -995,7 +1018,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`command-palette.tsx`**
   - exports: CommandPalette
   - imports: `@/lib/demo-mode`, `@/lib/supabase/client`
-  - meta: 369 lines
+  - meta: 371 lines
 - **`header.tsx`**
   - exports: Header
   - imports: `@/components/ui/avatar`, `@/components/ui/dropdown-menu`, `@/hooks/use-api-health`, `@/hooks/use-user`, `@/lib/supabase/client`, `@/lib/utils`
@@ -1006,7 +1029,7 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 - **`sidebar.tsx`**
   - exports: Sidebar
   - imports: `@/components/ui/button`, `@/lib/utils`
-  - meta: 170 lines
+  - meta: 172 lines
 
 **`frontend/src/components/marketing/`**
 
@@ -1129,6 +1152,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
   - exports: ApiHealthState (type), useApiHealth
   - imports: `@/lib/api`
   - meta: 43 lines
+- **`use-cached-jobs.ts`** — _SWR hooks around the Supabase-direct `cached_jobs` reads._
+  - exports: useCachedJobCompanies, useCachedJobs, useTopCachedJobSkills
+  - imports: `@/lib/supabase/cached-jobs`, `@/lib/supabase/client`
+  - meta: 95 lines
 - **`use-jobs.ts`**
   - exports: useJobs
   - imports: `@/lib/api`, `@/lib/demo-data`, `@/lib/kanban-reorder`, `@/types`
@@ -1240,6 +1267,10 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 
 **`frontend/src/lib/supabase/`**
 
+- **`cached-jobs.ts`**
+  - exports: CachedJobSort (type), CachedJobsQuery (type), CachedJobsResult (type), fetchCachedJobByExternal, fetchCachedJobCompanies, fetchCachedJobs (+1 more)
+  - imports: `./client`, `@/types`
+  - meta: 206 lines
 - **`client.ts`**
   - exports: createClient, isSupabaseConfigured
   - meta: 16 lines
@@ -1262,16 +1293,16 @@ Future Claude sessions should **read this file FIRST** before exploring with Gre
 **`frontend/src/types/`**
 
 - **`index.ts`**
-  - exports: AnalyticsConversions (type), AnalyticsData (type), AnalyticsDurations (type), AnalyticsSummary (type), AutomationAction (type), AutomationRule (type) (+48 more)
-  - meta: 477 lines
+  - exports: AnalyticsConversions (type), AnalyticsData (type), AnalyticsDurations (type), AnalyticsSummary (type), AutomationAction (type), AutomationRule (type) (+49 more)
+  - meta: 506 lines
 
 ## Stats
 
-- ts files: 146
-- ts lines: 24718
+- ts files: 152
+- ts lines: 26066
 - js files: 10
 - js lines: 948
 - py files: 86
 - py lines: 10719
-- Next.js routes: 52
+- Next.js routes: 53
 - API endpoints: 68

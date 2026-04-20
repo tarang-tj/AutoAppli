@@ -1,12 +1,12 @@
 {
   "stats": {
-    "ts files": 146,
-    "ts lines": 24718,
+    "ts files": 152,
+    "ts lines": 26066,
     "js files": 10,
     "js lines": 948,
     "py files": 86,
     "py lines": 10719,
-    "Next.js routes": 52,
+    "Next.js routes": 53,
     "API endpoints": 68
   },
   "files": [
@@ -2092,6 +2092,41 @@
       "line_count": 544
     },
     {
+      "path": "frontend/src/app/discover/discover-client.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DiscoverClient"
+      ],
+      "imports": [
+        "@/components/discover/discover-card",
+        "@/components/discover/discover-filters",
+        "@/components/ui/button",
+        "@/hooks/use-cached-jobs",
+        "@/lib/supabase/client",
+        "@/lib/supabase/jobs",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 472
+    },
+    {
+      "path": "frontend/src/app/discover/page.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DiscoverPage (default)"
+      ],
+      "imports": [
+        "./discover-client"
+      ],
+      "next_route": "PAGE /discover",
+      "api_routes": [],
+      "line_count": 61
+    },
+    {
       "path": "frontend/src/app/error.tsx",
       "kind": "ts",
       "role": null,
@@ -2542,7 +2577,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 21
+      "line_count": 22
     },
     {
       "path": "frontend/src/app/templates/layout.tsx",
@@ -2806,6 +2841,43 @@
       "line_count": 244
     },
     {
+      "path": "frontend/src/components/discover/discover-card.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DiscoverCard"
+      ],
+      "imports": [
+        "@/components/ui/badge",
+        "@/components/ui/button",
+        "@/lib/utils",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 178
+    },
+    {
+      "path": "frontend/src/components/discover/discover-filters.tsx",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "DISCOVER_DEFAULT_FILTERS",
+        "DiscoverFilters (type)",
+        "DiscoverFiltersPanel"
+      ],
+      "imports": [
+        "@/components/ui/button",
+        "@/components/ui/input",
+        "@/components/ui/label",
+        "@/lib/supabase/cached-jobs",
+        "@/lib/utils"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 302
+    },
+    {
       "path": "frontend/src/components/interviews/practice-history-panel.tsx",
       "kind": "ts",
       "role": null,
@@ -2961,7 +3033,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 369
+      "line_count": 371
     },
     {
       "path": "frontend/src/components/layout/header.tsx",
@@ -3007,7 +3079,7 @@
       ],
       "next_route": null,
       "api_routes": [],
-      "line_count": 170
+      "line_count": 172
     },
     {
       "path": "frontend/src/components/marketing/landing-page.tsx",
@@ -3473,6 +3545,23 @@
       "next_route": null,
       "api_routes": [],
       "line_count": 43
+    },
+    {
+      "path": "frontend/src/hooks/use-cached-jobs.ts",
+      "kind": "ts",
+      "role": "SWR hooks around the Supabase-direct `cached_jobs` reads.",
+      "exports": [
+        "useCachedJobCompanies",
+        "useCachedJobs",
+        "useTopCachedJobSkills"
+      ],
+      "imports": [
+        "@/lib/supabase/cached-jobs",
+        "@/lib/supabase/client"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 95
     },
     {
       "path": "frontend/src/hooks/use-jobs.ts",
@@ -3964,6 +4053,27 @@
       "line_count": 13
     },
     {
+      "path": "frontend/src/lib/supabase/cached-jobs.ts",
+      "kind": "ts",
+      "role": null,
+      "exports": [
+        "CachedJobSort (type)",
+        "CachedJobsQuery (type)",
+        "CachedJobsResult (type)",
+        "fetchCachedJobByExternal",
+        "fetchCachedJobCompanies",
+        "fetchCachedJobs",
+        "fetchTopCachedJobSkills"
+      ],
+      "imports": [
+        "./client",
+        "@/types"
+      ],
+      "next_route": null,
+      "api_routes": [],
+      "line_count": 206
+    },
+    {
       "path": "frontend/src/lib/supabase/client.ts",
       "kind": "ts",
       "role": null,
@@ -4105,6 +4215,7 @@
         "AutomationRule (type)",
         "AutomationSuggestion (type)",
         "AutomationTrigger (type)",
+        "CachedJob (type)",
         "ChangeDelta (type)",
         "ClosedReason (type)",
         "Compensation (type)",
@@ -4155,7 +4266,7 @@
       "imports": [],
       "next_route": null,
       "api_routes": [],
-      "line_count": 477
+      "line_count": 506
     }
   ]
 }
