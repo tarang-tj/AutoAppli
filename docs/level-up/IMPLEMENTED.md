@@ -34,3 +34,29 @@
 - This file (IMPLEMENTED.md)
 - FOLLOW-UPS.md — the items not shipped here, with concrete recipes
 
+
+---
+
+# v2 — 3D Hero + Build Fix
+
+Shipped via `apply-autoappli-nuclear-v2.sh`.
+
+## Commit 1 — fix broken Vercel build
+
+- Added missing `import { redactPII } from "@/lib/redact-pii"` in `frontend/src/app/api/ai/interview-practice/route.ts`. The v1 script's import-insertion regex only matched routes importing from `../claude`; this route imports `Anthropic` directly, so it was missed. TypeScript build error resolved.
+
+## Commit 2 — three.js deps
+
+- Added `three ^0.169.0` + `@types/three ^0.169.0` to `frontend/package.json`. Enables the 3D hero in commit 3.
+- **Run locally**: `cd frontend && npm install` before next `npm run dev`. Vercel installs automatically.
+
+## Commit 3 — 3D marketing hero
+
+- New component: `frontend/src/components/marketing/three-hero.tsx` — a plain-Three.js scene (no @react-three/fiber, to dodge React 19 compat churn) showing 5 stage columns × 3 floating cards each, representing the application pipeline. Ambient particles, camera parallaxing to mouse, smooth sine-wave card motion.
+- Respects `prefers-reduced-motion` (static render, no animation, no mouse listener).
+- Proper cleanup — disposes geometry, materials, renderer on unmount. No GPU leaks on route changes.
+- `aria-hidden="true"` — decorative, skipped by screen readers.
+- Wired into `landing-page.tsx` via `next/dynamic({ ssr: false })` with a matching gradient-orb loading fallback, replacing the static orb decoration that was there.
+
+## Commit 4 — this file
+
