@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { redactPII } from "@/lib/redact-pii";
 
 /**
  * /api/ai/interview-practice — multi-turn interviewer chat.
