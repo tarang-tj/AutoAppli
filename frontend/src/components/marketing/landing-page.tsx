@@ -27,7 +27,7 @@ const ThreeHero = dynamic(
   {
     ssr: false,
     loading: () => (
-      <ThreeHero />
+      <div className="absolute inset-0 -z-10 bg-zinc-950" />
     ),
   }
 );
