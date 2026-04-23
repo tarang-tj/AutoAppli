@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "../claude";
+import { redactPII } from "@/lib/redact-pii";
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
       keyword_suggestions: parsed.keyword_suggestions || [],
     });
   } catch (err) {
-    console.error("review-resume error:", err);
+    console.error("review-resume error:", redactPII(err instanceof Error ? err.message : String(err)));
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal error" },
       { status: 500 }

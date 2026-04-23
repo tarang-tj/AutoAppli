@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "../claude";
+import { redactPII } from "@/lib/redact-pii";
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,7 +57,7 @@ Write only the cover letter body paragraphs. Do not include greeting or signatur
       created_at: new Date().toISOString(),
     });
   } catch (err) {
-    console.error("cover-letter error:", err);
+    console.error("cover-letter error:", redactPII(err instanceof Error ? err.message : String(err)));
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal error" },
       { status: 500 }

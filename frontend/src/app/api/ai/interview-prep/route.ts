@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "../claude";
+import { redactPII } from "@/lib/redact-pii";
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,7 +55,7 @@ ${resume_text ? `\nCandidate Resume:\n${resume_text.slice(0, 1500)}` : ""}`;
 
     return NextResponse.json(parsed);
   } catch (err) {
-    console.error("interview-prep error:", err);
+    console.error("interview-prep error:", redactPII(err instanceof Error ? err.message : String(err)));
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal error" },
       { status: 500 }

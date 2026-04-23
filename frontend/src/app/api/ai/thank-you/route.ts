@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "../claude";
+import { redactPII } from "@/lib/redact-pii";
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,7 +48,7 @@ Make it personal and genuine, referencing the role and any discussion points pro
       saved_outreach_id: `msg-${Date.now()}`,
     });
   } catch (err) {
-    console.error("thank-you error:", err);
+    console.error("thank-you error:", redactPII(err instanceof Error ? err.message : String(err)));
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal error" },
       { status: 500 }

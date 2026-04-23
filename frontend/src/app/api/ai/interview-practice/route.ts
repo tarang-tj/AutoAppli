@@ -114,7 +114,7 @@ ${resume_text ? resume_text.slice(0, 2500) : "(not provided)"}
 
     return NextResponse.json({ reply: text });
   } catch (err) {
-    console.error("interview-practice error:", err);
+    console.error("interview-practice error:", redactPII(err instanceof Error ? err.message : String(err)));
     return NextResponse.json(
       {
         error: err instanceof Error ? err.message : "Internal error",

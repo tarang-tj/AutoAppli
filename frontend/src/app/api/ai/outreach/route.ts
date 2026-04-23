@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "../claude";
+import { redactPII } from "@/lib/redact-pii";
 
 export async function POST(req: NextRequest) {
   try {
@@ -71,7 +72,7 @@ ${resume_text ? `\nSender background excerpt:\n${resume_text.slice(0, 500)}` : "
       created_at: new Date().toISOString(),
     });
   } catch (err) {
-    console.error("outreach error:", err);
+    console.error("outreach error:", redactPII(err instanceof Error ? err.message : String(err)));
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal error" },
       { status: 500 }
