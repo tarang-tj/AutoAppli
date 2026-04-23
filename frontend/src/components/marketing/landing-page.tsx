@@ -18,6 +18,19 @@ import {
   Clock,
 } from "lucide-react";
 import { TryDemoButton } from "@/components/marketing/try-demo-button";
+import dynamic from "next/dynamic";
+
+// Client-only 3D hero — dynamically imported with SSR disabled so Three.js
+// doesn't try to touch `window` during prerender.
+const ThreeHero = dynamic(
+  () => import("@/components/marketing/three-hero"),
+  {
+    ssr: false,
+    loading: () => (
+      <ThreeHero />
+    ),
+  }
+);
 
 /**
  * LandingPage — marketing surface for AutoAppli.
