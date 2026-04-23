@@ -1,3 +1,4 @@
+from typing import Literal
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -26,7 +27,7 @@ class ResumeReviewRequest(BaseModel):
 
 
 class ResumeReviewResponse(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
 
     id: str
     overall_score: int = Field(ge=1, le=10, default=5)
@@ -112,13 +113,24 @@ class ProfileResponse(BaseModel):
     display_name: str = ""
     headline: str = ""
     linkedin_url: str = ""
+    phone: str = ""
+    location: str = ""
+    portfolio_url: str = ""
+    bio: str = ""
+    remote_preference: Literal["remote", "hybrid", "onsite", "any"] = "any"
     updated_at: str | None = None
 
 
 class ProfilePatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     display_name: str | None = None
     headline: str | None = None
     linkedin_url: str | None = None
+    phone: str | None = None
+    location: str | None = None
+    portfolio_url: str | None = None
+    bio: str | None = None
+    remote_preference: Literal["remote", "hybrid", "onsite", "any"] | None = None
 
 
 class SavedGeneratedDocument(BaseModel):

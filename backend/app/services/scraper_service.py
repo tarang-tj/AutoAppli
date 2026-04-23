@@ -17,6 +17,47 @@ HEADERS = {
 TIMEOUT = httpx.Timeout(15.0, connect=10.0)
 
 
+
+# ── URL safety (anti-SSRF) ─────────────────────────────────────────────────
+
+import ipaddress as _ipaddress
+from urllib.parse import urlparse as _urlparse
+
+_ALLOWED_HOSTS = {
+    "indeed.com",
+    "lever.co",
+    "greenhouse.io",
+    "linkedin.com",
+    "glassdoor.com",
+    "ashbyhq.com",
+    "smartrecruiters.com",
+    "workable.com",
+    "weworkremotely.com",
+}
+
+
+def _is_scrape_allowed(url: str) -> tuple[bool, str]:
+    try:
+        parsed = _urlparse(url)
+    except Exception as e:
+        return False, f"urlparse failed: {e}"
+    if parsed.scheme not in {"http", "https"}:
+        return False, f"disallowed scheme: {parsed.scheme}"
+    host = (parsed.hostname or "").lower()
+    if not host:
+        return False, "missing host"
+    try:
+        _ipaddress.ip_address(host)
+        return False, "literal IP addresses not allowed"
+    except ValueError:
+        pass
+    allowed = any(host == h or host.endswith("." + h) for h in _ALLOWED_HOSTS)
+    if not allowed:
+        return False, f"host not in allowlist: {host}"
+    return True, "ok"
+
+
+
 async def search_jobs(
     query: str,
     location: str | None = None,
@@ -50,10 +91,16 @@ async def scrape_job_details(url: str) -> dict:
     Scrape a single job posting page for its full description and metadata.
     Returns a dict with title, company, description, etc.
     """
-    async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
+    ok, reason = _is_scrape_allowed(url)
+    if not ok:
+        return {"error": f"URL rejected: {reason}", "url": url}
+    async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=False) as client:
         try:
             resp = await client.get(url)
             resp.raise_for_status()
+            ctype = resp.headers.get("content-type", "")
+            if "text/html" not in ctype.lower():
+                return {"error": f"unexpected content-type: {ctype}", "url": url}
         except httpx.HTTPError:
             return {"error": f"Failed to fetch {url}", "url": url}
 
@@ -113,7 +160,7 @@ async def _scrape_indeed(
     if remote_only:
         url += "&remotejob=032b3046-06a3-4876-8dfd-474eb5e7ed11"
 
-    async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
+    async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=False) as client:
         try:
             resp = await client.get(url)
             resp.raise_for_status()

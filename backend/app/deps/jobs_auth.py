@@ -24,13 +24,6 @@ def decode_supabase_user_sub(token: str, jwt_secret: str) -> str:
         )
     except jwt.ExpiredSignatureError:
         raise
-    except jwt.InvalidAudienceError:
-        payload = jwt.decode(
-            token,
-            jwt_secret,
-            algorithms=["HS256"],
-            options={"verify_aud": False},
-        )
     except jwt.InvalidTokenError:
         raise
     sub = payload.get("sub")

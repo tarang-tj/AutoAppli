@@ -29,6 +29,20 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+
+    def validate_required_env(self) -> list[str]:
+        """Return a list of missing required env vars. Call at startup."""
+        missing: list[str] = []
+        if not self.ANTHROPIC_API_KEY.strip():
+            missing.append("ANTHROPIC_API_KEY")
+        if not self.DEBUG:
+            for k in ("SUPABASE_URL", "SUPABASE_KEY", "SUPABASE_JWT_SECRET"):
+                if not getattr(self, k).strip():
+                    missing.append(k)
+            if "*" in self.CORS_ORIGINS:
+                missing.append("CORS_ORIGINS (wildcard not allowed when DEBUG=false)")
+        return missing
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [x.strip() for x in self.CORS_ORIGINS.split(",") if x.strip()]
