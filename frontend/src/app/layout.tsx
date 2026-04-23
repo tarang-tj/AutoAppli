@@ -80,8 +80,24 @@ export default function RootLayout({
         }}
       >
         <GlobalErrorListener />
+        <script
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "AutoAppli",
+              applicationCategory: "BusinessApplication",
+              operatingSystem: "Web",
+              url: siteUrl,
+              description: DESCRIPTION,
+              offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+            }),
+          }}
+        />
         {children}
-        <Toaster theme="dark" richColors position="top-center" />
+        <Toaster theme="dark" richColors position="bottom-right" />
       </body>
     </html>
   );
