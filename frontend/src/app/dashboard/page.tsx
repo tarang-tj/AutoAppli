@@ -218,7 +218,7 @@ function DashboardContent() {
                   />
                   <p className="text-xs text-zinc-400">https:// is added automatically when omitted.</p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label className="text-zinc-200">Location</Label>
                     <Input name="location" placeholder="San Francisco, CA" className="bg-zinc-800 border-zinc-700 text-white" />
@@ -233,7 +233,7 @@ function DashboardContent() {
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label className="text-zinc-200">Salary min</Label>
                     <Input name="salary_min" type="number" placeholder="80000" className="bg-zinc-800 border-zinc-700 text-white" />
@@ -243,7 +243,7 @@ function DashboardContent() {
                     <Input name="salary_max" type="number" placeholder="120000" className="bg-zinc-800 border-zinc-700 text-white" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label className="text-zinc-200">Job type</Label>
                     <select name="job_type" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
@@ -325,7 +325,7 @@ function DashboardContent() {
 
                 {showAdvanced && (
                   <div className="space-y-4 border-t border-zinc-700/50 pt-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label className="text-zinc-200">Department</Label>
                         <Input name="department" placeholder="Engineering" className="bg-zinc-800 border-zinc-700 text-white" />
@@ -335,7 +335,7 @@ function DashboardContent() {
                         <Input name="deadline" type="date" className="bg-zinc-800 border-zinc-700 text-white" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label className="text-zinc-200">Recruiter name</Label>
                         <Input name="recruiter_name" placeholder="Jane Smith" className="bg-zinc-800 border-zinc-700 text-white" />

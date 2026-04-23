@@ -87,7 +87,7 @@ function ScoreRing({ score, size = 56, label }: { score: number; size?: number; 
           {score}
         </span>
       </div>
-      <span className="text-[10px] text-zinc-500 uppercase tracking-wide font-medium">{label}</span>
+      <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">{label}</span>
     </div>
   );
 }
@@ -142,8 +142,8 @@ function TagList({ tags, variant }: { tags: string[]; variant: "matched" | "miss
           variant="secondary"
           className={
             variant === "matched"
-              ? "bg-emerald-950/60 text-emerald-300 text-[11px]"
-              : "bg-red-950/60 text-red-300 text-[11px]"
+              ? "bg-emerald-950/60 text-emerald-300 text-sm"
+              : "bg-red-950/60 text-red-300 text-sm"
           }
         >
           {tag}
@@ -196,14 +196,14 @@ export function EvalScoreCard({ eval_result }: { eval_result: EvalResult }) {
               the JD appear in your tailored resume.
             </p>
             <div className="space-y-1.5">
-              <p className="text-[11px] text-zinc-500 uppercase tracking-wide font-medium">
+              <p className="text-sm text-zinc-500 uppercase tracking-wide font-medium">
                 Matched
               </p>
               <TagList tags={keyword_coverage.matched} variant="matched" />
             </div>
             {keyword_coverage.missing.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[11px] text-zinc-500 uppercase tracking-wide font-medium">
+                <p className="text-sm text-zinc-500 uppercase tracking-wide font-medium">
                   Missing — consider adding
                 </p>
                 <TagList tags={keyword_coverage.missing} variant="missing" />
@@ -229,7 +229,7 @@ export function EvalScoreCard({ eval_result }: { eval_result: EvalResult }) {
                 </p>
                 {hallucination_check.hallucinated_skills.length > 0 && (
                   <div>
-                    <p className="text-[11px] text-zinc-500 uppercase tracking-wide font-medium mb-1">
+                    <p className="text-sm text-zinc-500 uppercase tracking-wide font-medium mb-1">
                       Skills not in original
                     </p>
                     <TagList tags={hallucination_check.hallucinated_skills} variant="missing" />
@@ -237,7 +237,7 @@ export function EvalScoreCard({ eval_result }: { eval_result: EvalResult }) {
                 )}
                 {hallucination_check.hallucinated_credentials.length > 0 && (
                   <div>
-                    <p className="text-[11px] text-zinc-500 uppercase tracking-wide font-medium mb-1">
+                    <p className="text-sm text-zinc-500 uppercase tracking-wide font-medium mb-1">
                       Credentials not in original
                     </p>
                     <TagList tags={hallucination_check.hallucinated_credentials} variant="missing" />
