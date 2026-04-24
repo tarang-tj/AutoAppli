@@ -265,15 +265,45 @@ export interface AnalyticsSummary {
 
 // ── Match score types ──────────────────────────────────────────────
 
+export type MatchSignal =
+  | "skills"
+  | "title"
+  | "seniority"
+  | "location"
+  | "remote"
+  | "recency"
+  | "salary";
+
+export interface MatchSignalContribution {
+  signal: MatchSignal;
+  raw: number;
+  weight: number;
+  points: number;
+  note: string;
+}
+
 export interface MatchScore {
   score: number;
-  matched_keywords: string[];
-  missing_keywords: string[];
-  top_job_keywords: string[];
+
+  // v2 (match_v2 engine) fields — preferred:
+  score_exact?: number;
+  breakdown?: MatchSignalContribution[];
+  matched_skills?: string[];
+  missing_skills?: string[];
+  extra_skills?: string[];
+  headline?: string;
+
+  // Legacy (match_service) fields — kept for back-compat with older
+  // callers and the demo-mode fallback. The backend response shape is
+  // discriminated by the `engine` field on the envelope.
+  matched_keywords?: string[];
+  missing_keywords?: string[];
+  top_job_keywords?: string[];
 }
 
 export interface MatchScoresResponse {
   scores: Record<string, MatchScore>;
+  engine?: "v2" | "legacy";
 }
 
 
