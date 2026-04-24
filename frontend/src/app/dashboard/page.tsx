@@ -211,36 +211,39 @@ function DashboardContent() {
               <DialogHeader>
                 <DialogTitle className="text-white">Add New Job</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleCreate} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+              <form onSubmit={handleCreate} aria-busy={creating} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
                 <div className="space-y-2">
-                  <Label className="text-zinc-200">Company *</Label>
-                  <Input name="company" required defaultValue={prefill.company} className="bg-zinc-800 border-zinc-700 text-white" />
+                  <Label htmlFor="job-company" className="text-zinc-200">Company *</Label>
+                  <Input id="job-company" name="company" required autoComplete="off" defaultValue={prefill.company} className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-200">Job Title *</Label>
-                  <Input name="title" required defaultValue={prefill.title} className="bg-zinc-800 border-zinc-700 text-white" />
+                  <Label htmlFor="job-title" className="text-zinc-200">Job Title *</Label>
+                  <Input id="job-title" name="title" required autoComplete="off" defaultValue={prefill.title} className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-200">Job posting URL</Label>
+                  <Label htmlFor="job-url" className="text-zinc-200">Job posting URL</Label>
                   <Input
+                    id="job-url"
                     name="url"
                     type="text"
                     inputMode="url"
                     autoComplete="url"
+                    spellCheck={false}
                     defaultValue={prefill.url}
                     placeholder="e.g. careers.acme.com/roles/123 or https://…"
+                    aria-describedby="job-url-hint"
                     className="bg-zinc-800 border-zinc-700 text-white"
                   />
-                  <p className="text-xs text-zinc-400">https:// is added automatically when omitted.</p>
+                  <p id="job-url-hint" className="text-xs text-zinc-400">https:// is added automatically when omitted.</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label className="text-zinc-200">Location</Label>
-                    <Input name="location" placeholder="San Francisco, CA" className="bg-zinc-800 border-zinc-700 text-white" />
+                    <Label htmlFor="job-location" className="text-zinc-200">Location</Label>
+                    <Input id="job-location" name="location" autoComplete="off" placeholder="San Francisco, CA" className="bg-zinc-800 border-zinc-700 text-white" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-zinc-200">Work model</Label>
-                    <select name="remote_type" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
+                    <Label htmlFor="job-remote-type" className="text-zinc-200">Work model</Label>
+                    <select id="job-remote-type" name="remote_type" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
                       <option value="">Not specified</option>
                       <option value="remote">Remote</option>
                       <option value="hybrid">Hybrid</option>
@@ -250,18 +253,18 @@ function DashboardContent() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label className="text-zinc-200">Salary min</Label>
-                    <Input name="salary_min" type="number" placeholder="80000" className="bg-zinc-800 border-zinc-700 text-white" />
+                    <Label htmlFor="job-salary-min" className="text-zinc-200">Salary min</Label>
+                    <Input id="job-salary-min" name="salary_min" type="number" inputMode="numeric" autoComplete="off" placeholder="80000" className="bg-zinc-800 border-zinc-700 text-white" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-zinc-200">Salary max</Label>
-                    <Input name="salary_max" type="number" placeholder="120000" className="bg-zinc-800 border-zinc-700 text-white" />
+                    <Label htmlFor="job-salary-max" className="text-zinc-200">Salary max</Label>
+                    <Input id="job-salary-max" name="salary_max" type="number" inputMode="numeric" autoComplete="off" placeholder="120000" className="bg-zinc-800 border-zinc-700 text-white" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label className="text-zinc-200">Job type</Label>
-                    <select name="job_type" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
+                    <Label htmlFor="job-type" className="text-zinc-200">Job type</Label>
+                    <select id="job-type" name="job_type" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
                       <option value="full_time">Full-time</option>
                       <option value="part_time">Part-time</option>
                       <option value="contract">Contract</option>
@@ -270,8 +273,8 @@ function DashboardContent() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-zinc-200">Level</Label>
-                    <select name="experience_level" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
+                    <Label htmlFor="job-experience-level" className="text-zinc-200">Level</Label>
+                    <select id="job-experience-level" name="experience_level" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
                       <option value="intern">Intern</option>
                       <option value="entry">Entry</option>
                       <option value="mid">Mid-level</option>
@@ -284,12 +287,15 @@ function DashboardContent() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-200">Skills</Label>
+                  <Label htmlFor="job-skill-input" className="text-zinc-200">Skills</Label>
                   <div className="flex gap-2">
                     <Input
+                      id="job-skill-input"
                       value={skillInput}
                       onChange={(e) => setSkillInput(e.target.value)}
                       placeholder="Type a skill and press Enter"
+                      autoComplete="off"
+                      aria-describedby="job-skill-hint"
                       className="bg-zinc-800 border-zinc-700 text-white flex-1"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -301,20 +307,30 @@ function DashboardContent() {
                       }}
                     />
                   </div>
+                  <p id="job-skill-hint" className="sr-only">
+                    Press Enter to add a skill. Each skill can be removed individually.
+                  </p>
                   {skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <ul aria-label="Selected skills" className="flex flex-wrap gap-1 mt-1 list-none p-0">
                       {skills.map((s) => (
-                        <span key={s} className="inline-flex items-center gap-1 rounded bg-violet-500/20 border border-violet-500/30 px-2 py-0.5 text-xs text-violet-200">
+                        <li key={s} className="inline-flex items-center gap-1 rounded bg-violet-500/20 border border-violet-500/30 px-2 py-0.5 text-xs text-violet-200">
                           {s}
-                          <button type="button" className="text-violet-400 hover:text-white" onClick={() => setSkills(skills.filter((x) => x !== s))}>&times;</button>
-                        </span>
+                          <button
+                            type="button"
+                            aria-label={`Remove skill ${s}`}
+                            className="text-violet-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
+                            onClick={() => setSkills(skills.filter((x) => x !== s))}
+                          >
+                            &times;
+                          </button>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-200">Priority</Label>
-                  <select name="priority" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
+                  <Label htmlFor="job-priority" className="text-zinc-200">Priority</Label>
+                  <select id="job-priority" name="priority" className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2">
                     <option value="0">None</option>
                     <option value="1">1 star</option>
                     <option value="2">2 stars</option>
@@ -324,53 +340,58 @@ function DashboardContent() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-200">Job Description</Label>
-                  <Textarea name="description" rows={3} defaultValue={prefill.description} className="bg-zinc-800 border-zinc-700 text-white" />
+                  <Label htmlFor="job-description" className="text-zinc-200">Job Description</Label>
+                  <Textarea id="job-description" name="description" rows={3} defaultValue={prefill.description} className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
 
                 {/* ── Advanced fields toggle ─────────── */}
                 <button
                   type="button"
-                  className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                  aria-expanded={showAdvanced}
+                  aria-controls="job-advanced-fields"
+                  className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
                   onClick={() => setShowAdvanced(!showAdvanced)}
                 >
-                  {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  {showAdvanced ? <ChevronUp aria-hidden="true" className="h-3 w-3" /> : <ChevronDown aria-hidden="true" className="h-3 w-3" />}
                   {showAdvanced ? "Hide" : "Show"} advanced fields
                 </button>
 
                 {showAdvanced && (
-                  <div className="space-y-4 border-t border-zinc-700/50 pt-4">
+                  <div id="job-advanced-fields" className="space-y-4 border-t border-zinc-700/50 pt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label className="text-zinc-200">Department</Label>
-                        <Input name="department" placeholder="Engineering" className="bg-zinc-800 border-zinc-700 text-white" />
+                        <Label htmlFor="job-department" className="text-zinc-200">Department</Label>
+                        <Input id="job-department" name="department" autoComplete="off" placeholder="Engineering" className="bg-zinc-800 border-zinc-700 text-white" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-zinc-200">Deadline</Label>
-                        <Input name="deadline" type="date" className="bg-zinc-800 border-zinc-700 text-white" />
+                        <Label htmlFor="job-deadline" className="text-zinc-200">Deadline</Label>
+                        <Input id="job-deadline" name="deadline" type="date" autoComplete="off" className="bg-zinc-800 border-zinc-700 text-white" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label className="text-zinc-200">Recruiter name</Label>
-                        <Input name="recruiter_name" placeholder="Jane Smith" className="bg-zinc-800 border-zinc-700 text-white" />
+                        <Label htmlFor="job-recruiter-name" className="text-zinc-200">Recruiter name</Label>
+                        <Input id="job-recruiter-name" name="recruiter_name" autoComplete="off" placeholder="Jane Smith" className="bg-zinc-800 border-zinc-700 text-white" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-zinc-200">Application email</Label>
-                        <Input name="application_email" type="email" placeholder="jobs@company.com" className="bg-zinc-800 border-zinc-700 text-white" />
+                        <Label htmlFor="job-application-email" className="text-zinc-200">Application email</Label>
+                        <Input id="job-application-email" name="application_email" type="email" autoComplete="off" spellCheck={false} placeholder="jobs@company.com" className="bg-zinc-800 border-zinc-700 text-white" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-zinc-200">Company website</Label>
-                      <Input name="company_website" placeholder="https://company.com" className="bg-zinc-800 border-zinc-700 text-white" />
+                      <Label htmlFor="job-company-website" className="text-zinc-200">Company website</Label>
+                      <Input id="job-company-website" name="company_website" type="url" inputMode="url" autoComplete="off" spellCheck={false} placeholder="https://company.com" className="bg-zinc-800 border-zinc-700 text-white" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-zinc-200">Tags</Label>
+                      <Label htmlFor="job-tag-input" className="text-zinc-200">Tags</Label>
                       <div className="flex gap-2">
                         <Input
+                          id="job-tag-input"
                           value={tagInput}
                           onChange={(e) => setTagInput(e.target.value)}
                           placeholder="e.g. dream_job, referral, FAANG"
+                          autoComplete="off"
+                          aria-describedby="job-tag-hint"
                           className="bg-zinc-800 border-zinc-700 text-white flex-1"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
@@ -382,15 +403,25 @@ function DashboardContent() {
                           }}
                         />
                       </div>
+                      <p id="job-tag-hint" className="sr-only">
+                        Press Enter to add a tag. Each tag can be removed individually.
+                      </p>
                       {tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
+                        <ul aria-label="Selected tags" className="flex flex-wrap gap-1 mt-1 list-none p-0">
                           {tags.map((t) => (
-                            <span key={t} className="inline-flex items-center gap-1 rounded bg-blue-500/20 border border-blue-500/30 px-2 py-0.5 text-xs text-blue-200">
+                            <li key={t} className="inline-flex items-center gap-1 rounded bg-blue-500/20 border border-blue-500/30 px-2 py-0.5 text-xs text-blue-200">
                               {t}
-                              <button type="button" className="text-blue-400 hover:text-white" onClick={() => setTags(tags.filter((x) => x !== t))}>&times;</button>
-                            </span>
+                              <button
+                                type="button"
+                                aria-label={`Remove tag ${t}`}
+                                className="text-blue-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
+                                onClick={() => setTags(tags.filter((x) => x !== t))}
+                              >
+                                &times;
+                              </button>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       )}
                     </div>
                   </div>
@@ -407,8 +438,13 @@ function DashboardContent() {
                     resume tailoring)
                   </span>
                 </label>
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={creating}>
-                  {creating ? "Adding..." : "Add Job"}
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={creating}
+                  aria-busy={creating}
+                >
+                  {creating ? "Adding…" : "Add Job"}
                 </Button>
               </form>
             </DialogContent>
