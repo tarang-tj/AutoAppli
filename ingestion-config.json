@@ -1,9 +1,22 @@
 {
   "_comment": [
-    "Source slug registry consumed by backend/scripts/ingest_all.py.",
+    "Source slug + priority registry consumed by backend/scripts/ingest_all.py.",
     "Each top-level key is a registered source name (must match the string",
     "passed to register_source(...) inside backend/app/services/ingestion).",
-    "Each value is the list of identifiers fed to source.fetch().",
+    "",
+    "Each entry is an object: {priority: int, slugs: [string]}.",
+    "The legacy flat shape  {source: [slug, ...]}  is still accepted by",
+    "_load_config — priority defaults to 999 (lowest) for those entries.",
+    "",
+    "Priority is consumed by PR 3's merge step: when N sources contribute",
+    "the same posting_key, the lowest-numbered priority wins each field",
+    "(freshness breaks ties). PR 2 only writes posting_key + sightings;",
+    "no merge happens yet, so priority is shadow data until PR 3 ships.",
+    "",
+    "Priority order rationale (see docs/level-up/adrs/0006-cached-jobs-dedup.md):",
+    "  ATS-native feeds (1-4) carry richer structured fields than",
+    "  aggregators (5-6). Within ATS, ashby > greenhouse > lever > workable",
+    "  by API completeness (compensation/team metadata coverage).",
     "",
     "ATS sources (greenhouse/lever/ashby/workable/smartrecruiters) take",
     "company-board slugs. WeWorkRemotely takes RSS category slugs because",
@@ -17,53 +30,71 @@
   ],
 
   "sources": {
-    "greenhouse": [
-      "airbnb",
-      "stripe",
-      "anthropic",
-      "openai",
-      "gitlab",
-      "dropbox"
-    ],
+    "ashby": {
+      "priority": 1,
+      "slugs": [
+        "ramp",
+        "linear",
+        "notion",
+        "mercury",
+        "retool",
+        "posthog",
+        "vercel"
+      ]
+    },
 
-    "lever": [
-      "lever",
-      "mixpanel",
-      "mux",
-      "attentive",
-      "gopuff",
-      "whatnot"
-    ],
+    "greenhouse": {
+      "priority": 2,
+      "slugs": [
+        "airbnb",
+        "stripe",
+        "anthropic",
+        "openai",
+        "gitlab",
+        "dropbox"
+      ]
+    },
 
-    "ashby": [
-      "ramp",
-      "linear",
-      "notion",
-      "mercury",
-      "retool",
-      "posthog",
-      "vercel"
-    ],
+    "lever": {
+      "priority": 3,
+      "slugs": [
+        "lever",
+        "mixpanel",
+        "mux",
+        "attentive",
+        "gopuff",
+        "whatnot"
+      ]
+    },
 
-    "workable": [
-      "remote",
-      "andela",
-      "depop",
-      "quickbooks"
-    ],
+    "workable": {
+      "priority": 4,
+      "slugs": [
+        "remote",
+        "andela",
+        "depop",
+        "quickbooks"
+      ]
+    },
 
-    "smartrecruiters": [
-      "Bosch",
-      "Visa",
-      "SamsungElectronics",
-      "Publicis"
-    ],
+    "smartrecruiters": {
+      "priority": 5,
+      "slugs": [
+        "Bosch",
+        "Visa",
+        "SamsungElectronics",
+        "Publicis"
+      ]
+    },
 
-    "weworkremotely": [
-      "remote-programming-jobs",
-      "remote-product-jobs",
-      "remote-design-jobs",
-      "remote-devops-sysadmin-jobs"
-    ]
+    "weworkremotely": {
+      "priority": 6,
+      "slugs": [
+        "remote-programming-jobs",
+        "remote-product-jobs",
+        "remote-design-jobs",
+        "remote-devops-sysadmin-jobs"
+      ]
+    }
   }
 }

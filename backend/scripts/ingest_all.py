@@ -57,17 +57,56 @@ from backend.app.services.ingestion.base import (  # noqa: E402
     NormalizedJob,
     dedupe_jobs,
 )
+from backend.app.services.ingestion.dedup import (  # noqa: E402
+    canonical_url,
+    compute_posting_key,
+    raw_hash,
+)
 
 
 DEFAULT_CONFIG = ROOT / "ingestion-config.json"
 UPSERT_BATCH_SIZE = 200  # PostgREST handles ~500 comfortably; 200 leaves headroom.
+
+# Default source priority when a source in the flat config shape doesn't
+# declare one explicitly. 999 ensures unknown/legacy sources lose to any
+# configured tier — PR 3's merge picks the lowest numeric priority.
+_DEFAULT_PRIORITY = 999
+
+
+def _shadow_write_enabled() -> bool:
+    """PR 2 shadow-write activation switch.
+
+    Off by default — the env var is a rollback lever, so the lever
+    only works as designed if "unset" means "not yet rolled out".
+    Set `JOBS_DEDUP_V1=true|1|yes|on` in the cron environment to
+    enable shadow-write of `posting_key` and `cached_jobs_sightings`.
+    """
+    raw = os.environ.get("JOBS_DEDUP_V1", "false").strip().lower()
+    return raw in ("true", "1", "yes", "on")
 
 
 # ---------------------------------------------------------------------------
 # Config loading
 # ---------------------------------------------------------------------------
 
-def _load_config(path: Path) -> dict[str, list[str]]:
+def _load_config(path: Path) -> dict[str, dict[str, Any]]:
+    """Load ingestion config. Accepts both shapes:
+
+    Flat — legacy::
+
+        {"sources": {"greenhouse": ["airbnb", "stripe"], ...}}
+
+    Rich — PR 2+::
+
+        {"sources": {
+            "greenhouse": {"priority": 2, "slugs": ["airbnb", "stripe"]},
+            ...
+         }}
+
+    Returns ``{source_name: {"slugs": [...], "priority": int}}``.
+    Sources in the flat shape default to priority ``_DEFAULT_PRIORITY``.
+    Keys starting with ``_`` are skipped (reserved for config comments).
+    """
     if not path.exists():
         raise SystemExit(f"Config not found: {path}")
     try:
@@ -81,17 +120,35 @@ def _load_config(path: Path) -> dict[str, list[str]]:
             f"Config {path} must have a top-level 'sources' object."
         )
 
-    out: dict[str, list[str]] = {}
-    for name, slugs in sources_block.items():
+    out: dict[str, dict[str, Any]] = {}
+    for name, entry in sources_block.items():
         if name.startswith("_"):
             continue
-        if not isinstance(slugs, list):
+        priority: int
+        if isinstance(entry, list):
+            slugs_raw = entry
+            priority = _DEFAULT_PRIORITY
+        elif isinstance(entry, dict):
+            slugs_raw = entry.get("slugs")
+            if not isinstance(slugs_raw, list):
+                raise SystemExit(
+                    f"Config {path}: 'sources.{name}.slugs' must be a list of strings"
+                )
+            priority_raw = entry.get("priority", _DEFAULT_PRIORITY)
+            try:
+                priority = int(priority_raw)
+            except (TypeError, ValueError):
+                raise SystemExit(
+                    f"Config {path}: 'sources.{name}.priority' must be an integer"
+                )
+        else:
             raise SystemExit(
-                f"Config {path}: 'sources.{name}' must be a list of strings"
+                f"Config {path}: 'sources.{name}' must be a list of slugs "
+                "or an object with 'priority' and 'slugs'"
             )
-        cleaned = [str(s).strip() for s in slugs if isinstance(s, str) and s.strip()]
-        if cleaned:
-            out[name] = cleaned
+        slugs = [str(s).strip() for s in slugs_raw if isinstance(s, str) and s.strip()]
+        if slugs:
+            out[name] = {"slugs": slugs, "priority": priority}
     return out
 
 
@@ -124,13 +181,35 @@ def _row_for_cached(job: NormalizedJob) -> dict[str, Any]:
     `last_verified_at` is the meaningful freshness signal (distinct from the
     firehose heartbeat `last_seen_at`). We bump it on every successful
     ingest of this row. PR 3 uses it for decay scoring.
+
+    When shadow-write is enabled (PR 2), `posting_key` is attached so the
+    row picks up its cross-source canonical identity on insert.
     """
     row = job.to_row()
     now_iso = _dt.datetime.now(_dt.timezone.utc).isoformat()
     row["last_seen_at"] = now_iso
     row["last_verified_at"] = now_iso
     row["inactive_at"] = None
+    if _shadow_write_enabled():
+        row["posting_key"] = compute_posting_key(job)
     return row
+
+
+def _sighting_row(job: NormalizedJob, now_iso: str) -> dict[str, Any]:
+    """Build a row for cached_jobs_sightings.
+
+    One row per (source, external_id). The `missing=default` prefer
+    header on upsert ensures `first_seen_at` stays at its DB default on
+    insert and is left untouched on update.
+    """
+    return {
+        "source": job.source,
+        "external_id": job.external_id,
+        "posting_key": compute_posting_key(job),
+        "url": canonical_url(job.url),
+        "raw_hash": raw_hash(job),
+        "last_seen_at": now_iso,
+    }
 
 
 def _upsert_batch(supabase_url: str, key: str, rows: list[dict[str, Any]]) -> None:
@@ -154,6 +233,42 @@ def _upsert_batch(supabase_url: str, key: str, rows: list[dict[str, Any]]) -> No
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", "replace")[:300]
         raise RuntimeError(f"Supabase upsert failed (HTTP {e.code}): {body}")
+
+
+def _upsert_sightings_batch(
+    supabase_url: str,
+    key: str,
+    rows: list[dict[str, Any]],
+) -> None:
+    """Shadow-write path: upsert rows into cached_jobs_sightings.
+
+    Same upsert idiom as cached_jobs (on_conflict=source,external_id,
+    merge-duplicates, missing=default). Separate endpoint keeps the
+    cached_jobs write unaffected if this fails mid-flight.
+    """
+    endpoint = (
+        f"{supabase_url}/rest/v1/cached_jobs_sightings"
+        f"?on_conflict=source,external_id"
+    )
+    req = urllib.request.Request(
+        endpoint,
+        data=json.dumps(rows).encode("utf-8"),
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {key}",
+            "apikey": key,
+            "Prefer": "resolution=merge-duplicates,return=minimal,missing=default",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            resp.read()
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")[:300]
+        raise RuntimeError(
+            f"Supabase sightings upsert failed (HTTP {e.code}): {body}"
+        )
 
 
 def _sweep_inactive(supabase_url: str, key: str, run_started: _dt.datetime) -> int:
@@ -268,6 +383,29 @@ def _run_source(
         except RuntimeError as e:
             upsert_error = str(e)
 
+    sightings_upserted = 0
+    sightings_error: str | None = None
+    if (
+        deduped
+        and not dry_run
+        and supabase_url
+        and key
+        and upsert_error is None
+        and _shadow_write_enabled()
+    ):
+        now_iso = _dt.datetime.now(_dt.timezone.utc).isoformat()
+        sighting_rows = [_sighting_row(j, now_iso) for j in deduped]
+        try:
+            for i in range(0, len(sighting_rows), UPSERT_BATCH_SIZE):
+                _upsert_sightings_batch(
+                    supabase_url, key, sighting_rows[i : i + UPSERT_BATCH_SIZE]
+                )
+            sightings_upserted = len(sighting_rows)
+        except RuntimeError as e:
+            # Shadow-write must NOT fail the run — cached_jobs already
+            # landed; we just lose the audit trail for this batch.
+            sightings_error = str(e)
+
     elapsed_ms = int((time.monotonic() - start) * 1000)
     return {
         "source": name,
@@ -278,6 +416,8 @@ def _run_source(
         "failed_slugs": failed_slugs,
         "jobs": len(rows),
         "upserted": upserted,
+        "sightings_upserted": sightings_upserted,
+        "sightings_error": sightings_error,
         "elapsed_ms": elapsed_ms,
     }
 
@@ -302,6 +442,7 @@ def _print_summary(
     width = max((len(r["source"]) for r in results), default=10)
     total_jobs = 0
     total_upserted = 0
+    total_sightings = 0
     for r in results:
         name = r["source"].ljust(width)
         if not r["ok"]:
@@ -319,18 +460,31 @@ def _print_summary(
             jobs_part = f"{r['upserted']:>4} jobs"
         else:
             jobs_part = f"{r['jobs']:>4} fetched / {r['upserted']} upserted"
+        sightings_note = ""
+        sightings_count = r.get("sightings_upserted", 0)
+        if r.get("sightings_error"):
+            sightings_note = (
+                f" {yellow}[sightings: {r['sightings_error'][:60]}…]{reset}"
+            )
+        elif sightings_count:
+            sightings_note = f" {dim}+{sightings_count} sightings{reset}"
         print(
             f"  {green}✓{reset} {name}  "
             f"{jobs_part} across {r['slugs_total']} slugs "
-            f"{dim}({r['elapsed_ms']}ms){reset}{slug_note}",
+            f"{dim}({r['elapsed_ms']}ms){reset}{slug_note}{sightings_note}",
             file=sys.stderr,
         )
         total_jobs += r["jobs"]
         total_upserted += r["upserted"]
+        total_sightings += sightings_count
 
+    sightings_total_part = (
+        f", {total_sightings} sightings" if total_sightings else ""
+    )
     print(
         f"Total: {total_upserted} upserted "
-        f"({total_jobs} fetched), {deactivated} marked inactive",
+        f"({total_jobs} fetched), {deactivated} marked inactive"
+        f"{sightings_total_part}",
         file=sys.stderr,
     )
 
@@ -386,8 +540,9 @@ def main() -> int:
 
     run_started = _dt.datetime.now(_dt.timezone.utc)
     results: list[dict[str, Any]] = []
-    for name, slugs in config.items():
-        result = _run_source(name, slugs, supabase_url, key, args.dry_run)
+    for name, entry in config.items():
+        result = _run_source(name, entry["slugs"], supabase_url, key, args.dry_run)
+        result["priority"] = entry["priority"]
         results.append(result)
 
     deactivated = 0
@@ -403,11 +558,15 @@ def main() -> int:
     if args.summary_out:
         summary = {
             "run_started_at": run_started.isoformat(),
+            "shadow_write_enabled": _shadow_write_enabled(),
             "deactivated": deactivated,
             "sources": results,
             "totals": {
                 "fetched": sum(r["jobs"] for r in results),
                 "upserted": sum(r["upserted"] for r in results),
+                "sightings_upserted": sum(
+                    r.get("sightings_upserted", 0) for r in results
+                ),
                 "failed_sources": sum(1 for r in results if not r["ok"]),
             },
         }

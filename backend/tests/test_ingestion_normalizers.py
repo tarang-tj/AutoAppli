@@ -19,6 +19,7 @@ from backend.app.services.ingestion.normalizers import (
     NORMALIZER_VERSION,
     normalize_company,
     normalize_location,
+    normalize_title,
     should_mark_remote,
 )
 
@@ -213,6 +214,43 @@ def test_mark_remote_onsite_defers_to_location() -> None:
 def test_mark_remote_null_remote_type_uses_location() -> None:
     assert should_mark_remote(None, True) is True
     assert should_mark_remote(None, False) is False
+
+
+# ---------------------------------------------------------------------------
+# normalize_title — added in PR 2 for cross-source posting_key dedup
+# ---------------------------------------------------------------------------
+
+TITLE_CASES: list[tuple[str, str]] = [
+    # Bracketed / parenthesized location qualifiers stripped.
+    ("Senior Software Engineer", "senior software engineer"),
+    ("Senior Software Engineer (Remote, US)", "senior software engineer"),
+    ("Senior Software Engineer [Hybrid]", "senior software engineer"),
+    ("Frontend Engineer (San Francisco)", "frontend engineer"),
+    # Abbreviation expansion.
+    ("Sr. Backend Engineer", "senior backend engineer"),
+    ("Sr Backend Eng", "senior backend engineer"),
+    ("Jr. Developer", "junior developer"),
+    # Trailing " - <location>" / " / <location>" stripped.
+    ("Staff Engineer - Remote", "staff engineer"),
+    ("Staff Engineer / US-Remote", "staff engineer"),
+    # `&` collapses to "and".
+    ("ML & Data Engineer", "ml and data engineer"),
+    # Empty / None.
+    ("", ""),
+    (None, ""),
+]
+
+
+@pytest.mark.parametrize("raw,expected", TITLE_CASES)
+def test_title_normalize(raw: str | None, expected: str) -> None:
+    assert normalize_title(raw) == expected
+
+
+def test_title_seniority_stays_distinct() -> None:
+    """Critical for PR 2: the posting_key must not collapse seniority."""
+    assert normalize_title("Senior Engineer") != normalize_title("Engineer")
+    assert normalize_title("Staff Engineer") != normalize_title("Engineer")
+    assert normalize_title("Junior Engineer") != normalize_title("Engineer")
 
 
 # ---------------------------------------------------------------------------
