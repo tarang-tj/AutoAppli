@@ -12,6 +12,13 @@ dist/
 build/
 .DS_Store
 .claude/
+.claude.backup-existing/
+
+# Local scratch migration/fix scripts kept at root by the dev.
+# Not intended for the repo — they're one-shot ops tooling.
+/apply-*.sh
+/fix.sh
+/fix-*.sh
 
 # Accidental duplicate files from macOS Finder ("file 2.ext")
 **/* 2.*
