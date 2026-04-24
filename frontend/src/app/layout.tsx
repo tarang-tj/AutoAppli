@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/site";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/next";
 import { GlobalErrorListener } from "@/components/layout/global-error-listener";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CommandPalette } from "@/components/command-palette";
@@ -9,27 +10,31 @@ import { CommandPalette } from "@/components/command-palette";
 const siteUrl = getSiteUrl();
 
 const DESCRIPTION =
-  "Save roles, tailor resumes with AI in 30 seconds, draft outreach, and track every application on a Kanban board. Free forever tier, no credit card required.";
+  "Find internships from Greenhouse, Lever, Ashby, Indeed, and LinkedIn. Tailor your resume in 30 seconds. Track everything on a kanban. You still hit apply. Built by a CS student for CS students.";
+
+const SITE_TITLE = "AutoAppli: Job-search workspace for students";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "AutoAppli — Your entire job search, one workspace",
+    default: SITE_TITLE,
     template: "%s · AutoAppli",
   },
   description: DESCRIPTION,
   applicationName: "AutoAppli",
   keywords: [
-    "job search",
-    "AI resume",
-    "resume builder",
-    "job tracker",
-    "Kanban job board",
+    "internship search",
+    "student job search",
+    "AI resume tailoring",
+    "CS internships",
+    "new grad jobs",
+    "application tracker",
+    "kanban job board",
     "cover letter generator",
     "cold outreach",
-    "ATS resume",
-    "application tracker",
-    "career tools",
+    "Greenhouse jobs",
+    "Lever jobs",
+    "Ashby jobs",
   ],
   authors: [{ name: "AutoAppli" }],
   creator: "AutoAppli",
@@ -42,14 +47,14 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: siteUrl,
     siteName: "AutoAppli",
-    title: "AutoAppli — Your entire job search, one workspace",
+    title: SITE_TITLE,
     description: DESCRIPTION,
     // `opengraph-image.tsx` at the app-root is auto-discovered by Next.js
     // and used as the default OG image; no explicit `images` entry needed.
   },
   twitter: {
     card: "summary_large_image",
-    title: "AutoAppli — Your entire job search, one workspace",
+    title: SITE_TITLE,
     description: DESCRIPTION,
     creator: "@autoappli",
   },
@@ -103,6 +108,7 @@ export default function RootLayout({
           <CommandPalette />
           <Toaster richColors position="bottom-right" />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

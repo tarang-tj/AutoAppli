@@ -9,7 +9,6 @@ import {
   Mail,
   Search,
   Sparkles,
-  Users,
   Upload,
   Bookmark,
   Wand2,
@@ -120,20 +119,21 @@ function Hero({ demoMode }: { demoMode: boolean }) {
       <div className="max-w-3xl">
         <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300 mb-6">
           <Sparkles className="h-3 w-3" />
-          AI-powered job search, built for 2026
+          Built by a UW Bothell CS junior who ran the grind
         </div>
 
         <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.05]">
-          Your entire job search,{" "}
+          The internship grind,{" "}
           <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-violet-400 bg-clip-text text-transparent">
-            one workspace.
+            minus the tab chaos.
           </span>
         </h1>
 
         <p className="mt-6 text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
-          Save roles from anywhere, tailor your resume with AI in 30 seconds,
-          draft outreach messages, and track every application on a Kanban
-          board that actually feels good to use.
+          AutoAppli pulls live jobs from Greenhouse, Lever, Ashby, Indeed, and
+          LinkedIn, tailors your resume to the JD in about 30 seconds, and
+          tracks every application on a kanban. We don&rsquo;t auto-submit and
+          we don&rsquo;t spray. You still click apply. That&rsquo;s the point.
         </p>
 
         <div className="mt-10 flex flex-wrap gap-3 items-center">
@@ -142,7 +142,7 @@ function Hero({ demoMode }: { demoMode: boolean }) {
               href="/dashboard"
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
             >
-              Try the app
+              Start your internship board
               <ArrowRight className="h-4 w-4" />
             </Link>
           ) : (
@@ -151,10 +151,10 @@ function Hero({ demoMode }: { demoMode: boolean }) {
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
               >
-                Get started free
+                Start your internship board
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <TryDemoButton />
+              <TryDemoButton>Try it without signup</TryDemoButton>
             </>
           )}
         </div>
@@ -162,15 +162,15 @@ function Hero({ demoMode }: { demoMode: boolean }) {
         <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs text-zinc-500">
           <li className="flex items-center gap-1.5">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-            Free forever tier
+            Free demo while I&rsquo;m building
           </li>
           <li className="flex items-center gap-1.5">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-            No credit card required
+            No credit card
           </li>
           <li className="flex items-center gap-1.5">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-            Your data stays yours
+            We never click apply for you
           </li>
         </ul>
       </div>
@@ -185,9 +185,9 @@ function TrustBar() {
     <section className="px-6 py-8 border-y border-zinc-900 bg-zinc-950/50">
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
         <p className="text-xs uppercase tracking-wider text-zinc-600 font-medium">
-          Sources supported
+          Pulls jobs from
         </p>
-        {["LinkedIn", "Indeed", "Greenhouse", "Lever", "Ashby"].map((s) => (
+        {["LinkedIn", "Indeed", "Greenhouse", "Lever", "Ashby", "Workday"].map((s) => (
           <span
             key={s}
             className="text-zinc-500 text-sm font-medium tracking-tight"
@@ -320,19 +320,24 @@ function KanbanColumn({
 function HowItWorks() {
   const steps = [
     {
-      icon: Upload,
-      title: "Upload your resume",
-      body: "Drop a PDF or paste your LinkedIn. We parse skills, experience, and seniority automatically.",
-    },
-    {
       icon: Bookmark,
-      title: "Save jobs that fit",
-      body: "Browse live listings or paste any URL — we grade the match against your resume in real time.",
+      title: "Find",
+      body: "Live search pulls from the company ATS boards students actually apply through. Save from LinkedIn with the Chrome extension in one click.",
     },
     {
       icon: Wand2,
-      title: "Tailor & apply",
-      body: "One click generates a tailored resume + cover letter. Track every application on a Kanban board.",
+      title: "Tailor",
+      body: "Point AutoAppli at a JD. It drafts a resume version that matches, plus a cover letter, plus a recruiter outreach message. Thirty seconds. You edit it.",
+    },
+    {
+      icon: Upload,
+      title: "Apply (you)",
+      body: "Open the company&rsquo;s apply page. Paste, check, submit. We don&rsquo;t do this part on purpose. Recruiters can tell when a tool did.",
+    },
+    {
+      icon: Kanban,
+      title: "Track",
+      body: "Card moves down the kanban. Automation flips statuses when you mark applied, schedule an interview, or get ghosted for 14 days.",
     },
   ];
   return (
@@ -342,15 +347,15 @@ function HowItWorks() {
           How it works
         </p>
         <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-          From resume to offer in one loop.
+          Find, tailor, track. You hit apply.
         </h2>
         <p className="mt-3 text-zinc-400 leading-relaxed">
-          No more spreadsheets. No more 12 browser tabs. Every step of your
-          search lives in one fast, keyboard-friendly workspace.
+          No spreadsheets. No 40 open tabs at 1am. One kanban that carries the
+          JD, the tailored resume, the cover letter, and the apply timestamp.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((s, i) => (
           <div
             key={s.title}
@@ -381,61 +386,61 @@ function FeatureGrid() {
     >
       <div className="max-w-2xl mb-12">
         <p className="text-xs uppercase tracking-wider text-blue-400 font-semibold mb-2">
-          Everything you need
+          What&rsquo;s inside
         </p>
         <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-          Eight tools, one workspace.
+          Eight tools, built for the recruiting calendar.
         </h2>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <FeatureCard
-          icon={Search}
-          iconColor="text-blue-400"
-          title="Job Search"
-          description="Live listings from LinkedIn, Indeed, Greenhouse, Lever, and Ashby. Filter by skills, location, and fit score."
-        />
-        <FeatureCard
           icon={FileText}
           iconColor="text-amber-400"
-          title="Resume Builder"
-          description="Upload your resume, paste a job, and get an AI-tailored version with ATS scoring in under 30 seconds."
+          title="Resume tailoring"
+          description="Paste the JD. Get a resume version tuned to it. Matches skills, keywords, seniority. About 30 seconds per role."
         />
         <FeatureCard
-          icon={Mail}
+          icon={Search}
+          iconColor="text-blue-400"
+          title="Live job search"
+          description="Firehose pulls from Greenhouse, Lever, Ashby. Deduped, matched against your profile, ranked by fit."
+        />
+        <FeatureCard
+          icon={Bookmark}
           iconColor="text-emerald-400"
-          title="Outreach"
-          description="Generate cold emails and LinkedIn messages matched to the role, company, and your own voice."
-        />
-        <FeatureCard
-          icon={Kanban}
-          iconColor="text-violet-400"
-          title="Pipeline"
-          description="Drag-and-drop Kanban from bookmarked to offer. Reorder within columns. Notes on every card."
-        />
-        <FeatureCard
-          icon={CalendarCheck}
-          iconColor="text-rose-400"
-          title="Interview Prep"
-          description="AI-generated prep with company overview, likely questions, and talking points tailored to the role."
-        />
-        <FeatureCard
-          icon={BarChart3}
-          iconColor="text-cyan-400"
-          title="Analytics"
-          description="Funnel visualization, conversion rates by stage, response metrics, and weekly activity trends."
-        />
-        <FeatureCard
-          icon={Users}
-          iconColor="text-orange-400"
-          title="Contacts CRM"
-          description="Track recruiters and hiring managers with relationship types and full interaction history."
+          title="Chrome extension"
+          description="Save from LinkedIn or any ATS page. One click. Read-only. Does not touch the company&rsquo;s forms."
         />
         <FeatureCard
           icon={Sparkles}
           iconColor="text-pink-400"
-          title="Cover Letters"
-          description="Tailored cover letters in multiple tones — formal, conversational, bold — one-click copy and download."
+          title="Cover letters"
+          description="Generated against the JD, not a template. Edit the draft, don&rsquo;t start from blank."
+        />
+        <FeatureCard
+          icon={Mail}
+          iconColor="text-violet-400"
+          title="Outreach drafts"
+          description="Recruiter DM drafts that sound like a student, not a sales email. Personalized to the role and the person."
+        />
+        <FeatureCard
+          icon={Kanban}
+          iconColor="text-cyan-400"
+          title="Kanban tracker"
+          description="Every card carries its JD, resume version, cover letter, outreach, and apply timestamp. Mobile-snap."
+        />
+        <FeatureCard
+          icon={CalendarCheck}
+          iconColor="text-rose-400"
+          title="Interview prep"
+          description="Prep mode with a Claude backend. Company overview, likely questions, talking points. PII-redacted by default."
+        />
+        <FeatureCard
+          icon={BarChart3}
+          iconColor="text-orange-400"
+          title="Match scoring"
+          description="Seven-signal explainable fit score. Hover for the breakdown. Not a black box."
         />
       </div>
     </section>
@@ -471,22 +476,22 @@ function FeatureCard({
 function Metrics() {
   const stats = [
     {
+      icon: Shield,
+      value: "0",
+      label: "Applications we submit for you",
+      body: "By design. The extension is read-only. The backend has zero browser-automation code. You click apply on the company&rsquo;s page. Recruiters can tell the difference.",
+    },
+    {
       icon: Zap,
-      value: "30s",
+      value: "~30s",
       label: "Resume tailored per role",
-      body: "From paste to polished PDF in under a minute. Tested across 500+ postings.",
+      body: "Paste the JD, get a tuned resume version. You still review every line before it goes out.",
     },
     {
       icon: Clock,
-      value: "3×",
-      label: "More applications per week",
-      body: "Users self-report tripling their weekly application output in their first month.",
-    },
-    {
-      icon: Shield,
-      value: "0",
-      label: "Data sold or shared",
-      body: "Your resume, jobs, and contacts are yours. Export everything as CSV any time.",
+      value: "1-click",
+      label: "Save from any supported board",
+      body: "Chrome extension pulls the title, company, JD, and URL into your kanban. No spreadsheets, no copy-paste.",
     },
   ];
   return (
@@ -499,7 +504,7 @@ function Metrics() {
           Why it works
         </p>
         <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-          Built for the way modern job searches actually go.
+          The 10 minutes of prep that matters. Not the 30 seconds we could fake.
         </h2>
       </div>
 
@@ -533,17 +538,18 @@ function Testimonial() {
     <section className="px-6 py-16 max-w-4xl mx-auto w-full">
       <figure className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8 md:p-10 text-center">
         <blockquote className="text-lg md:text-xl text-zinc-200 leading-relaxed">
-          &ldquo;I went from 4 applications a week on a messy Notion table to
-          18 well-targeted ones with tailored resumes. Got two offers in six
-          weeks. This is the job-search tool I wish existed a decade ago.&rdquo;
+          &ldquo;I applied to about 400 internships last cycle. The ones that
+          actually turned into offers were the ones where I had time to tailor
+          my resume, not the ones I copy-pasted at 2am. Built AutoAppli so
+          next year&rsquo;s me spends that time on the roles that matter.&rdquo;
         </blockquote>
         <figcaption className="mt-6 flex flex-col items-center gap-1">
           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
-            M
+            T
           </div>
-          <div className="text-sm font-medium text-white">Maya R.</div>
+          <div className="text-sm font-medium text-white">Tarang J.</div>
           <div className="text-xs text-zinc-500">
-            Data Analyst · moved to a Series-C fintech
+            UW Bothell CS &apos;27 · AutoAppli founder
           </div>
         </figcaption>
       </figure>
@@ -557,24 +563,32 @@ function Testimonial() {
 
 const FAQ_ITEMS: Array<{ q: string; a: string }> = [
   {
-    q: "Is AutoAppli really free?",
-    a: "Yes — the core tracker, search, and AI tooling are free forever. A paid Pro tier is coming with unlimited AI generations and team workspaces, but everything shown above works on the free plan with no credit card.",
+    q: "Does AutoAppli auto-apply for me?",
+    a: "No. On purpose. AutoAppli doesn't submit applications, doesn't fill forms, doesn't click apply buttons. Recruiters can tell when a tool did it and it tanks your callback rate. What we do: find the role, tailor your resume and cover letter to it, track it. You open the apply page and submit yourself. We set up the ten minutes of work that matters; we don't try to fake the last thirty seconds.",
   },
   {
-    q: "Does AutoAppli auto-apply to jobs?",
-    a: "No. We believe auto-applying gets you filtered out. AutoAppli shortens every manual step — tailoring a resume in 30 seconds instead of 30 minutes, drafting personalised outreach, tracking every application on one board — so you can apply thoughtfully to more roles.",
+    q: "Why \"for students\" specifically?",
+    a: "I built this while doing my own internship search as a CS junior at UW Bothell. Internship recruiting has a cycle (Sept to Nov for next summer, Jan to Mar for new-grad) and a different rhythm than mid-career search. AutoAppli is tuned for that. Other audiences are welcome; the defaults are set for students.",
+  },
+  {
+    q: "How is this different from LazyApply, Simplify, or Huntr?",
+    a: "LazyApply submits for you. We don't. Simplify autofills any role for any user; we're vertical on student internship and new-grad. Huntr is a tracker only; we do the prep work (resume tailor, cover letter, outreach) plus tracking. If what you want is to mass-fire 500 applications tonight, we are not the tool.",
+  },
+  {
+    q: "Is AutoAppli really free?",
+    a: "Free demo while I'm still building. If I add paid features later, the core stays free for verified students. No credit card, no trial timer, no dark patterns.",
   },
   {
     q: "Which AI model tailors my resume?",
-    a: "Anthropic Claude (Sonnet). You can bring your own API key via settings if you prefer to own the billing. All AI calls run through our backend with per-user rate limits; we never train models on your resume.",
+    a: "Anthropic Claude. You can bring your own API key via settings if you prefer to own the billing. All AI calls run through our backend with per-user rate limits; we never train models on your resume.",
   },
   {
     q: "Where does the job data come from?",
-    a: "We ingest public job boards nightly — Greenhouse, Lever, Ashby, Workable, SmartRecruiters, WeWorkRemotely — and top off with a live Indeed scrape for long-tail queries. No LinkedIn scraping; no ToS violations.",
+    a: "We ingest public job boards nightly (Greenhouse, Lever, Ashby, Workable, SmartRecruiters, WeWorkRemotely) and top off with a live Indeed scrape for long-tail queries. No LinkedIn scraping; no ToS violations.",
   },
   {
     q: "Can I export my data?",
-    a: "Any time. CSV, JSON, PDF — your board, resumes, outreach, and timeline all export from the Export page. We don't trap your data.",
+    a: "Any time. CSV, JSON, PDF. Your board, resumes, outreach, and timeline all export from the Export page. We don't trap your data.",
   },
   {
     q: "What data do you store?",
@@ -589,7 +603,7 @@ function FAQ() {
         Questions, answered.
       </h2>
       <p className="text-zinc-400 text-center mb-10">
-        Everything else — ping{" "}
+        Everything else, ping{" "}
         <a
           href="mailto:hello@autoappli.com"
           className="text-blue-400 hover:underline"
@@ -653,11 +667,12 @@ function FinalCTA({ demoMode }: { demoMode: boolean }) {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-blue-500/10 rounded-full blur-3xl" />
         </div>
         <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
-          Your next role is one workspace away.
+          Recruiting season&rsquo;s already started somewhere. Set up your board.
         </h2>
         <p className="mt-4 text-zinc-400 max-w-xl mx-auto">
-          Free forever tier, no credit card, export anything. Takes 60 seconds
-          to set up.
+          Free demo while I&rsquo;m still building. If paid features come later,
+          the core stays free for verified students. No credit card. Thirty
+          seconds to first saved job.
         </p>
         <div className="mt-8 flex flex-wrap gap-3 justify-center">
           {demoMode ? (
@@ -674,7 +689,7 @@ function FinalCTA({ demoMode }: { demoMode: boolean }) {
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/30"
               >
-                Get started free
+                Start your internship board
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <TryDemoButton>Try the demo</TryDemoButton>
