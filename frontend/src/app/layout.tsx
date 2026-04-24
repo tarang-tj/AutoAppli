@@ -3,6 +3,8 @@ import "./globals.css";
 import { getSiteUrl } from "@/lib/site";
 import { Toaster } from "sonner";
 import { GlobalErrorListener } from "@/components/layout/global-error-listener";
+import { ThemeProvider } from "@/components/theme-provider";
+import { CommandPalette } from "@/components/command-palette";
 
 const siteUrl = getSiteUrl();
 
@@ -71,7 +73,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased dark">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <body
         className="min-h-full flex flex-col"
         style={{
@@ -79,25 +81,28 @@ export default function RootLayout({
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
         }}
       >
-        <GlobalErrorListener />
-        <script
-          type="application/ld+json"
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              name: "AutoAppli",
-              applicationCategory: "BusinessApplication",
-              operatingSystem: "Web",
-              url: siteUrl,
-              description: DESCRIPTION,
-              offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-            }),
-          }}
-        />
-        {children}
-        <Toaster theme="dark" richColors position="bottom-right" />
+        <ThemeProvider>
+          <GlobalErrorListener />
+          <script
+            type="application/ld+json"
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "SoftwareApplication",
+                name: "AutoAppli",
+                applicationCategory: "BusinessApplication",
+                operatingSystem: "Web",
+                url: siteUrl,
+                description: DESCRIPTION,
+                offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+              }),
+            }}
+          />
+          {children}
+          <CommandPalette />
+          <Toaster richColors position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

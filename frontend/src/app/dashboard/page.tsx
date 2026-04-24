@@ -9,6 +9,8 @@ import { ActivationChecklist } from "@/components/dashboard/activation-checklist
 import { WeeklyDigest } from "@/components/dashboard/weekly-digest";
 import { OutcomesBreakdown } from "@/components/dashboard/outcomes-breakdown";
 import { StaleJobsNudge } from "@/components/dashboard/stale-jobs-nudge";
+import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -34,7 +36,7 @@ export default function DashboardPage() {
   // wrapping the real content in Suspense lets Next.js build the page
   // without erroring, and the actual params resolve on the client.
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<DashboardSkeleton />}>
       <DashboardContent />
     </Suspense>
   );
@@ -153,6 +155,18 @@ function DashboardContent() {
     toast.success(`Exported ${rows.length} job${rows.length === 1 ? "" : "s"}`);
   };
 
+  // Show skeleton on initial fetch so users don't see a blank dashboard.
+  // `jobs.length === 0 && isLoading` covers first paint only — once we have
+  // any jobs cached (or confirmed zero), the full UI renders with its own
+  // section-level empty state.
+  if (isLoading && jobs.length === 0) {
+    return (
+      <div>
+        <DashboardSkeleton />
+      </div>
+    );
+  }
+
   return (
     <div>
       <OnboardingTour />
@@ -166,6 +180,7 @@ function DashboardContent() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <ThemeToggle className="text-zinc-200 hover:text-white" />
           <Link
             href="/jobs"
             className={cn(
