@@ -379,6 +379,67 @@ def normalize_company(raw: Optional[str], source: str = "") -> str:
     return lower
 
 
+_TITLE_TRAILING_LOCATION_RE = re.compile(
+    r"\s+[-–—/|]\s+(remote|hybrid|onsite|us|usa|eu|uk|emea|apac|"
+    r"anywhere|worldwide|distributed|fully remote|wfh|"
+    r"new york|nyc|sf|sfo|san francisco|seattle|boston|london|berlin|toronto)\b.*$",
+    re.IGNORECASE,
+)
+
+_TITLE_BRACKETED_RE = re.compile(r"\([^)]*\)|\[[^\]]*\]|\{[^}]*\}")
+
+# Title abbreviation expansions. Same caveat as in normalize_company:
+# matching is on the lowercased input; word boundaries prevent over-eager
+# expansion. `eng` → `engineer` is intentional (catches "Sr Backend Eng")
+# even though it leaves "Eng Manager" / "Engineering Manager" non-collapsing
+# — that's a known asymmetry, see PR 2 design doc §5.2.
+_TITLE_ABBREV_RE: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\bsr\.?\b", re.IGNORECASE), "senior"),
+    (re.compile(r"\bjr\.?\b", re.IGNORECASE), "junior"),
+    (re.compile(r"\bmgr\.?\b", re.IGNORECASE), "manager"),
+    (re.compile(r"\beng\.?\b(?!ineer)", re.IGNORECASE), "engineer"),
+    (re.compile(r"\bdev\.?\b(?!eloper|ops)", re.IGNORECASE), "developer"),
+    (re.compile(r"\s+&\s+"), " and "),
+)
+
+
+def normalize_title(raw: Optional[str], source: str = "") -> str:
+    """Canonicalize a job title for cross-source dedup.
+
+    Lowercase. Strips bracket/paren content, trailing location/remote hints,
+    and expands common abbreviations (sr → senior, jr → junior, mgr →
+    manager, eng → engineer, dev → developer). Preserves seniority
+    distinctions — "Senior Engineer" and "Engineer" intentionally stay
+    different so PR 2's posting_key doesn't collapse genuinely different
+    roles.
+
+    Examples:
+        "Senior Software Engineer (Remote, US)"  -> "senior software engineer"
+        "Sr. Backend Engineer"                   -> "senior backend engineer"
+        "Staff Engineer - Remote"                -> "staff engineer"
+        "ML & Data Engineer"                     -> "ml and data engineer"
+        ""                                       -> ""
+        None                                     -> ""
+    """
+    if not raw:
+        return ""
+    text = raw.strip()
+    if not text:
+        return ""
+    # Strip bracketed content first so abbreviations inside don't expand.
+    text = _TITLE_BRACKETED_RE.sub(" ", text)
+    # Strip trailing location/remote hints.
+    text = _TITLE_TRAILING_LOCATION_RE.sub("", text)
+    # Expand abbreviations.
+    for pattern, replacement in _TITLE_ABBREV_RE:
+        text = pattern.sub(replacement, text)
+    text = text.lower()
+    # Keep alphanumerics and spaces; collapse the rest.
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
 def should_mark_remote(remote_type: Optional[str], location_is_remote: bool) -> bool:
     """Reconcile the remote_type text signal with the location-derived bool.
 
