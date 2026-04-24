@@ -16,6 +16,13 @@ import hashlib
 from dataclasses import dataclass, field, asdict
 from typing import Callable, Iterable, Optional, Protocol
 
+from .normalizers import (
+    NORMALIZER_VERSION,
+    normalize_company,
+    normalize_location,
+    should_mark_remote,
+)
+
 
 @dataclass
 class NormalizedJob:
@@ -33,6 +40,53 @@ class NormalizedJob:
     skills: list[str] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
     posted_at: Optional[str] = None  # ISO8601
+
+    # Normalized fields — populated automatically in __post_init__ by the
+    # ingest-time normalizer. Parsers don't need to touch these; they flow
+    # through from `location`, `company`, and `remote_type`.
+    #
+    # If a caller (tests, future callers that already have canonical values)
+    # wants to pre-seed these, they can. __post_init__ only computes the
+    # value when the field is still at its default.
+    location_city: Optional[str] = None
+    location_region: Optional[str] = None
+    location_country: Optional[str] = None
+    location_is_remote: bool = False
+    company_normalized: Optional[str] = None
+    normalized_version: int = 0
+
+    def __post_init__(self) -> None:
+        # Company canonicalization — only run if not pre-seeded.
+        if self.company_normalized is None:
+            self.company_normalized = normalize_company(self.company, self.source)
+
+        # Location parsing — three-field tuple either all caller-set or all
+        # derived. Using `any()` means a caller who pre-seeds even one field
+        # takes ownership of the entire location parse. The is_remote bool
+        # still gets reconciled against remote_type below.
+        caller_set_location = any(
+            [self.location_city, self.location_region, self.location_country]
+        )
+        if not caller_set_location:
+            norm = normalize_location(self.location, self.source)
+            self.location_city = norm.city
+            self.location_region = norm.region
+            self.location_country = norm.country
+            # Merge remote_type (from JD scan) with location-derived is_remote.
+            self.location_is_remote = should_mark_remote(
+                self.remote_type, norm.is_remote
+            )
+        else:
+            # Caller gave us canonical location fields; still reconcile
+            # is_remote using whatever location_is_remote they passed.
+            self.location_is_remote = should_mark_remote(
+                self.remote_type, self.location_is_remote
+            )
+
+        # Always stamp with the current normalizer version so downstream
+        # backfills can detect out-of-date rows.
+        if not self.normalized_version:
+            self.normalized_version = NORMALIZER_VERSION
 
     @property
     def canonical_id(self) -> str:

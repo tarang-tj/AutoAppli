@@ -120,9 +120,15 @@ def _row_for_cached(job: NormalizedJob) -> dict[str, Any]:
     was previously marked inactive gets revived when the source returns it
     again. `last_seen_at` is also stamped here (server-side default would
     only fire on insert, not update).
+
+    `last_verified_at` is the meaningful freshness signal (distinct from the
+    firehose heartbeat `last_seen_at`). We bump it on every successful
+    ingest of this row. PR 3 uses it for decay scoring.
     """
     row = job.to_row()
-    row["last_seen_at"] = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    now_iso = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    row["last_seen_at"] = now_iso
+    row["last_verified_at"] = now_iso
     row["inactive_at"] = None
     return row
 
