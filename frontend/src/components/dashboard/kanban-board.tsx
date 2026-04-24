@@ -164,7 +164,7 @@ export function KanbanBoard({
               key={col.id}
               className="min-w-[min(100%,18rem)] flex-1 lg:min-w-[11.5rem] flex flex-col snap-start lg:snap-align-none"
               role="listitem"
-              aria-label={`${col.label} — ${colJobs.length} jobs`}
+              aria-label={`${col.label} — ${colJobs.length} ${colJobs.length === 1 ? "job" : "jobs"}`}
             >
               <KanbanColumn
                 id={col.id}

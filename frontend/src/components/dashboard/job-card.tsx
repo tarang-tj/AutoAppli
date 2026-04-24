@@ -22,7 +22,6 @@ import {
   Archive,
   ArchiveRestore,
   Building2,
-  Calendar,
   CircleSlash,
   Clock,
   Copy,
@@ -91,6 +90,7 @@ function MatchBadge({ score }: { score: number }) {
     <span
       className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${color}`}
       title={`${score}% resume match`}
+      aria-label={`Resume match score: ${score} percent`}
     >
       {score}% fit
     </span>
@@ -118,9 +118,18 @@ function formatSalary(min?: number | null, max?: number | null, currency = "USD"
 function PriorityStars({ count }: { count: number }) {
   if (!count || count <= 0) return null;
   return (
-    <span className="inline-flex items-center gap-px" title={`Priority ${count}/5`}>
+    <span
+      className="inline-flex items-center gap-px"
+      title={`Priority ${count}/5`}
+      aria-label={`Priority ${count} of 5`}
+      role="img"
+    >
       {Array.from({ length: count }, (_, i) => (
-        <Star key={i} className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+        <Star
+          key={i}
+          aria-hidden="true"
+          className="h-2.5 w-2.5 fill-amber-400 text-amber-400"
+        />
       ))}
     </span>
   );
@@ -311,7 +320,7 @@ export function JobCard({
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-zinc-50 truncate">{job.title}</p>
                   <div className="flex items-center gap-1 mt-1">
-                    <Building2 className="h-3 w-3 shrink-0 text-zinc-400" />
+                    <Building2 aria-hidden="true" className="h-3 w-3 shrink-0 text-zinc-400" />
                     <p className="text-xs text-zinc-300 truncate">{job.company}</p>
                   </div>
                 </div>
@@ -329,7 +338,7 @@ export function JobCard({
                         setNotesOpen(true);
                       }}
                     >
-                      <StickyNote className={cn("h-3.5 w-3.5", hasNotes && "fill-current")} />
+                      <StickyNote aria-hidden="true" className={cn("h-3.5 w-3.5", hasNotes && "fill-current")} />
                     </button>
                   ) : null}
                   {thankYouEligible ? (
@@ -343,7 +352,7 @@ export function JobCard({
                         setThankYouOpen(true);
                       }}
                     >
-                      <Heart className="h-3.5 w-3.5" />
+                      <Heart aria-hidden="true" className="h-3.5 w-3.5" />
                     </button>
                   ) : null}
                   <button
@@ -361,7 +370,7 @@ export function JobCard({
                       );
                     }}
                   >
-                    <Sparkles className="h-3.5 w-3.5" />
+                    <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
                   </button>
                   <button
                     type="button"
@@ -378,17 +387,19 @@ export function JobCard({
                       );
                     }}
                   >
-                    <Send className="h-3.5 w-3.5" />
+                    <Send aria-hidden="true" className="h-3.5 w-3.5" />
                   </button>
                   {linkHref ? (
                     <a
                       href={linkHref}
                       target="_blank"
                       rel="noopener noreferrer"
+                      title="Open job posting in new tab"
+                      aria-label={`Open ${job.title} at ${job.company} job posting in new tab`}
                       className="text-zinc-400 hover:text-sky-400 p-1 -m-1 rounded hover:bg-zinc-800/80"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
                     </a>
                   ) : null}
                   {onCloseOut ? (
@@ -413,7 +424,7 @@ export function JobCard({
                         setCloseOutOpen(true);
                       }}
                     >
-                      <CircleSlash className="h-3.5 w-3.5" />
+                      <CircleSlash aria-hidden="true" className="h-3.5 w-3.5" />
                     </button>
                   ) : null}
                   {onArchive ? (
@@ -434,9 +445,9 @@ export function JobCard({
                       }}
                     >
                       {isArchived ? (
-                        <ArchiveRestore className="h-3.5 w-3.5" />
+                        <ArchiveRestore aria-hidden="true" className="h-3.5 w-3.5" />
                       ) : (
-                        <Archive className="h-3.5 w-3.5" />
+                        <Archive aria-hidden="true" className="h-3.5 w-3.5" />
                       )}
                     </button>
                   ) : null}
@@ -450,7 +461,7 @@ export function JobCard({
                         setConfirmOpen(true);
                       }}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
                     </button>
                   ) : null}
                 </div>
@@ -461,17 +472,17 @@ export function JobCard({
                   {job.priority ? <PriorityStars count={job.priority} /> : null}
                   {salaryStr ? (
                     <span className="inline-flex items-center gap-0.5 rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-px text-[10px] font-semibold text-emerald-400 tabular-nums">
-                      <DollarSign className="h-2.5 w-2.5" />{salaryStr}
+                      <DollarSign aria-hidden="true" className="h-2.5 w-2.5" />{salaryStr}
                     </span>
                   ) : null}
                   {job.location ? (
                     <span className="inline-flex items-center gap-0.5 rounded border border-zinc-600 bg-zinc-800/60 px-1.5 py-px text-[10px] text-zinc-300">
-                      <MapPin className="h-2.5 w-2.5" />{job.location}
+                      <MapPin aria-hidden="true" className="h-2.5 w-2.5" />{job.location}
                     </span>
                   ) : null}
                   {remoteInfo ? (
                     <span className={cn("inline-flex items-center gap-0.5 rounded border px-1.5 py-px text-[10px] font-medium", remoteInfo.cls)}>
-                      <Laptop className="h-2.5 w-2.5" />{remoteInfo.label}
+                      <Laptop aria-hidden="true" className="h-2.5 w-2.5" />{remoteInfo.label}
                     </span>
                   ) : null}
                   {closedReasonLabel && job.closed_reason ? (
@@ -481,13 +492,13 @@ export function JobCard({
                         CLOSED_REASON_STYLES[job.closed_reason]
                       )}
                     >
-                      <CircleSlash className="h-2.5 w-2.5" />
+                      <CircleSlash aria-hidden="true" className="h-2.5 w-2.5" />
                       {closedReasonLabel}
                     </span>
                   ) : null}
                   {isArchived ? (
                     <span className="inline-flex items-center gap-0.5 rounded border border-zinc-600 bg-zinc-800/60 px-1.5 py-px text-[10px] text-zinc-400">
-                      <Archive className="h-2.5 w-2.5" />Archived
+                      <Archive aria-hidden="true" className="h-2.5 w-2.5" />Archived
                     </span>
                   ) : null}
                 </div>
@@ -506,7 +517,7 @@ export function JobCard({
                   ) : null}
                   {(job.tags ?? []).slice(0, 2).map((t) => (
                     <span key={t} className="inline-flex items-center gap-0.5 rounded bg-blue-500/15 border border-blue-500/25 px-1.5 py-px text-[9px] font-medium text-blue-300">
-                      <Tag className="h-2 w-2" />{t}
+                      <Tag aria-hidden="true" className="h-2 w-2" />{t}
                     </span>
                   ))}
                 </div>
@@ -517,12 +528,15 @@ export function JobCard({
                 <div className="flex items-center gap-2 mt-1.5 text-[10px]">
                   {job.next_step ? (
                     <span className="inline-flex items-center gap-0.5 text-sky-400 truncate max-w-[60%]">
-                      <Flag className="h-2.5 w-2.5 shrink-0" />{job.next_step}
+                      <Flag aria-hidden="true" className="h-2.5 w-2.5 shrink-0" />{job.next_step}
                     </span>
                   ) : null}
                   {deadlineStr ? (
-                    <span className={cn("inline-flex items-center gap-0.5 ml-auto", deadlineUrgent ? "text-red-400" : "text-zinc-400")}>
-                      <Clock className="h-2.5 w-2.5" />{deadlineStr}
+                    <span
+                      className={cn("inline-flex items-center gap-0.5 ml-auto", deadlineUrgent ? "text-red-400" : "text-zinc-400")}
+                      aria-label={`Deadline ${deadlineStr}${deadlineUrgent ? " (urgent)" : ""}`}
+                    >
+                      <Clock aria-hidden="true" className="h-2.5 w-2.5" />{deadlineStr}
                     </span>
                   ) : null}
                 </div>
@@ -585,6 +599,7 @@ export function JobCard({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Interview prep, contacts, salary range…"
+              aria-label={`Notes for ${job.title} at ${job.company}`}
               className="min-h-[120px] bg-zinc-950 border-zinc-700 text-zinc-100 resize-y"
             />
             <DialogFooter className="border-zinc-800 bg-zinc-900/80 sm:justify-end gap-2">
@@ -625,17 +640,20 @@ export function JobCard({
           {!thankYouResult ? (
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label className="text-zinc-300">Interviewer name (optional)</Label>
+                <Label htmlFor="thankyou-interviewer" className="text-zinc-300">Interviewer name (optional)</Label>
                 <Input
+                  id="thankyou-interviewer"
                   value={thankYouWho}
                   onChange={(e) => setThankYouWho(e.target.value)}
                   placeholder="Jane Smith"
+                  autoComplete="off"
                   className="bg-zinc-950 border-zinc-700 text-white"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-zinc-300">What to mention (optional)</Label>
+                <Label htmlFor="thankyou-notes" className="text-zinc-300">What to mention (optional)</Label>
                 <Textarea
+                  id="thankyou-notes"
                   value={thankYouNotes}
                   onChange={(e) => setThankYouNotes(e.target.value)}
                   placeholder="Topics you discussed, why you’re a fit…"
@@ -717,39 +735,47 @@ export function JobCard({
                 {job.title} · {job.company}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-2">
+            <fieldset className="space-y-2">
+              <legend className="sr-only">Close-out reason</legend>
               {(Object.keys(CLOSED_REASON_LABELS) as ClosedReason[]).map(
                 (reason) => {
                   const selected = closeOutChoice === reason;
+                  const optionId = `closeout-reason-${reason}`;
                   return (
-                    <button
+                    <label
                       key={reason}
-                      type="button"
-                      onClick={() => setCloseOutChoice(reason)}
+                      htmlFor={optionId}
                       className={cn(
-                        "w-full text-left rounded-lg border px-3 py-2 text-sm transition-colors",
+                        "flex w-full items-center gap-2 cursor-pointer rounded-lg border px-3 py-2 text-sm transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-400 focus-within:ring-offset-2 focus-within:ring-offset-zinc-900",
                         selected
                           ? "border-amber-400/60 bg-amber-500/10 text-amber-100"
                           : "border-zinc-700 bg-zinc-950/50 text-zinc-200 hover:bg-zinc-800/60"
                       )}
                     >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "inline-block h-3 w-3 rounded-full border",
-                            selected
-                              ? "border-amber-300 bg-amber-400"
-                              : "border-zinc-500 bg-transparent"
-                          )}
-                          aria-hidden
-                        />
-                        <span>{CLOSED_REASON_LABELS[reason]}</span>
-                      </div>
-                    </button>
+                      <input
+                        type="radio"
+                        id={optionId}
+                        name="closeout-reason"
+                        value={reason}
+                        checked={selected}
+                        onChange={() => setCloseOutChoice(reason)}
+                        className="sr-only"
+                      />
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "inline-block h-3 w-3 shrink-0 rounded-full border",
+                          selected
+                            ? "border-amber-300 bg-amber-400"
+                            : "border-zinc-500 bg-transparent"
+                        )}
+                      />
+                      <span>{CLOSED_REASON_LABELS[reason]}</span>
+                    </label>
                   );
                 }
               )}
-            </div>
+            </fieldset>
             {onArchive ? (
               <label className="mt-2 flex items-center gap-2 text-sm text-zinc-300">
                 <input

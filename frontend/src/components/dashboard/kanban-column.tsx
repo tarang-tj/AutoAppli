@@ -31,7 +31,7 @@ export function KanbanColumn({
   return (
     <div className="flex flex-col flex-1 min-h-[min(420px,55vh)]">
       <div className="flex items-center gap-2 mb-3 px-1 shrink-0">
-        <div className={cn("h-2.5 w-2.5 rounded-full", color)} />
+        <div aria-hidden="true" className={cn("h-2.5 w-2.5 rounded-full", color)} />
         <span className="text-sm font-semibold text-zinc-100">{label}</span>
         <Badge
           variant="secondary"
