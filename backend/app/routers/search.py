@@ -9,7 +9,7 @@ from app.deps.jobs_auth import get_optional_user_id, jobs_use_supabase
 from app.middleware.rate_limit import limiter
 from app.models.schemas import JobSearchResult, SearchRequest
 from app.repositories import search_supabase
-from app.services import scraper_service
+from app.services import live_search_service
 
 router = APIRouter(tags=["search"])
 logger = logging.getLogger(__name__)
@@ -28,14 +28,15 @@ async def search_jobs(
     req: SearchRequest,
     user_id: str | None = Depends(get_optional_user_id),
 ):
-    results = await scraper_service.search_jobs(
+    settings = get_settings()
+    results = await live_search_service.live_search(
+        settings,
         query=req.query,
         location=req.location or None,
         remote_only=req.remote_only,
         page=req.page,
         per_page=req.per_page,
     )
-    settings = get_settings()
     search_id: str | None = None
     persisted = False
     if jobs_use_supabase(settings) and user_id:
