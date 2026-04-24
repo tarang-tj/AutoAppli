@@ -23,3 +23,6 @@ build/
 # Accidental duplicate files from macOS Finder ("file 2.ext")
 **/* 2.*
 **/* 3.*
+
+# Supabase CLI local state (auth, project metadata)
+supabase/.temp/
