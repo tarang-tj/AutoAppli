@@ -33,10 +33,19 @@ import ThreeHero from "@/components/marketing/three-hero-wrapper";
  */
 export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
+    <div
+      className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col"
+      style={{ colorScheme: "dark" }}
+    >
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-blue-600 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+      >
+        Skip to main content
+      </a>
       <MarketingHeader demoMode={demoMode} />
 
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         <Hero demoMode={demoMode} />
         <TrustBar />
         <AppPreview />
@@ -55,25 +64,47 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
 
 // ---- Header --------------------------------------------------------------
 
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950";
+
 function MarketingHeader({ demoMode }: { demoMode: boolean }) {
   return (
     <header className="border-b border-zinc-800/50 px-6 py-4 flex items-center justify-between gap-4 backdrop-blur-sm bg-zinc-950/80 sticky top-0 z-10">
-      <Link href="/" className="flex items-center gap-2.5 no-underline">
-        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20">
+      <Link
+        href="/"
+        className={`flex items-center gap-2.5 no-underline rounded-md ${FOCUS_RING}`}
+        aria-label="AutoAppli home"
+      >
+        <div
+          aria-hidden="true"
+          className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20"
+        >
           A
         </div>
         <span className="font-semibold tracking-tight text-white text-lg">
           AutoAppli
         </span>
       </Link>
-      <nav className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
-        <a href="#how-it-works" className="hover:text-white transition-colors">
+      <nav
+        aria-label="Primary"
+        className="hidden md:flex items-center gap-6 text-sm text-zinc-400"
+      >
+        <a
+          href="#how-it-works"
+          className={`rounded-md hover:text-white transition-colors ${FOCUS_RING}`}
+        >
           How it works
         </a>
-        <a href="#features" className="hover:text-white transition-colors">
+        <a
+          href="#features"
+          className={`rounded-md hover:text-white transition-colors ${FOCUS_RING}`}
+        >
           Features
         </a>
-        <a href="#metrics" className="hover:text-white transition-colors">
+        <a
+          href="#metrics"
+          className={`rounded-md hover:text-white transition-colors ${FOCUS_RING}`}
+        >
           Why it works
         </a>
       </nav>
@@ -82,13 +113,13 @@ function MarketingHeader({ demoMode }: { demoMode: boolean }) {
           <>
             <Link
               href="/login"
-              className="text-zinc-400 hover:text-white transition-colors"
+              className={`rounded-md text-zinc-400 hover:text-white transition-colors ${FOCUS_RING}`}
             >
               Sign in
             </Link>
             <Link
               href="/signup"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
+              className={`rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 ${FOCUS_RING}`}
             >
               Sign up free
             </Link>
@@ -96,7 +127,7 @@ function MarketingHeader({ demoMode }: { demoMode: boolean }) {
         ) : (
           <Link
             href="/dashboard"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
+            className={`rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 ${FOCUS_RING}`}
           >
             Open app
           </Link>
@@ -118,18 +149,18 @@ function Hero({ demoMode }: { demoMode: boolean }) {
 
       <div className="max-w-3xl">
         <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300 mb-6">
-          <Sparkles className="h-3 w-3" />
+          <Sparkles aria-hidden="true" className="h-3 w-3" />
           Built by a UW Bothell CS junior who ran the grind
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.05]">
+        <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.05] text-balance">
           The internship grind,{" "}
           <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-violet-400 bg-clip-text text-transparent">
             minus the tab chaos.
           </span>
         </h1>
 
-        <p className="mt-6 text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
+        <p className="mt-6 text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed text-pretty">
           AutoAppli pulls live jobs from Greenhouse, Lever, Ashby, Indeed, and
           LinkedIn, tailors your resume to the JD in about 30 seconds, and
           tracks every application on a kanban. We don&rsquo;t auto-submit and
@@ -140,19 +171,19 @@ function Hero({ demoMode }: { demoMode: boolean }) {
           {demoMode ? (
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
+              className={`inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 [transition:background-color_150ms,box-shadow_150ms] shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 ${FOCUS_RING}`}
             >
               Start your internship board
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
             </Link>
           ) : (
             <>
               <Link
                 href="/signup"
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
+                className={`inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 [transition:background-color_150ms,box-shadow_150ms] shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 ${FOCUS_RING}`}
               >
                 Start your internship board
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
               <TryDemoButton>Try it without signup</TryDemoButton>
             </>
@@ -161,15 +192,15 @@ function Hero({ demoMode }: { demoMode: boolean }) {
 
         <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs text-zinc-500">
           <li className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+            <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5 text-emerald-400" />
             Free demo while I&rsquo;m building
           </li>
           <li className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+            <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5 text-emerald-400" />
             No credit card
           </li>
           <li className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+            <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5 text-emerald-400" />
             We never click apply for you
           </li>
         </ul>
@@ -204,8 +235,15 @@ function TrustBar() {
 
 function AppPreview() {
   return (
-    <section className="px-6 py-12 max-w-6xl mx-auto w-full">
-      <div className="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950 p-3 shadow-2xl shadow-blue-500/5">
+    <section
+      className="px-6 py-12 max-w-6xl mx-auto w-full"
+      aria-label="AutoAppli kanban dashboard preview"
+    >
+      <div
+        role="img"
+        aria-label="Mock dashboard showing four kanban columns — Bookmarked, Applied, Interviewing, Offer — with sample job cards"
+        className="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950 p-3 shadow-2xl shadow-blue-500/5"
+      >
         {/* Fake window chrome */}
         <div className="flex items-center gap-2 px-3 pb-2">
           <span className="h-2.5 w-2.5 rounded-full bg-red-500/50" />
@@ -332,7 +370,7 @@ function HowItWorks() {
     {
       icon: Upload,
       title: "Apply (you)",
-      body: "Open the company&rsquo;s apply page. Paste, check, submit. We don&rsquo;t do this part on purpose. Recruiters can tell when a tool did.",
+      body: "Open the company’s apply page. Paste, check, submit. We don’t do this part on purpose. Recruiters can tell when a tool did.",
     },
     {
       icon: Kanban,
@@ -341,15 +379,18 @@ function HowItWorks() {
     },
   ];
   return (
-    <section id="how-it-works" className="px-6 py-20 max-w-6xl mx-auto w-full">
+    <section
+      id="how-it-works"
+      className="scroll-mt-20 px-6 py-20 max-w-6xl mx-auto w-full"
+    >
       <div className="max-w-2xl mb-12">
         <p className="text-xs uppercase tracking-wider text-blue-400 font-semibold mb-2">
           How it works
         </p>
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-balance">
           Find, tailor, track. You hit apply.
         </h2>
-        <p className="mt-3 text-zinc-400 leading-relaxed">
+        <p className="mt-3 text-zinc-400 leading-relaxed text-pretty">
           No spreadsheets. No 40 open tabs at 1am. One kanban that carries the
           JD, the tailored resume, the cover letter, and the apply timestamp.
         </p>
@@ -364,7 +405,7 @@ function HowItWorks() {
             <div className="absolute -top-3 left-6 h-6 px-2 rounded-full bg-blue-600 text-white text-xs font-semibold flex items-center">
               Step {i + 1}
             </div>
-            <s.icon className="h-7 w-7 text-blue-400 mb-4" />
+            <s.icon aria-hidden="true" className="h-7 w-7 text-blue-400 mb-4" />
             <h3 className="font-semibold text-white text-lg">{s.title}</h3>
             <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
               {s.body}
@@ -382,13 +423,13 @@ function FeatureGrid() {
   return (
     <section
       id="features"
-      className="px-6 py-20 max-w-6xl mx-auto w-full border-t border-zinc-900"
+      className="scroll-mt-20 px-6 py-20 max-w-6xl mx-auto w-full border-t border-zinc-900"
     >
       <div className="max-w-2xl mb-12">
         <p className="text-xs uppercase tracking-wider text-blue-400 font-semibold mb-2">
           What&rsquo;s inside
         </p>
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-balance">
           Eight tools, built for the recruiting calendar.
         </h2>
       </div>
@@ -410,13 +451,13 @@ function FeatureGrid() {
           icon={Bookmark}
           iconColor="text-emerald-400"
           title="Chrome extension"
-          description="Save from LinkedIn or any ATS page. One click. Read-only. Does not touch the company&rsquo;s forms."
+          description="Save from LinkedIn or any ATS page. One click. Read-only. Does not touch the company’s forms."
         />
         <FeatureCard
           icon={Sparkles}
           iconColor="text-pink-400"
           title="Cover letters"
-          description="Generated against the JD, not a template. Edit the draft, don&rsquo;t start from blank."
+          description="Generated against the JD, not a template. Edit the draft, don’t start from blank."
         />
         <FeatureCard
           icon={Mail}
@@ -459,9 +500,10 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="group rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5 hover:border-zinc-700 hover:bg-zinc-900/70 transition-all duration-200">
+    <div className="group rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-5 hover:border-zinc-700 hover:bg-zinc-900/70 [transition:border-color_200ms,background-color_200ms] motion-reduce:transition-none">
       <Icon
-        className={`h-7 w-7 ${iconColor} mb-3 group-hover:scale-110 transition-transform duration-200`}
+        aria-hidden="true"
+        className={`h-7 w-7 ${iconColor} mb-3 group-hover:scale-110 transition-transform duration-200 motion-reduce:transition-none motion-reduce:group-hover:scale-100`}
       />
       <h3 className="font-semibold text-white">{title}</h3>
       <p className="mt-2 text-sm text-zinc-500 leading-relaxed">
@@ -479,7 +521,7 @@ function Metrics() {
       icon: Shield,
       value: "0",
       label: "Applications we submit for you",
-      body: "By design. The extension is read-only. The backend has zero browser-automation code. You click apply on the company&rsquo;s page. Recruiters can tell the difference.",
+      body: "By design. The extension is read-only. The backend has zero browser-automation code. You click apply on the company’s page. Recruiters can tell the difference.",
     },
     {
       icon: Zap,
@@ -497,13 +539,13 @@ function Metrics() {
   return (
     <section
       id="metrics"
-      className="px-6 py-20 max-w-6xl mx-auto w-full border-t border-zinc-900"
+      className="scroll-mt-20 px-6 py-20 max-w-6xl mx-auto w-full border-t border-zinc-900"
     >
       <div className="max-w-2xl mb-12">
         <p className="text-xs uppercase tracking-wider text-blue-400 font-semibold mb-2">
           Why it works
         </p>
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-balance">
           The 10 minutes of prep that matters. Not the 30 seconds we could fake.
         </h2>
       </div>
@@ -514,7 +556,7 @@ function Metrics() {
             key={s.label}
             className="rounded-xl border border-zinc-800 bg-gradient-to-b from-zinc-900/50 to-zinc-950 p-6"
           >
-            <s.icon className="h-6 w-6 text-blue-400 mb-3" />
+            <s.icon aria-hidden="true" className="h-6 w-6 text-blue-400 mb-3" />
             <div className="text-4xl font-bold text-white tracking-tight">
               {s.value}
             </div>
@@ -544,7 +586,10 @@ function Testimonial() {
           next year&rsquo;s me spends that time on the roles that matter.&rdquo;
         </blockquote>
         <figcaption className="mt-6 flex flex-col items-center gap-1">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+          <div
+            aria-hidden="true"
+            className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm"
+          >
             T
           </div>
           <div className="text-sm font-medium text-white">Tarang J.</div>
@@ -564,19 +609,19 @@ function Testimonial() {
 const FAQ_ITEMS: Array<{ q: string; a: string }> = [
   {
     q: "Does AutoAppli auto-apply for me?",
-    a: "No. On purpose. AutoAppli doesn't submit applications, doesn't fill forms, doesn't click apply buttons. Recruiters can tell when a tool did it and it tanks your callback rate. What we do: find the role, tailor your resume and cover letter to it, track it. You open the apply page and submit yourself. We set up the ten minutes of work that matters; we don't try to fake the last thirty seconds.",
+    a: "No. On purpose. AutoAppli doesn’t submit applications, doesn’t fill forms, doesn’t click apply buttons. Recruiters can tell when a tool did it and it tanks your callback rate. What we do: find the role, tailor your resume and cover letter to it, track it. You open the apply page and submit yourself. We set up the ten minutes of work that matters; we don’t try to fake the last thirty seconds.",
   },
   {
-    q: "Why \"for students\" specifically?",
+    q: "Why “for students” specifically?",
     a: "I built this while doing my own internship search as a CS junior at UW Bothell. Internship recruiting has a cycle (Sept to Nov for next summer, Jan to Mar for new-grad) and a different rhythm than mid-career search. AutoAppli is tuned for that. Other audiences are welcome; the defaults are set for students.",
   },
   {
     q: "How is this different from LazyApply, Simplify, or Huntr?",
-    a: "LazyApply submits for you. We don't. Simplify autofills any role for any user; we're vertical on student internship and new-grad. Huntr is a tracker only; we do the prep work (resume tailor, cover letter, outreach) plus tracking. If what you want is to mass-fire 500 applications tonight, we are not the tool.",
+    a: "LazyApply submits for you. We don’t. Simplify autofills any role for any user; we’re vertical on student internship and new-grad. Huntr is a tracker only; we do the prep work (resume tailor, cover letter, outreach) plus tracking. If what you want is to mass-fire 500 applications tonight, we are not the tool.",
   },
   {
     q: "Is AutoAppli really free?",
-    a: "Free demo while I'm still building. If I add paid features later, the core stays free for verified students. No credit card, no trial timer, no dark patterns.",
+    a: "Free demo while I’m still building. If I add paid features later, the core stays free for verified students. No credit card, no trial timer, no dark patterns.",
   },
   {
     q: "Which AI model tailors my resume?",
@@ -588,25 +633,25 @@ const FAQ_ITEMS: Array<{ q: string; a: string }> = [
   },
   {
     q: "Can I export my data?",
-    a: "Any time. CSV, JSON, PDF. Your board, resumes, outreach, and timeline all export from the Export page. We don't trap your data.",
+    a: "Any time. CSV, JSON, PDF. Your board, resumes, outreach, and timeline all export from the Export page. We don’t trap your data.",
   },
   {
     q: "What data do you store?",
-    a: "Your account email, resumes you upload, jobs you save, outreach messages you draft. Data is stored in Supabase (Postgres) with row-level security. We don't sell data and we don't share it with advertisers.",
+    a: "Your account email, resumes you upload, jobs you save, outreach messages you draft. Data is stored in Supabase (Postgres) with row-level security. We don’t sell data and we don’t share it with advertisers.",
   },
 ];
 
 function FAQ() {
   return (
     <section className="px-6 py-20 max-w-3xl mx-auto w-full">
-      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-center mb-3">
+      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-center mb-3 text-balance">
         Questions, answered.
       </h2>
       <p className="text-zinc-400 text-center mb-10">
         Everything else, ping{" "}
         <a
           href="mailto:hello@autoappli.com"
-          className="text-blue-400 hover:underline"
+          className={`rounded-md text-blue-400 hover:underline ${FOCUS_RING}`}
         >
           hello@autoappli.com
         </a>
@@ -666,10 +711,10 @@ function FinalCTA({ demoMode }: { demoMode: boolean }) {
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-blue-500/10 rounded-full blur-3xl" />
         </div>
-        <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+        <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight text-balance">
           Recruiting season&rsquo;s already started somewhere. Set up your board.
         </h2>
-        <p className="mt-4 text-zinc-400 max-w-xl mx-auto">
+        <p className="mt-4 text-zinc-400 max-w-xl mx-auto text-pretty">
           Free demo while I&rsquo;m still building. If paid features come later,
           the core stays free for verified students. No credit card. Thirty
           seconds to first saved job.
@@ -678,19 +723,19 @@ function FinalCTA({ demoMode }: { demoMode: boolean }) {
           {demoMode ? (
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/30"
+              className={`inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 [transition:background-color_150ms,box-shadow_150ms] shadow-lg shadow-blue-600/30 ${FOCUS_RING}`}
             >
               Open the app
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
             </Link>
           ) : (
             <>
               <Link
                 href="/signup"
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/30"
+                className={`inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 [transition:background-color_150ms,box-shadow_150ms] shadow-lg shadow-blue-600/30 ${FOCUS_RING}`}
               >
                 Start your internship board
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
               <TryDemoButton>Try the demo</TryDemoButton>
             </>
@@ -708,7 +753,10 @@ function MarketingFooter() {
     <footer className="border-t border-zinc-800/50 px-6 py-8 text-xs text-zinc-600">
       <div className="max-w-6xl mx-auto flex flex-wrap gap-4 justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-[10px]">
+          <div
+            aria-hidden="true"
+            className="h-5 w-5 rounded bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-[10px]"
+          >
             A
           </div>
           <span className="text-zinc-500 font-medium">AutoAppli</span>
@@ -719,18 +767,21 @@ function MarketingFooter() {
         <div className="flex flex-wrap gap-4">
           <Link
             href="/privacy"
-            className="hover:text-zinc-400 transition-colors"
+            className={`rounded-md hover:text-zinc-400 transition-colors ${FOCUS_RING}`}
           >
             Privacy
           </Link>
-          <Link href="/terms" className="hover:text-zinc-400 transition-colors">
+          <Link
+            href="/terms"
+            className={`rounded-md hover:text-zinc-400 transition-colors ${FOCUS_RING}`}
+          >
             Terms
           </Link>
           <a
             href="https://github.com/tarang-tj/AutoAppli"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-zinc-400 transition-colors"
+            className={`rounded-md hover:text-zinc-400 transition-colors ${FOCUS_RING}`}
           >
             GitHub
           </a>

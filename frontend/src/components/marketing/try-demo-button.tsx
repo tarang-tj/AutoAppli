@@ -32,7 +32,7 @@ export function TryDemoButton({
   }, [router]);
 
   const base =
-    "inline-flex items-center gap-2 rounded-lg px-6 py-3 font-medium transition-all";
+    "inline-flex items-center gap-2 rounded-lg px-6 py-3 font-medium [transition:background-color_150ms,border-color_150ms,box-shadow_150ms,opacity_150ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950";
   const styles =
     variant === "primary"
       ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/25"
@@ -43,9 +43,11 @@ export function TryDemoButton({
       type="button"
       onClick={onClick}
       disabled={pending}
+      aria-busy={pending}
+      aria-live="polite"
       className={`${base} ${styles} disabled:opacity-60 ${className}`}
     >
-      <PlayCircle className="h-4 w-4" />
+      <PlayCircle aria-hidden="true" className="h-4 w-4" />
       {children ?? (pending ? "Loading demo…" : "Try the demo")}
     </button>
   );
