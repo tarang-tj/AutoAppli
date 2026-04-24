@@ -1,6 +1,6 @@
 # ADR-0005: Match scoring — TF-IDF, semantic, or hybrid
 
-**Status:** Draft.
+**Status:** Accepted (Phase 1 structured scorer shipped 2026-04-23 as level-up v3 commit A2; embeddings hybrid deferred to Phase 2).
 **Date:** 2026-04-23
 
 ## Context

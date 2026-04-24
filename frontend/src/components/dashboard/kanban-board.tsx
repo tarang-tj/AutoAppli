@@ -147,7 +147,11 @@ export function KanbanBoard({
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex flex-col lg:flex-row gap-4 min-h-[65vh] items-stretch overflow-x-auto pb-1 -mx-1 px-1">
+      <div
+        className="flex flex-col lg:flex-row gap-4 min-h-[65vh] items-stretch overflow-x-auto pb-1 -mx-1 px-1 lg:snap-none snap-x snap-mandatory scroll-smooth"
+        role="list"
+        aria-label="Job pipeline — drag cards between columns"
+      >
         {COLUMNS.map((col) => {
           const colJobs =
             col.id === "bookmarked"
@@ -158,7 +162,9 @@ export function KanbanBoard({
           return (
             <div
               key={col.id}
-              className="min-w-[min(100%,18rem)] flex-1 lg:min-w-[11.5rem] flex flex-col"
+              className="min-w-[min(100%,18rem)] flex-1 lg:min-w-[11.5rem] flex flex-col snap-start lg:snap-align-none"
+              role="listitem"
+              aria-label={`${col.label} — ${colJobs.length} jobs`}
             >
               <KanbanColumn
                 id={col.id}

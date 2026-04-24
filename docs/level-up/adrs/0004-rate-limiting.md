@@ -1,6 +1,6 @@
 # ADR-0004: Rate limiting and abuse prevention
 
-**Status:** Draft.
+**Status:** Accepted (Phase 1 shipped 2026-04-23 as part of level-up v3 commits B1 + B2).
 **Date:** 2026-04-23
 
 ## Context

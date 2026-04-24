@@ -45,6 +45,7 @@ export function LandingPage({ demoMode = false }: { demoMode?: boolean }) {
         <FeatureGrid />
         <Metrics />
         <Testimonial />
+        <FAQ />
         <FinalCTA demoMode={demoMode} />
       </main>
 
@@ -551,6 +552,98 @@ function Testimonial() {
 }
 
 // ---- Final CTA ----------------------------------------------------------
+
+// ---- FAQ ----------------------------------------------------------------
+
+const FAQ_ITEMS: Array<{ q: string; a: string }> = [
+  {
+    q: "Is AutoAppli really free?",
+    a: "Yes — the core tracker, search, and AI tooling are free forever. A paid Pro tier is coming with unlimited AI generations and team workspaces, but everything shown above works on the free plan with no credit card.",
+  },
+  {
+    q: "Does AutoAppli auto-apply to jobs?",
+    a: "No. We believe auto-applying gets you filtered out. AutoAppli shortens every manual step — tailoring a resume in 30 seconds instead of 30 minutes, drafting personalised outreach, tracking every application on one board — so you can apply thoughtfully to more roles.",
+  },
+  {
+    q: "Which AI model tailors my resume?",
+    a: "Anthropic Claude (Sonnet). You can bring your own API key via settings if you prefer to own the billing. All AI calls run through our backend with per-user rate limits; we never train models on your resume.",
+  },
+  {
+    q: "Where does the job data come from?",
+    a: "We ingest public job boards nightly — Greenhouse, Lever, Ashby, Workable, SmartRecruiters, WeWorkRemotely — and top off with a live Indeed scrape for long-tail queries. No LinkedIn scraping; no ToS violations.",
+  },
+  {
+    q: "Can I export my data?",
+    a: "Any time. CSV, JSON, PDF — your board, resumes, outreach, and timeline all export from the Export page. We don't trap your data.",
+  },
+  {
+    q: "What data do you store?",
+    a: "Your account email, resumes you upload, jobs you save, outreach messages you draft. Data is stored in Supabase (Postgres) with row-level security. We don't sell data and we don't share it with advertisers.",
+  },
+];
+
+function FAQ() {
+  return (
+    <section className="px-6 py-20 max-w-3xl mx-auto w-full">
+      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-center mb-3">
+        Questions, answered.
+      </h2>
+      <p className="text-zinc-400 text-center mb-10">
+        Everything else — ping{" "}
+        <a
+          href="mailto:hello@autoappli.com"
+          className="text-blue-400 hover:underline"
+        >
+          hello@autoappli.com
+        </a>
+        .
+      </p>
+      <dl className="divide-y divide-zinc-800/70 rounded-xl border border-zinc-800/70 bg-zinc-900/40">
+        {FAQ_ITEMS.map((item, i) => (
+          <details
+            key={i}
+            className="group px-5 py-4 marker:text-zinc-400"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-zinc-100 font-medium">
+              <span>{item.q}</span>
+              <svg
+                aria-hidden="true"
+                className="h-4 w-4 shrink-0 text-zinc-500 transition-transform group-open:rotate-45"
+                viewBox="0 0 16 16"
+                fill="none"
+              >
+                <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </summary>
+            <dd className="mt-3 text-sm leading-relaxed text-zinc-400">
+              {item.a}
+            </dd>
+          </details>
+        ))}
+      </dl>
+
+      {/* FAQPage JSON-LD for rich results on Google. */}
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQ_ITEMS.map((it) => ({
+              "@type": "Question",
+              name: it.q,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: it.a,
+              },
+            })),
+          }),
+        }}
+      />
+    </section>
+  );
+}
 
 function FinalCTA({ demoMode }: { demoMode: boolean }) {
   return (
