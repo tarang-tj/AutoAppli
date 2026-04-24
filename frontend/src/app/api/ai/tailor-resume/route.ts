@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "../claude";
 import { redactPII } from "@/lib/redact-pii";
+import { gateAiRoute } from "@/lib/ai-gate";
 
 export async function POST(req: NextRequest) {
+  const gate = await gateAiRoute({
+    route: "tailor-resume",
+    perRouteMax: 10,
+    perRouteWindowMin: 60,
+    globalDailyMax: 100,
+  });
+  if (!gate.ok) return gate.response;
+
+  const started = Date.now();
   try {
     const body = await req.json();
     const { job_description, resume_text, instructions } = body as {
@@ -45,6 +55,12 @@ export async function POST(req: NextRequest) {
       temperature: 0.5,
     });
 
+    await gate.log({
+      model: process.env.CLAUDE_MODEL || "claude-sonnet-4-20250514",
+      durationMs: Date.now() - started,
+      status: 200,
+    });
+
     return NextResponse.json({
       id: `doc-${Date.now()}`,
       doc_type: "tailored_resume",
@@ -54,6 +70,7 @@ export async function POST(req: NextRequest) {
       pdf_base64: null,
     });
   } catch (err) {
+    await gate.log({ durationMs: Date.now() - started, status: 500 });
     console.error(
       "tailor-resume error:",
       redactPII(err instanceof Error ? err.message : String(err))

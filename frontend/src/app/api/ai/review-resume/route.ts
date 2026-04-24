@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "../claude";
 import { redactPII } from "@/lib/redact-pii";
+import { gateAiRoute } from "@/lib/ai-gate";
 
 export async function POST(req: NextRequest) {
+  const gate = await gateAiRoute({
+    route: "review-resume",
+    perRouteMax: 20,
+    perRouteWindowMin: 60,
+    globalDailyMax: 100,
+  });
+  if (!gate.ok) return gate.response;
+
+  const started = Date.now();
   try {
     const body = await req.json();
     const { resume_text } = body as { resume_text?: string };
@@ -53,6 +63,12 @@ export async function POST(req: NextRequest) {
       };
     }
 
+    await gate.log({
+      model: process.env.CLAUDE_MODEL || "claude-sonnet-4-20250514",
+      durationMs: Date.now() - started,
+      status: 200,
+    });
+
     return NextResponse.json({
       id: `rev-${Date.now()}`,
       overall_score: Math.max(1, Math.min(10, parsed.overall_score || 5)),
@@ -64,6 +80,7 @@ export async function POST(req: NextRequest) {
       keyword_suggestions: parsed.keyword_suggestions || [],
     });
   } catch (err) {
+    await gate.log({ durationMs: Date.now() - started, status: 500 });
     console.error("review-resume error:", redactPII(err instanceof Error ? err.message : String(err)));
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal error" },

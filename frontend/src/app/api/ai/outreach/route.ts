@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "../claude";
 import { redactPII } from "@/lib/redact-pii";
+import { gateAiRoute } from "@/lib/ai-gate";
 
 export async function POST(req: NextRequest) {
+  const gate = await gateAiRoute({
+    route: "outreach",
+    perRouteMax: 15,
+    perRouteWindowMin: 60,
+    globalDailyMax: 100,
+  });
+  if (!gate.ok) return gate.response;
+
+  const started = Date.now();
   try {
     const body = await req.json();
     const {
@@ -61,6 +71,12 @@ ${resume_text ? `\nSender background excerpt:\n${resume_text.slice(0, 500)}` : "
       emailBody = raw.trim();
     }
 
+    await gate.log({
+      model: process.env.CLAUDE_MODEL || "claude-sonnet-4-20250514",
+      durationMs: Date.now() - started,
+      status: 200,
+    });
+
     return NextResponse.json({
       id: `msg-${Date.now()}`,
       message_type: isLinkedIn ? "linkedin" : "email",
@@ -72,6 +88,7 @@ ${resume_text ? `\nSender background excerpt:\n${resume_text.slice(0, 500)}` : "
       created_at: new Date().toISOString(),
     });
   } catch (err) {
+    await gate.log({ durationMs: Date.now() - started, status: 500 });
     console.error("outreach error:", redactPII(err instanceof Error ? err.message : String(err)));
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal error" },

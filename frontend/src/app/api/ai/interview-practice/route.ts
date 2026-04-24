@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { redactPII } from "@/lib/redact-pii";
+import { gateAiRoute } from "@/lib/ai-gate";
 
 /**
  * /api/ai/interview-practice — multi-turn interviewer chat.
@@ -27,6 +28,15 @@ import { redactPII } from "@/lib/redact-pii";
 type IncomingMessage = { role: "user" | "assistant"; content: string };
 
 export async function POST(req: NextRequest) {
+  const gate = await gateAiRoute({
+    route: "interview-practice",
+    perRouteMax: 30,
+    perRouteWindowMin: 60,
+    globalDailyMax: 100,
+  });
+  if (!gate.ok) return gate.response;
+
+  const started = Date.now();
   try {
     const body = await req.json();
     const {
@@ -113,8 +123,15 @@ ${resume_text ? resume_text.slice(0, 2500) : "(not provided)"}
       .join("")
       .trim();
 
+    await gate.log({
+      model: process.env.CLAUDE_MODEL || "claude-sonnet-4-20250514",
+      durationMs: Date.now() - started,
+      status: 200,
+    });
+
     return NextResponse.json({ reply: text });
   } catch (err) {
+    await gate.log({ durationMs: Date.now() - started, status: 500 });
     console.error("interview-practice error:", redactPII(err instanceof Error ? err.message : String(err)));
     return NextResponse.json(
       {
