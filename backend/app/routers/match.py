@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.config import Settings, get_settings
 from app.deps.jobs_auth import get_jobs_user_id, jobs_use_supabase
+from app.middleware.rate_limit import limiter
 from app.repositories import jobs_supabase as jobs_sb
 from app.repositories import jobs_memory
 from app.services.match_service import compute_batch_match_scores
@@ -20,7 +21,9 @@ def _all_jobs(settings: Settings, user_id: str | None) -> list[dict]:
 
 
 @router.post("/match/scores")
+@limiter.limit("60/minute")
 async def get_match_scores(
+    request: Request,
     body: dict,
     user_id: str | None = Depends(get_jobs_user_id),
     settings: Settings = Depends(get_settings),

@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.config import get_settings
 from app.deps.jobs_auth import get_optional_user_id, jobs_use_supabase
+from app.middleware.rate_limit import limiter
 from app.models.schemas import JobSearchResult, SearchRequest
 from app.repositories import search_supabase
 from app.services import scraper_service
@@ -21,7 +22,9 @@ def _result_payload(r: JobSearchResult) -> dict:
 
 
 @router.post("/search")
+@limiter.limit("20/minute")
 async def search_jobs(
+    request: Request,
     req: SearchRequest,
     user_id: str | None = Depends(get_optional_user_id),
 ):

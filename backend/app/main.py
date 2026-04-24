@@ -1,12 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.config import get_settings
+from app.middleware.rate_limit import limiter
 from app.routers import analytics, automation, auth, contacts, cover_letter, export, interview, jobs, match, notifications, outreach, profile, resume, salary, search, templates, timeline
 
 settings = get_settings()
 
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
