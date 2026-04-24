@@ -65,6 +65,7 @@ jobs:
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
           ONLY_SOURCE: ${{ github.event.inputs.source || '' }}
           NO_DEACTIVATE: ${{ github.event.inputs.no_deactivate || 'false' }}
+          JOBS_DEDUP_V1: 'true'
         run: |
           args=( "--summary-out" "run-summary.json" )
           if [ "$DRY_RUN" = "true" ]; then
