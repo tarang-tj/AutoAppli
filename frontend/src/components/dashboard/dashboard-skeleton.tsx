@@ -7,7 +7,13 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export function DashboardSkeleton() {
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label="Loading dashboard"
+    >
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
@@ -60,6 +66,7 @@ export function DashboardSkeleton() {
           </div>
         ))}
       </div>
+      <span className="sr-only">Loading dashboard…</span>
     </div>
   );
 }

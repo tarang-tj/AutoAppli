@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Kanban, Mail, Sparkles, Upload, X } from "lucide-react";
 import Link from "next/link";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 /**
  * OnboardingTour — first-run guided intro shown on /dashboard.
@@ -55,15 +56,31 @@ const STORAGE_KEY = "autoappli_tour_completed";
 export function OnboardingTour() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+
+  useFocusTrap(open, dialogRef);
 
   useEffect(() => {
     try {
       const done = window.localStorage.getItem(STORAGE_KEY) === "1";
-      if (!done) setOpen(true);
+      if (!done) {
+        openerRef.current = document.activeElement as HTMLElement | null;
+        setOpen(true);
+      }
     } catch {
       /* private browsing — just skip the tour */
     }
   }, []);
+
+  // Restore focus to the opener on close.
+  useEffect(() => {
+    if (open) return;
+    const opener = openerRef.current;
+    if (opener && typeof opener.focus === "function") {
+      opener.focus();
+    }
+  }, [open]);
 
   const close = useCallback((markCompleted: boolean) => {
     if (markCompleted) {
@@ -102,21 +119,25 @@ export function OnboardingTour() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="tour-title"
+      aria-describedby="tour-body"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm"
     >
-      <div className="relative w-full max-w-md rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-2xl">
+      <div
+        ref={dialogRef}
+        className="relative w-full max-w-md rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-2xl overscroll-contain"
+      >
         <button
           type="button"
-          aria-label="Dismiss tour"
+          aria-label="Dismiss onboarding tour"
           onClick={() => close(false)}
-          className="absolute top-3 right-3 rounded-md p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-800"
+          className="absolute top-3 right-3 rounded-md p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
 
         <div className="p-6 md:p-8">
           <div className="mx-auto h-14 w-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-violet-500/20 border border-blue-500/30 flex items-center justify-center mb-5">
-            <Icon className="h-7 w-7 text-blue-300" />
+            <Icon className="h-7 w-7 text-blue-300" aria-hidden="true" />
           </div>
 
           <h2
@@ -125,7 +146,10 @@ export function OnboardingTour() {
           >
             {current.title}
           </h2>
-          <p className="mt-3 text-sm text-zinc-400 leading-relaxed text-center">
+          <p
+            id="tour-body"
+            className="mt-3 text-sm text-zinc-400 leading-relaxed text-center"
+          >
             {current.body}
           </p>
 
@@ -133,22 +157,27 @@ export function OnboardingTour() {
             <Link
               href={current.cta.href}
               onClick={() => close(true)}
-              className="mt-5 mx-auto w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-500/40 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-200 hover:bg-blue-500/20 transition-colors"
+              className="mt-5 mx-auto w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-500/40 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-200 hover:bg-blue-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
               {current.cta.label}
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           )}
 
           {/* Progress dots */}
-          <div className="mt-6 flex items-center justify-center gap-1.5">
+          <div
+            className="mt-6 flex items-center justify-center gap-1.5"
+            role="group"
+            aria-label="Tour progress"
+          >
             {STEPS.map((_, i) => (
               <button
                 key={i}
                 type="button"
-                aria-label={`Go to step ${i + 1}`}
+                aria-label={`Go to step ${i + 1} of ${STEPS.length}`}
+                aria-current={i === step ? "step" : undefined}
                 onClick={() => setStep(i)}
-                className={`h-1.5 rounded-full transition-all ${
+                className={`h-1.5 rounded-full [transition:width_150ms,background-color_150ms] motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
                   i === step
                     ? "w-6 bg-blue-500"
                     : "w-1.5 bg-zinc-700 hover:bg-zinc-500"
@@ -162,7 +191,7 @@ export function OnboardingTour() {
             <button
               type="button"
               onClick={() => close(false)}
-              className="text-xs text-zinc-500 hover:text-zinc-300"
+              className="text-xs text-zinc-500 hover:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
             >
               Skip tour
             </button>
@@ -171,7 +200,7 @@ export function OnboardingTour() {
                 <button
                   type="button"
                   onClick={() => setStep((s) => Math.max(s - 1, 0))}
-                  className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800"
+                  className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
                   Back
                 </button>
@@ -180,7 +209,7 @@ export function OnboardingTour() {
                 <button
                   type="button"
                   onClick={() => close(true)}
-                  className="rounded-md bg-blue-600 hover:bg-blue-700 px-4 py-1.5 text-xs font-medium text-white shadow-lg shadow-blue-600/20"
+                  className="rounded-md bg-blue-600 hover:bg-blue-700 px-4 py-1.5 text-xs font-medium text-white shadow-lg shadow-blue-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
                   Finish
                 </button>
@@ -188,10 +217,10 @@ export function OnboardingTour() {
                 <button
                   type="button"
                   onClick={() => setStep((s) => Math.min(s + 1, STEPS.length - 1))}
-                  className="rounded-md bg-blue-600 hover:bg-blue-700 px-4 py-1.5 text-xs font-medium text-white shadow-lg shadow-blue-600/20 inline-flex items-center gap-1.5"
+                  className="rounded-md bg-blue-600 hover:bg-blue-700 px-4 py-1.5 text-xs font-medium text-white shadow-lg shadow-blue-600/20 inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
                   Next
-                  <ArrowRight className="h-3 w-3" />
+                  <ArrowRight className="h-3 w-3" aria-hidden="true" />
                 </button>
               )}
             </div>

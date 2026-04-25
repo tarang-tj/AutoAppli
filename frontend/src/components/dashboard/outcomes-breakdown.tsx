@@ -173,7 +173,7 @@ function KpiTile({
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
       <div className="flex items-center gap-1.5 text-xs text-zinc-400 mb-2">
-        <Icon className="h-3.5 w-3.5" style={{ color: iconColor }} />
+        <Icon className="h-3.5 w-3.5" style={{ color: iconColor }} aria-hidden="true" />
         {label}
       </div>
       <div className="text-2xl font-bold text-white tabular-nums">{value}</div>
@@ -248,7 +248,7 @@ export function OutcomesBreakdown({ jobs }: Props) {
           preserves a stable visual order regardless of counts. */}
       <div className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
         <div className="mb-2 flex items-center gap-1.5 text-xs text-zinc-400">
-          <BarChart3 className="h-3.5 w-3.5" />
+          <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
           How your applications end
         </div>
         <div className="flex h-3 w-full overflow-hidden rounded-full bg-zinc-800">
@@ -279,7 +279,7 @@ export function OutcomesBreakdown({ jobs }: Props) {
                 <span
                   className="h-2 w-2 rounded-full"
                   style={{ backgroundColor: REASON_COLORS[reason] }}
-                  aria-hidden
+                  aria-hidden="true"
                 />
                 <span className="text-zinc-300">{REASON_LABELS[reason]}</span>
                 <span className="text-zinc-500 tabular-nums">
@@ -298,21 +298,25 @@ export function OutcomesBreakdown({ jobs }: Props) {
           <button
             type="button"
             onClick={() => setSourceTableOpen((o) => !o)}
-            className="flex w-full items-center justify-between px-4 py-3 text-left text-xs text-zinc-300 hover:bg-zinc-800/40 transition-colors"
+            className="flex w-full items-center justify-between px-4 py-3 text-left text-xs text-zinc-300 hover:bg-zinc-800/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-xl"
             aria-expanded={sourceTableOpen}
+            aria-controls="outcomes-by-source-panel"
           >
             <span className="inline-flex items-center gap-1.5">
-              <BarChart3 className="h-3.5 w-3.5 text-zinc-400" />
+              <BarChart3 className="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
               By source ({stats.bySource.length})
             </span>
             {sourceTableOpen ? (
-              <ChevronUp className="h-4 w-4 text-zinc-500" />
+              <ChevronUp className="h-4 w-4 text-zinc-500" aria-hidden="true" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-zinc-500" />
+              <ChevronDown className="h-4 w-4 text-zinc-500" aria-hidden="true" />
             )}
           </button>
           {sourceTableOpen ? (
-            <div className="border-t border-zinc-800 px-4 pb-3 pt-2">
+            <div
+              id="outcomes-by-source-panel"
+              className="border-t border-zinc-800 px-4 pb-3 pt-2"
+            >
               <table className="w-full text-left text-xs">
                 <thead className="text-[11px] uppercase tracking-wide text-zinc-500">
                   <tr>

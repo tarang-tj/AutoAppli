@@ -140,7 +140,7 @@ export function ActivationChecklist() {
       <header className="flex items-center justify-between gap-3 border-b border-blue-500/20 bg-blue-950/30 px-4 py-3">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/20 text-blue-300">
-            <Sparkles className="h-4 w-4" />
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
           </div>
           <div>
             <h2 className="text-sm font-semibold text-zinc-100">
@@ -157,36 +157,48 @@ export function ActivationChecklist() {
             type="button"
             onClick={() => setCollapsed((c) => !c)}
             aria-label={collapsed ? "Expand checklist" : "Collapse checklist"}
-            className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+            aria-expanded={!collapsed}
+            aria-controls="activation-checklist-panel"
+            className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           >
             {collapsed ? (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
             ) : (
-              <ChevronUp className="h-4 w-4" />
+              <ChevronUp className="h-4 w-4" aria-hidden="true" />
             )}
           </button>
           <button
             type="button"
             onClick={handleDismiss}
-            aria-label="Dismiss checklist"
+            aria-label="Dismiss activation checklist"
             title="Dismiss — won't show again"
-            className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
+            className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </header>
 
       {/* Progress bar — small visual cue under the header. */}
-      <div className="h-1 w-full bg-zinc-900">
+      <div
+        className="h-1 w-full bg-zinc-900"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={steps.length}
+        aria-valuenow={completedCount}
+        aria-label={`Activation progress: ${completedCount} of ${steps.length} complete`}
+      >
         <div
-          className="h-full bg-gradient-to-r from-blue-500 to-violet-500 transition-all duration-500"
+          className="h-full bg-gradient-to-r from-blue-500 to-violet-500 [transition:width_500ms] motion-reduce:transition-none"
           style={{ width: `${(completedCount / steps.length) * 100}%` }}
         />
       </div>
 
       {!collapsed && (
-        <ol className="divide-y divide-zinc-800">
+        <ol
+          id="activation-checklist-panel"
+          className="divide-y divide-zinc-800"
+        >
           {steps.map((step, i) => (
             <ChecklistRow
               key={step.id}
@@ -213,20 +225,20 @@ function ChecklistRow({
   return (
     <li
       className={cn(
-        "flex items-start gap-3 px-4 py-3.5 transition-colors",
+        "flex items-start gap-3 px-4 py-3.5 [transition:background-color_150ms]",
         isNext && "bg-blue-500/5",
       )}
     >
       <div className="mt-0.5 shrink-0">
         {step.done ? (
-          <CheckCircle2 className="h-5 w-5 text-emerald-400" aria-hidden />
+          <CheckCircle2 className="h-5 w-5 text-emerald-400" aria-hidden="true" />
         ) : (
           <Circle
             className={cn(
               "h-5 w-5",
               isNext ? "text-blue-400" : "text-zinc-600",
             )}
-            aria-hidden
+            aria-hidden="true"
           />
         )}
       </div>
@@ -257,7 +269,7 @@ function ChecklistRow({
           )}
         >
           {step.id === "resume" ? (
-            <Upload className="h-3.5 w-3.5 mr-1.5" />
+            <Upload className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
           ) : null}
           {step.cta.label}
         </Link>

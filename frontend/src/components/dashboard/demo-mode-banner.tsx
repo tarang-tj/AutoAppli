@@ -25,10 +25,14 @@ export function DemoModeBanner() {
   if (!visible || dismissed) return null;
 
   return (
-    <div className="mb-4 rounded-lg border border-blue-500/40 bg-gradient-to-r from-blue-600/10 via-blue-600/5 to-violet-600/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+    <div
+      role="status"
+      aria-live="polite"
+      className="mb-4 rounded-lg border border-blue-500/40 bg-gradient-to-r from-blue-600/10 via-blue-600/5 to-violet-600/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+    >
       <div className="flex items-center gap-3 min-w-0">
         <div className="shrink-0 h-8 w-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center">
-          <Sparkles className="h-4 w-4 text-blue-300" />
+          <Sparkles className="h-4 w-4 text-blue-300" aria-hidden="true" />
         </div>
         <div className="min-w-0">
           <div className="text-sm font-semibold text-zinc-50">
@@ -44,24 +48,24 @@ export function DemoModeBanner() {
         <Link
           href="/signup"
           onClick={() => disableDemoMode()}
-          className="rounded-md bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-blue-600/20"
+          className="rounded-md bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-blue-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
         >
           Sign up free
         </Link>
         <Link
           href="/login"
           onClick={() => disableDemoMode()}
-          className="rounded-md border border-zinc-700 hover:bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200"
+          className="rounded-md border border-zinc-700 hover:bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
         >
           Sign in
         </Link>
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          aria-label="Dismiss demo banner"
-          className="rounded-md p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800"
+          aria-label="Dismiss demo mode banner"
+          className="rounded-md p-1.5 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </div>

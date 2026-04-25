@@ -173,8 +173,14 @@ export function RecommendedJobs({
 
   if (rows === null) {
     return (
-      <section className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900 p-3">
-        <p className="text-sm text-zinc-400">Loading recommendations…</p>
+      <section
+        className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900 p-3"
+        aria-label="Recommended jobs"
+        aria-busy="true"
+      >
+        <p className="text-sm text-zinc-400" role="status" aria-live="polite">
+          Loading recommendations…
+        </p>
       </section>
     )
   }
@@ -185,12 +191,13 @@ export function RecommendedJobs({
   }
 
   return (
-    <section className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900">
+    <section className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900" aria-label="Recommended jobs">
       <button
         type="button"
         onClick={() => setExpanded(e => !e)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-zinc-800/50"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-zinc-800/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-lg"
         aria-expanded={expanded}
+        aria-controls="recommended-jobs-panel"
       >
         <span className="flex items-center gap-2">
           <span className="text-sm font-semibold text-zinc-50">Recommended for you</span>
@@ -203,7 +210,7 @@ export function RecommendedJobs({
             Ranked by fit{remotePreference ? ` + ${remotePreference}` : ''}
           </span>
           <svg
-            className={`h-4 w-4 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 shrink-0 [transition:transform_150ms] motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`}
             fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -212,7 +219,7 @@ export function RecommendedJobs({
       </button>
 
       {expanded && (
-      <div className="border-t border-zinc-700 p-4">
+      <div id="recommended-jobs-panel" className="border-t border-zinc-700 p-4">
       <div className="mb-3 flex items-baseline justify-between">
         <h3 className="sr-only">Recommended for you</h3>
         <span className="text-xs text-zinc-400">
@@ -221,7 +228,11 @@ export function RecommendedJobs({
       </div>
 
       {error && (
-        <div className="mb-3 rounded border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="mb-3 rounded border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive"
+        >
           {error}
         </div>
       )}
@@ -255,7 +266,8 @@ export function RecommendedJobs({
                     href={j.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-primary underline-offset-2 hover:underline"
+                    aria-label={`View ${j.title} at ${j.company} (opens in new tab)`}
+                    className="text-xs text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
                   >
                     View
                   </a>
@@ -263,8 +275,14 @@ export function RecommendedJobs({
                 <button
                   type="button"
                   disabled={isSaved || isSaving}
+                  aria-busy={isSaving}
+                  aria-label={
+                    isSaved
+                      ? `Saved ${j.title} at ${j.company}`
+                      : `Save ${j.title} at ${j.company} to kanban`
+                  }
                   onClick={() => save(j)}
-                  className="rounded-md border bg-background px-3 py-1 text-xs font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-md border bg-background px-3 py-1 text-xs font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
                   {isSaved  ? 'Saved' :
                    isSaving ? 'Saving…' :

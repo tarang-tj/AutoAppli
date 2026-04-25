@@ -80,36 +80,42 @@ export function FeedbackWidget() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        className="w-full flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-200 transition-colors py-1"
+        className="w-full flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-200 [transition:color_150ms] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
         aria-label="Send feedback"
       >
-        <MessageSquarePlus className="h-3.5 w-3.5" aria-hidden />
+        <MessageSquarePlus className="h-3.5 w-3.5" aria-hidden="true" />
         Send feedback
       </DialogTrigger>
       <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Send feedback</DialogTitle>
           <DialogDescription className="text-zinc-400">
-            Anything off, confusing, or missing? Let us know — we'll read it.
+            Anything off, confusing, or missing? Let us know — we&apos;ll read it.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label className="text-zinc-300">Type</Label>
+            <Label htmlFor="feedback-category" className="text-zinc-300">
+              Type
+            </Label>
             <Select
               value={category}
               onValueChange={(v) => setCategory(v as FeedbackCategory)}
+              name="feedback-category"
             >
-              <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white w-full">
+              <SelectTrigger
+                id="feedback-category"
+                className="bg-zinc-800 border-zinc-700 text-white w-full"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-zinc-900 border-zinc-700">
                 <SelectItem value="bug" className="text-white">
-                  🐛 Bug — something's broken
+                  🐛 Bug — something&apos;s broken
                 </SelectItem>
                 <SelectItem value="confused" className="text-white">
-                  🤔 Confused — I don't know what to do
+                  🤔 Confused — I don&apos;t know what to do
                 </SelectItem>
                 <SelectItem value="idea" className="text-white">
                   💡 Idea — wish this existed
@@ -122,16 +128,23 @@ export function FeedbackWidget() {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-zinc-300">Message</Label>
+            <Label htmlFor="feedback-message" className="text-zinc-300">
+              Message
+            </Label>
             <Textarea
+              id="feedback-message"
+              name="feedback-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="What happened, what did you expect, what should we do differently?"
               rows={5}
               maxLength={2000}
+              autoComplete="off"
+              spellCheck
+              aria-describedby="feedback-message-hint"
               className="bg-zinc-800 border-zinc-700 text-white resize-none"
             />
-            <p className="text-xs text-zinc-500">
+            <p id="feedback-message-hint" className="text-xs text-zinc-500">
               We see your current page automatically — no need to mention it.
             </p>
           </div>
@@ -142,7 +155,8 @@ export function FeedbackWidget() {
             type="button"
             onClick={() => void handleSubmit()}
             disabled={submitting}
-            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+            aria-busy={submitting}
+            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           >
             {submitting ? "Sending…" : "Send"}
           </Button>

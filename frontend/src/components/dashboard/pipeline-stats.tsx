@@ -46,7 +46,11 @@ export function PipelineStats({
 
   if (jobs.length === 0 && filtered) {
     return (
-      <div className="mb-6 rounded-lg border border-amber-600/60 bg-amber-950/40 px-4 py-3">
+      <div
+        className="mb-6 rounded-lg border border-amber-600/60 bg-amber-950/40 px-4 py-3"
+        role="status"
+        aria-live="polite"
+      >
         <p className="text-sm font-medium text-amber-100">
           No jobs match your search — try another keyword or clear the filter.
         </p>
@@ -87,7 +91,7 @@ export function PipelineStats({
                 <li
                   key={status}
                   className={cn(
-                    "rounded-md border px-2.5 py-1 text-xs font-semibold tabular-nums transition-colors",
+                    "rounded-md border px-2.5 py-1 text-xs font-semibold tabular-nums [transition:background-color_150ms,border-color_150ms]",
                     COLOURS[status]
                   )}
                 >

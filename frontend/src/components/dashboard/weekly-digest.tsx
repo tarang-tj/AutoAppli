@@ -134,12 +134,12 @@ export function WeeklyDigest({ jobs }: Props) {
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-              <Rocket className="h-3.5 w-3.5" />
+              <Rocket className="h-3.5 w-3.5" aria-hidden="true" />
               Applied this week
             </div>
             {stats.weekDelta !== 0 && (
               <span className={`inline-flex items-center gap-0.5 text-[11px] ${deltaTone}`}>
-                <DeltaIcon className="h-3 w-3" />
+                <DeltaIcon className="h-3 w-3" aria-hidden="true" />
                 {Math.abs(stats.weekDelta)}
               </span>
             )}
@@ -163,11 +163,11 @@ export function WeeklyDigest({ jobs }: Props) {
                 window.dispatchEvent(new CustomEvent(OPEN_GHOST_NUDGE_EVENT));
               }
             }}
-            className="text-left rounded-xl border p-4 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400/40"
-            aria-label={`Review ${stats.stale.length} stale applications`}
+            className="text-left rounded-xl border p-4 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 [transition:background-color_150ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40"
+            aria-label={`Review ${stats.stale.length} stale application${stats.stale.length === 1 ? "" : "s"}`}
           >
             <div className="flex items-center gap-1.5 text-xs text-zinc-400 mb-2">
-              <AlertTriangle className="h-3.5 w-3.5" />
+              <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
               Needs follow-up
             </div>
             <div className="text-2xl font-bold text-white">{stats.stale.length}</div>
@@ -178,7 +178,7 @@ export function WeeklyDigest({ jobs }: Props) {
         ) : (
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
             <div className="flex items-center gap-1.5 text-xs text-zinc-400 mb-2">
-              <AlertTriangle className="h-3.5 w-3.5" />
+              <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
               Needs follow-up
             </div>
             <div className="text-2xl font-bold text-white">0</div>
@@ -195,7 +195,7 @@ export function WeeklyDigest({ jobs }: Props) {
           }`}
         >
           <div className="flex items-center gap-1.5 text-xs text-zinc-400 mb-2">
-            <CalendarClock className="h-3.5 w-3.5" />
+            <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
             Next 7 days
           </div>
           <div className="text-2xl font-bold text-white">{stats.upcoming.length}</div>
@@ -209,7 +209,7 @@ export function WeeklyDigest({ jobs }: Props) {
         {/* Response rate */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
           <div className="flex items-center gap-1.5 text-xs text-zinc-400 mb-2">
-            <Target className="h-3.5 w-3.5" />
+            <Target className="h-3.5 w-3.5" aria-hidden="true" />
             Response rate
           </div>
           <div className="text-2xl font-bold text-white">
@@ -232,7 +232,7 @@ export function WeeklyDigest({ jobs }: Props) {
           </span>
           <Link
             href="/outreach"
-            className="shrink-0 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-100 hover:bg-amber-500/20 transition-colors"
+            className="shrink-0 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-100 hover:bg-amber-500/20 [transition:background-color_150ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40"
           >
             Draft follow-up →
           </Link>

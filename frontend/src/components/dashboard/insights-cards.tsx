@@ -111,13 +111,13 @@ function InsightCard({
   subtitle?: string;
 }) {
   return (
-    <Card className="bg-zinc-900/80 border-zinc-700/60 hover:border-zinc-600 transition-all">
+    <Card className="bg-zinc-900/80 border-zinc-700/60 hover:border-zinc-600 [transition:border-color_150ms]">
       <CardContent className="flex items-center gap-3 py-3.5 px-4">
         <div
           className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
           style={{ backgroundColor: `${iconColor}18` }}
         >
-          <Icon className="h-4.5 w-4.5" style={{ color: iconColor }} />
+          <Icon className="h-4.5 w-4.5" style={{ color: iconColor }} aria-hidden="true" />
         </div>
         <div className="min-w-0">
           <p className="text-lg font-bold text-white tabular-nums leading-tight">{value}</p>
@@ -144,7 +144,11 @@ export function InsightsCards({ jobs }: { jobs: Job[] }) {
     : "Same as last week";
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+    <div
+      className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5"
+      role="group"
+      aria-label="Application insights"
+    >
       <InsightCard
         icon={Zap}
         iconColor="#f59e0b"
