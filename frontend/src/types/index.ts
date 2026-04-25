@@ -293,6 +293,12 @@ export interface MatchScore {
   extra_skills?: string[];
   headline?: string;
 
+  // Per-dimension human-readable reason strings (added 2026-04-25 in
+  // match_v2 explanation pass). Powers the "Why this match" expander on
+  // the discover surface. Optional because legacy/demo callers don't set
+  // it.
+  explanations?: Record<string, string>;
+
   // Legacy (match_service) fields — kept for back-compat with older
   // callers and the demo-mode fallback. The backend response shape is
   // discriminated by the `engine` field on the envelope.

@@ -26,6 +26,7 @@ import { ArrowLeft, ArrowRight, RefreshCw, Sparkles } from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DiscoverCard } from "@/components/discover/discover-card";
+import { useMatchScores } from "@/hooks/use-match-scores";
 import {
   DiscoverFiltersPanel,
   DISCOVER_DEFAULT_FILTERS,
@@ -152,6 +153,11 @@ export function DiscoverClient() {
 
   const { skills: topSkills } = useTopCachedJobSkills(30);
   const { companies } = useCachedJobCompanies();
+
+  // Match scores against the user's primary resume. Returns empty when no
+  // resume on file — DiscoverCard renders no badge in that case, so the
+  // surface degrades gracefully for users who haven't uploaded one yet.
+  const { scores: matchScores, isLoading: scoresLoading } = useMatchScores();
 
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -412,6 +418,8 @@ export function DiscoverClient() {
                     savedJobId={savedByUrl.get(job.url) ?? null}
                     saving={savingIds.has(job.id)}
                     onSave={handleSave}
+                    matchScore={matchScores[job.id]}
+                    scoreLoading={scoresLoading}
                   />
                 ))}
               </div>
