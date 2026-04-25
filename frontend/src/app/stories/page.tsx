@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
-import { BookText, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { StoryCard } from "@/components/stories/story-card";
 import { StoryForm } from "@/components/stories/story-form";
+import { Masthead } from "@/app/stories/_components/masthead";
+import { EmptyState } from "@/app/stories/_components/empty-state";
 import {
   deleteStory,
   getStoriesServerSnapshot,
@@ -14,16 +14,23 @@ import {
 } from "@/lib/stories/storage";
 
 /**
- * /stories — Story Library page.
+ * /stories — Story Library page (editorial archive treatment).
  *
- * v1 is localStorage-only. The list subscribes via useSyncExternalStore
- * (matches the OnboardingTour / ThemeToggle pattern in this codebase) so
- * any write from the form propagates instantly without lifted state.
+ * Reads stories via useSyncExternalStore (matches OnboardingTour /
+ * ThemeToggle pattern). Writes go through the StoryForm dialog which
+ * calls writeStory directly; the subscription handles re-render.
  *
  * Page-level keyboard affordances:
  *   - "n" with no modifier opens "Add a story" (skipped when typing in
- *     a field). Same convention used elsewhere in the app shell.
+ *     a field, or when a modal is already open).
  */
+
+function isTypingTarget(el: Element | null): boolean {
+  if (!el) return false;
+  const tag = el.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+  return Boolean((el as HTMLElement).isContentEditable);
+}
 
 export default function StoriesPage() {
   const stories = useSyncExternalStore(
@@ -46,49 +53,57 @@ export default function StoriesPage() {
   }, []);
 
   const handleDelete = useCallback((story: Story) => {
-    const ok = window.confirm(
-      `Delete "${story.title}"? Can't undo this.`,
-    );
+    const ok = window.confirm(`Delete "${story.title}"? Can't undo this.`);
     if (!ok) return;
     deleteStory(story.id);
   }, []);
 
-  return (
-    <div>
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-zinc-50">
-            <BookText aria-hidden="true" className="h-6 w-6 text-blue-400" />
-            Story Library
-          </h1>
-          <p className="mt-1 text-sm text-zinc-300 leading-relaxed max-w-2xl">
-            Bank your strongest stories once. Reuse them across every interview.
-          </p>
-        </div>
-        <Button
-          onClick={openAdd}
-          aria-label="Add a story"
-          className="shrink-0"
-        >
-          <Plus aria-hidden="true" className="h-4 w-4" />
-          Add a story
-        </Button>
-      </header>
+  // "n" hotkey — single-key, no modifiers, ignored while typing or while
+  // the form is already open. Matches the convention in shortcuts-help.tsx.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "n" && e.key !== "N") return;
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      if (isTypingTarget(document.activeElement)) return;
+      if (formOpen) return;
+      e.preventDefault();
+      openAdd();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [formOpen, openAdd]);
 
-      {stories.length === 0 ? (
+  // Newest first — same order as readStories returns.
+  const total = stories.length;
+
+  return (
+    <div className="mx-auto max-w-4xl">
+      <Masthead count={total} onAdd={openAdd} />
+
+      {total === 0 ? (
         <EmptyState onAdd={openAdd} />
       ) : (
-        <ul role="list" className="space-y-3">
-          {stories.map((story) => (
+        <ol
+          aria-label="Filed entries"
+          className="mt-2 space-y-10 md:space-y-14"
+        >
+          {stories.map((story, idx) => (
             <li key={story.id}>
               <StoryCard
                 story={story}
+                index={total - idx}
                 onEdit={openEdit}
                 onDelete={handleDelete}
               />
             </li>
           ))}
-        </ul>
+        </ol>
+      )}
+
+      {total > 0 && (
+        <footer className="mt-16 border-t border-[oklch(0.55_0.05_40_/_0.35)] pt-6 text-center font-[family-name:var(--font-stories-mono)] text-[10px] tracking-[0.32em] text-[oklch(0.45_0.05_38)] smallcaps">
+          End of file · {total} {total === 1 ? "entry" : "entries"} on record
+        </footer>
       )}
 
       <StoryForm
@@ -99,32 +114,6 @@ export default function StoriesPage() {
           /* useSyncExternalStore re-renders the list automatically. */
         }}
       />
-    </div>
-  );
-}
-
-function EmptyState({ onAdd }: { onAdd: () => void }) {
-  return (
-    <div
-      role="status"
-      className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/30 p-10 text-center"
-    >
-      <div className="mx-auto h-12 w-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
-        <BookText aria-hidden="true" className="h-6 w-6 text-blue-300" />
-      </div>
-      <p className="mt-4 text-base font-semibold text-zinc-100">
-        No stories yet.
-      </p>
-      <p className="mt-1 text-sm text-zinc-400 max-w-md mx-auto leading-relaxed">
-        The grind goes faster when you&rsquo;ve got 8&ndash;10 strong ones
-        banked. One story, four short paragraphs &mdash; that&rsquo;s it.
-      </p>
-      <div className="mt-5 flex justify-center">
-        <Button onClick={onAdd}>
-          <Plus aria-hidden="true" className="h-4 w-4" />
-          Add your first story
-        </Button>
-      </div>
     </div>
   );
 }
