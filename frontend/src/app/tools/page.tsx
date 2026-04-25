@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Mail, FileSearch, ScanLine, Send } from "lucide-react";
+import { ArrowRight, Mail, FileSearch, ScanLine, Send, MessageSquare } from "lucide-react";
 
 /**
  * /tools — index page for free, no-signup interactive tools.
@@ -85,6 +85,13 @@ const TOOLS: ToolCard[] = [
       "Enter who you're reaching out to and why. Get 3 ready-to-edit templates — short curious, value-first, ask-for-advice. Browser-only, no AI.",
     icon: <Send className="h-5 w-5" aria-hidden="true" />,
   },
+  {
+    href: "/tools/recruiter-followup-generator",
+    title: "Recruiter follow-up generator",
+    blurb:
+      "Pick your situation — just applied, just interviewed, or ghosted for two weeks. Get a ready-to-send follow-up under 120 words. Browser-only, no AI.",
+    icon: <MessageSquare className="h-5 w-5" aria-hidden="true" />,
+  },
 ];
 
 const FOCUS_RING =
@@ -110,10 +117,11 @@ export default function ToolsIndexPage() {
           Free tools for the internship grind
         </h1>
         <p className="mt-5 text-lg text-zinc-400 max-w-2xl leading-relaxed text-pretty">
-          No signup. No paywall. Nothing leaves your browser. Four small
+          No signup. No paywall. Nothing leaves your browser. Five small
           utilities for the internship grind — generate cold email templates,
-          score a subject line before you send it, pull the keywords from a
-          JD, and see what an ATS actually extracts from your resume.
+          follow up with recruiters, score a subject line before you send it,
+          pull the keywords from a JD, and see what an ATS actually extracts
+          from your resume.
         </p>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
