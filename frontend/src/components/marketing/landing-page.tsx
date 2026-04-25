@@ -145,15 +145,21 @@ function Hero({ demoMode }: { demoMode: boolean }) {
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-blue-500/5 rounded-full blur-3xl" />
         <div className="absolute top-40 right-0 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-3xl" />
+        {/* Third blob — subtle emerald wash in the upper-right adds
+            depth behind the eyebrow + headline without busy detail. */}
+        <div className="absolute top-20 right-20 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl" />
       </div>
 
       <div className="max-w-3xl">
         <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300 mb-6">
-          <Sparkles aria-hidden="true" className="h-3 w-3" />
+          <Sparkles
+            aria-hidden="true"
+            className="h-3 w-3 animate-pulse motion-reduce:animate-none"
+          />
           Built by a UW Bothell CS junior who ran the grind
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.05] text-balance">
+        <h1 className="font-heading text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.05] text-balance">
           The internship grind,{" "}
           <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-violet-400 bg-clip-text text-transparent">
             minus the tab chaos.
@@ -392,7 +398,7 @@ function HowItWorks() {
         <p className="text-xs uppercase tracking-wider text-blue-400 font-semibold mb-2">
           How it works
         </p>
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-balance">
+        <h2 className="font-heading text-3xl md:text-4xl font-bold text-white tracking-tight text-balance">
           Find, tailor, track. You hit apply.
         </h2>
         <p className="mt-3 text-zinc-400 leading-relaxed text-pretty">
@@ -434,7 +440,7 @@ function FeatureGrid() {
         <p className="text-xs uppercase tracking-wider text-blue-400 font-semibold mb-2">
           What&rsquo;s inside
         </p>
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-balance">
+        <h2 className="font-heading text-3xl md:text-4xl font-bold text-white tracking-tight text-balance">
           Eight tools, built for the recruiting calendar.
         </h2>
       </div>
@@ -550,7 +556,7 @@ function Metrics() {
         <p className="text-xs uppercase tracking-wider text-blue-400 font-semibold mb-2">
           Why it works
         </p>
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-balance">
+        <h2 className="font-heading text-3xl md:text-4xl font-bold text-white tracking-tight text-balance">
           The 10 minutes of prep that matters. Not the 30 seconds we could fake.
         </h2>
       </div>
@@ -649,7 +655,7 @@ const FAQ_ITEMS: Array<{ q: string; a: string }> = [
 function FAQ() {
   return (
     <section className="px-6 py-20 max-w-3xl mx-auto w-full">
-      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight text-center mb-3 text-balance">
+      <h2 className="font-heading text-3xl md:text-4xl font-bold text-white tracking-tight text-center mb-3 text-balance">
         Questions, answered.
       </h2>
       <p className="text-zinc-400 text-center mb-10">
@@ -716,7 +722,7 @@ function FinalCTA({ demoMode }: { demoMode: boolean }) {
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-blue-500/10 rounded-full blur-3xl" />
         </div>
-        <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight text-balance">
+        <h2 className="font-heading text-3xl md:text-5xl font-bold text-white tracking-tight text-balance">
           Recruiting season&rsquo;s already started somewhere. Set up your board.
         </h2>
         <p className="mt-4 text-zinc-400 max-w-xl mx-auto text-pretty">

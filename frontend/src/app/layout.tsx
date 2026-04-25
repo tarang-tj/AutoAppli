@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/site";
 import { Toaster } from "sonner";
@@ -6,6 +7,23 @@ import { Analytics } from "@vercel/analytics/next";
 import { GlobalErrorListener } from "@/components/layout/global-error-listener";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CommandPalette } from "@/components/command-palette";
+
+// Body font — Inter, the de-facto SaaS default. Self-hosted by Next.
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+// Heading font — Sora, geometric/distinctive. Used for h1/h2/h3 on
+// the marketing surface to give the brand a sharper visual identity than
+// the generic SaaS Inter-everywhere look.
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-sora",
+});
 
 const siteUrl = getSiteUrl();
 
@@ -86,14 +104,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
-      <body
-        className="min-h-full flex flex-col"
-        style={{
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-        }}
-      >
+    <html
+      lang="en"
+      className={`${inter.variable} ${sora.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <GlobalErrorListener />
           <script
