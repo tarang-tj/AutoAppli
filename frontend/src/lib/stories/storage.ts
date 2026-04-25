@@ -82,6 +82,13 @@ const EMPTY: Story[] = [];
 let _apiCache: Story[] | null = null;
 let _apiFetchPromise: Promise<void> | null = null;
 
+// localStorage-mode snapshot cache. getStoriesSnapshot must return a stable
+// reference between store events for useSyncExternalStore (React 19), or
+// the renderer falls into an infinite re-render loop and throws #185.
+// readStories() builds a fresh array on every call (filter / []), so we
+// memoize it here and invalidate on storage events + writes.
+let _lsCache: Story[] | null = null;
+
 // ─── Subscriber set ──────────────────────────────────────────────────────────
 
 const _subscribers = new Set<() => void>();
@@ -241,7 +248,16 @@ export function readStories(): Story[] {
 }
 
 function writeAll(stories: Story[]): void {
+  _lsCache = null; // invalidate so next snapshot re-reads
   lsSet(JSON.stringify(stories));
+}
+
+/** Stable-reference accessor for localStorage mode. Never returns a fresh
+ * array unless the underlying data actually changed (write or storage event). */
+function readStoriesCached(): Story[] {
+  if (_lsCache !== null) return _lsCache;
+  _lsCache = readStories();
+  return _lsCache;
 }
 
 // ─── Public write API ─────────────────────────────────────────────────────────
@@ -415,7 +431,10 @@ export function subscribeStories(cb: () => void): () => void {
 
   // Cross-tab localStorage events (localStorage fallback mode).
   const storageHandler = (e: StorageEvent) => {
-    if (e.key === STORIES_KEY || e.key === null) cb();
+    if (e.key === STORIES_KEY || e.key === null) {
+      _lsCache = null; // invalidate before notifying
+      cb();
+    }
   };
   window.addEventListener("storage", storageHandler);
 
@@ -445,7 +464,7 @@ export function getStoriesSnapshot(): Story[] {
     }
     return _apiCache;
   }
-  return readStories();
+  return readStoriesCached();
 }
 
 /**

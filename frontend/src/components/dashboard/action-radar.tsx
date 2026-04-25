@@ -6,21 +6,16 @@
  * dashboard. All scoring is delegated to `lib/dashboard/action-radar.ts`
  * which is pure and unit-tested.
  */
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { CalendarCheck, Clock, Mail, Radar } from "lucide-react";
 import { useJobs } from "@/hooks/use-jobs";
+import { useStableNow } from "@/hooks/use-stable-now";
 import {
   computeActionRadar,
   type ActionType,
   type RadarAction,
 } from "@/lib/dashboard/action-radar";
-
-// Read "now" via useSyncExternalStore so the renderer stays pure (Date.now
-// lives in the snapshot getter, mirrors the pattern in WeeklyDigest).
-const subscribeNoop = () => () => {};
-const getNowSnapshot = () => Date.now();
-const getNowServerSnapshot = () => 0;
 
 const TYPE_ICON: Record<ActionType, typeof Clock> = {
   "closing-soon": Clock,
@@ -85,11 +80,7 @@ function ActionRow({ action }: { action: RadarAction }) {
 
 export function ActionRadar() {
   const { jobs, isLoading } = useJobs();
-  const now = useSyncExternalStore(
-    subscribeNoop,
-    getNowSnapshot,
-    getNowServerSnapshot,
-  );
+  const now = useStableNow();
   const snapshot = useMemo(() => computeActionRadar(jobs, now), [jobs, now]);
 
   // Hide entirely on the empty/loading dashboard — no signal to give yet.

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState } from "react";
+import { useStableNow } from "@/hooks/use-stable-now";
 import {
   Building2,
   Calendar,
@@ -88,12 +89,6 @@ const DATE_BUCKET_ORDER = [
   "Older",
 ];
 
-// "now" snapshot via useSyncExternalStore — satisfies the react-hooks/purity
-// rule by keeping Date.now() in the snapshot getter (an external read by design)
-// rather than directly in the render body.
-const subscribeNoop = () => () => {};
-const getNowSnapshot = () => Date.now();
-const getNowServerSnapshot = () => 0;
 
 export function PracticeHistoryPanel({
   sessions,
@@ -108,9 +103,7 @@ export function PracticeHistoryPanel({
   const [groupMode, setGroupMode] = useState<GroupMode>("date");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  // Read "now" via useSyncExternalStore so Date.now() does not appear in
-  // the render body — satisfies the react-hooks/purity lint rule.
-  const now = useSyncExternalStore(subscribeNoop, getNowSnapshot, getNowServerSnapshot);
+  const now = useStableNow();
 
   const filtered = useMemo(() => {
     if (!sessions) return [];

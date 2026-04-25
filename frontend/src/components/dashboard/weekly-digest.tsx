@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
+import { useStableNow } from "@/hooks/use-stable-now";
 import {
   AlertTriangle,
   CalendarClock,
@@ -38,15 +39,6 @@ type Props = {
 
 const DAY = 86_400_000;
 
-// "now" snapshot via useSyncExternalStore. Returns a stable value during a
-// single render (so stats compute deterministically), updates only when
-// React re-renders, and reading Date.now in the snapshot getter satisfies
-// the react-hooks/purity rule because the rule treats getSnapshot as an
-// external read by design.
-const subscribeNoop = () => () => {};
-const getNowSnapshot = () => Date.now();
-const getNowServerSnapshot = () => 0;
-
 function parseDate(x?: string | null): number | null {
   if (!x) return null;
   const t = Date.parse(x);
@@ -60,15 +52,7 @@ function deltaIcon(delta: number): { Icon: React.ElementType; tone: string } {
 }
 
 export function WeeklyDigest({ jobs }: Props) {
-  // Read "now" via useSyncExternalStore so the purity rule is satisfied —
-  // Date.now() lives in the snapshot getter, not the render body. SSR
-  // gets 0 (component is below-the-fold, no SSR-time stats matter for
-  // a logged-in dashboard).
-  const now = useSyncExternalStore(
-    subscribeNoop,
-    getNowSnapshot,
-    getNowServerSnapshot,
-  );
+  const now = useStableNow();
   const stats = useMemo(() => {
     const weekAgo = now - 7 * DAY;
     const twoWeeksAgo = now - 14 * DAY;
