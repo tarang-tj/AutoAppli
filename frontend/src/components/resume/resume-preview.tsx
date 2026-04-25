@@ -26,8 +26,27 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { ReactNode } from "react";
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
+
+// SSR-safe persisted-template sync. Server snapshot returns the default
+// (matches initial render); client snapshot reads the user's saved choice
+// from localStorage. Replaces the previous useEffect(() =>
+// setTemplateIdState(loadTemplatePreference()), []) bootstrapping pattern.
+// Subscriber listens to both the cross-tab `storage` event and a same-tab
+// custom event so in-component setter calls (saveTemplatePreference +
+// dispatch) re-fire the snapshot read.
+const TEMPLATE_PREF_EVENT = "autoappli:resume-template-pref";
+const subscribeTemplatePref = (cb: () => void) => {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", cb);
+  window.addEventListener(TEMPLATE_PREF_EVENT, cb);
+  return () => {
+    window.removeEventListener("storage", cb);
+    window.removeEventListener(TEMPLATE_PREF_EVENT, cb);
+  };
+};
+const getTemplatePrefServerSnapshot = (): ResumeTemplateId => DEFAULT_TEMPLATE_ID;
 
 type PreviewTab = "formatted" | "pdf" | "source" | "diff";
 
@@ -59,15 +78,19 @@ export function ResumePreview({
 }) {
   const [tab, setTab] = useState<PreviewTab>("formatted");
   const [pdfObjectUrl, setPdfObjectUrl] = useState<string | null>(null);
-  // Sprint 7 — persisted template choice. Lazy init reads localStorage
-  // once on first render; writes happen in the setter below.
-  const [templateId, setTemplateIdState] = useState<ResumeTemplateId>(DEFAULT_TEMPLATE_ID);
-  useEffect(() => {
-    setTemplateIdState(loadTemplatePreference());
-  }, []);
+  // Sprint 7 — persisted template choice. Synced from localStorage via
+  // useSyncExternalStore so SSR renders the default and the client picks
+  // up the saved value after hydration without a state-in-effect bootstrap.
+  const templateId = useSyncExternalStore(
+    subscribeTemplatePref,
+    loadTemplatePreference,
+    getTemplatePrefServerSnapshot,
+  );
   const setTemplateId = (id: ResumeTemplateId) => {
-    setTemplateIdState(id);
     saveTemplatePreference(id);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(TEMPLATE_PREF_EVENT));
+    }
   };
   // Cherry-picked hybrid text (set from the Diff tab via Apply hybrid).
   // When non-null, the Formatted/Plain-text views and the Copy/HTML/Print
@@ -111,7 +134,11 @@ export function ResumePreview({
   }, [doc?.id, doc?.download_url, doc?.pdf_base64]);
 
   // Drop any active hybrid + reject decisions when the underlying doc changes.
+  // This is a legitimate "reset internal state when an input prop changes"
+  // pattern. The cleaner React-19 alternative is to remount via a `key`
+  // prop, but that's the parent's call and out of scope here.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- prop-driven reset; parent owns the key alternative
     setHybridContent(null);
     setRejectedRows({});
   }, [doc?.id]);

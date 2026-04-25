@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -90,6 +97,18 @@ const STATIC_COMMANDS: Omit<Command, "run">[] = [
   { id: "act-help", label: "Show Keyboard Shortcuts", icon: HelpCircle, group: "Actions", keywords: ["?", "hotkeys", "help"] },
 ];
 
+// SSR-safe demo-flag sync. The server snapshot is always `false`; the
+// client snapshot reads localStorage on every render. We listen for the
+// `storage` event to catch cross-tab toggles. This replaces the previous
+// `useEffect(() => setDemoOn(isDemoMode()), [open])` pattern, which the
+// React 19 set-state-in-effect rule rejects.
+const subscribeDemoFlag = (cb: () => void) => {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", cb);
+  return () => window.removeEventListener("storage", cb);
+};
+const getDemoFlagServerSnapshot = () => false;
+
 function matchScore(cmd: Omit<Command, "run">, q: string): number {
   if (!q) return 1;
   const needle = q.toLowerCase();
@@ -117,16 +136,17 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
-  const [demoOn, setDemoOn] = useState(false);
+  // localStorage is the source of truth for demo mode; subscribe to keep
+  // the palette label ("Enter/Exit Demo Mode") in sync without a manual
+  // refresh effect.
+  const demoOn = useSyncExternalStore(
+    subscribeDemoFlag,
+    isDemoMode,
+    getDemoFlagServerSnapshot,
+  );
 
   // Trap Tab inside the dialog so aria-modal="true" actually holds.
   useFocusTrap(open, dialogRef);
-
-  // Refresh demo flag whenever the modal opens; localStorage is the source
-  // of truth and may have changed while the palette was unmounted.
-  useEffect(() => {
-    if (open) setDemoOn(isDemoMode());
-  }, [open]);
 
   // Toggle palette with ⌘K / Ctrl+K, close on Esc when nothing else is open.
   useEffect(() => {
@@ -220,19 +240,22 @@ export function CommandPalette() {
 
   const flatList = useMemo(() => grouped.flatMap((g) => g.items), [grouped]);
 
-  // Reset highlight when filtered list shrinks below current index.
-  useEffect(() => {
-    if (highlight >= flatList.length) setHighlight(0);
-  }, [flatList.length, highlight]);
+  // Clamp the highlight in render instead of writing it back from an
+  // effect — keeps the arrow-key navigation state in `highlight` while
+  // ensuring out-of-range values (after the filtered list shrinks) snap
+  // to 0 for display purposes. Subsequent arrow keys re-clamp via
+  // onInputKey below.
+  const safeHighlight =
+    flatList.length === 0 || highlight >= flatList.length ? 0 : highlight;
 
   // Scroll highlighted row into view as user navigates with arrows.
   useEffect(() => {
     if (!open || !listRef.current) return;
     const el = listRef.current.querySelector<HTMLElement>(
-      `[data-cmd-index="${highlight}"]`
+      `[data-cmd-index="${safeHighlight}"]`
     );
     el?.scrollIntoView({ block: "nearest" });
-  }, [highlight, open]);
+  }, [safeHighlight, open]);
 
   const execute = useCallback(
     (cmd: Command) => {
@@ -261,19 +284,19 @@ export function CommandPalette() {
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setHighlight((h) => Math.max(h - 1, 0));
-      } else if (e.key === "Enter" && flatList[highlight]) {
+      } else if (e.key === "Enter" && flatList[safeHighlight]) {
         e.preventDefault();
-        execute(flatList[highlight]);
+        execute(flatList[safeHighlight]);
       }
     },
-    [flatList, highlight, execute]
+    [flatList, safeHighlight, execute]
   );
 
   if (!open) return null;
 
   const listboxId = "command-palette-listbox";
   const activeOptionId =
-    flatList[highlight] ? `command-palette-option-${flatList[highlight].id}` : undefined;
+    flatList[safeHighlight] ? `command-palette-option-${flatList[safeHighlight].id}` : undefined;
 
   return (
     <div
@@ -333,7 +356,7 @@ export function CommandPalette() {
                 </div>
                 {g.items.map((cmd) => {
                   const idx = flatList.indexOf(cmd);
-                  const active = idx === highlight;
+                  const active = idx === safeHighlight;
                   const Icon = cmd.icon;
                   return (
                     <button

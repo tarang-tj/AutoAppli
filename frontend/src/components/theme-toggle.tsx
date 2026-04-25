@@ -1,12 +1,20 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const CYCLE: Array<"light" | "dark" | "system"> = ["light", "dark", "system"];
+
+// useSyncExternalStore with a noop subscriber returns `false` on the server
+// snapshot and `true` after hydration — same SSR-safe mount detection as the
+// old `useEffect(() => setMounted(true), [])` pattern, but without the
+// set-state-in-effect lint violation.
+const subscribeMount = () => () => {};
+const getMountedSnapshot = () => true;
+const getMountedServerSnapshot = () => false;
 
 /**
  * Cycles through light → dark → system.
@@ -15,8 +23,11 @@ const CYCLE: Array<"light" | "dark" | "system"> = ["light", "dark", "system"];
  */
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    subscribeMount,
+    getMountedSnapshot,
+    getMountedServerSnapshot,
+  );
 
   if (!mounted) {
     return (

@@ -21,7 +21,7 @@
  *
  * Self-contained: takes no props. Mount it anywhere on /dashboard.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import {
@@ -41,6 +41,31 @@ import { useJobs } from "@/hooks/use-jobs";
 import type { Resume, SavedTailoredDocument } from "@/types";
 
 const DISMISS_KEY = "autoappli_activation_dismissed";
+
+// SSR-safe sync: server snapshot is `false` (matches initial render — we
+// never want to flash the checklist away for users who already dismissed
+// it on a previous visit, but mismatching SSR/client booleans here is
+// fine because the checklist is purely a client-side enhancement).
+function readDismissed(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+const subscribeDismissed = (cb: () => void) => {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", cb);
+  return () => window.removeEventListener("storage", cb);
+};
+const getDismissedServerSnapshot = () => false;
+// Mounted gate: useSyncExternalStore with a noop subscriber returns
+// `false` on the server snapshot and `true` after hydration — same SSR
+// guard as the old `setMounted(true)` effect, no state-in-effect violation.
+const subscribeMount = () => () => {};
+const getMountedSnapshot = () => true;
+const getMountedServerSnapshot = () => false;
 
 interface ChecklistStep {
   id: "resume" | "job" | "tailor";
@@ -69,17 +94,22 @@ export function ActivationChecklist() {
 
   // Dismiss state — persisted, with a one-render flicker guard so SSR
   // hydration doesn't mismatch (see the "mounted" gate below).
-  const [dismissed, setDismissed] = useState(false);
+  // `dismissedPersisted` reflects the localStorage flag; `dismissedLocal`
+  // tracks an in-tab dismiss that hasn't been persisted yet (kept around
+  // so the X button feels instant even if storage write is slow).
+  const dismissedPersisted = useSyncExternalStore(
+    subscribeDismissed,
+    readDismissed,
+    getDismissedServerSnapshot,
+  );
+  const [dismissedLocal, setDismissedLocal] = useState(false);
+  const dismissed = dismissedPersisted || dismissedLocal;
   const [collapsed, setCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-    try {
-      if (window.localStorage.getItem(DISMISS_KEY) === "1") setDismissed(true);
-    } catch {
-      /* storage disabled — show the checklist */
-    }
-  }, []);
+  const mounted = useSyncExternalStore(
+    subscribeMount,
+    getMountedSnapshot,
+    getMountedServerSnapshot,
+  );
 
   const steps: ChecklistStep[] = useMemo(
     () => [
@@ -129,7 +159,7 @@ export function ActivationChecklist() {
     } catch {
       /* ignore */
     }
-    setDismissed(true);
+    setDismissedLocal(true);
   };
 
   return (

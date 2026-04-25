@@ -221,7 +221,7 @@ export default function ResumeTemplatesPage() {
                 existing resume, and add a job description
               </li>
               <li>
-                Our AI will tailor your resume to match the job while following the template's
+                Our AI will tailor your resume to match the job while following the template&rsquo;s
                 format and best practices
               </li>
             </ol>

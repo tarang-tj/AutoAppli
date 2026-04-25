@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { ArrowRight, Kanban, Mail, Sparkles, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -53,25 +59,53 @@ const STEPS: Step[] = [
 
 const STORAGE_KEY = "autoappli_tour_completed";
 
+// SSR-safe sync of the tour-completed flag. Server renders nothing (snapshot
+// `true` so the tour stays closed); client snapshot reads localStorage so
+// new visitors see the tour immediately on hydration without going through
+// a `setState` inside an effect.
+function readTourCompleted(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === "1";
+  } catch {
+    return true; // private browsing — skip the tour
+  }
+}
+const subscribeTourFlag = (cb: () => void) => {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", cb);
+  return () => window.removeEventListener("storage", cb);
+};
+const getTourFlagServerSnapshot = () => true;
+
 export function OnboardingTour() {
-  const [open, setOpen] = useState(false);
+  // `manuallyClosed` is the in-tab dismiss flag (covers both Skip and
+  // Finish — Finish also persists). The tour is open iff:
+  //   it's been hydrated AND the persisted flag is unset AND the user
+  //   hasn't closed it this session.
+  const tourCompleted = useSyncExternalStore(
+    subscribeTourFlag,
+    readTourCompleted,
+    getTourFlagServerSnapshot,
+  );
+  const [manuallyClosed, setManuallyClosed] = useState(false);
+  const open = !tourCompleted && !manuallyClosed;
   const [step, setStep] = useState(0);
   const dialogRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
 
   useFocusTrap(open, dialogRef);
 
+  // Capture the element that had focus right before the tour opens, so we
+  // can restore focus on close. Runs on every transition into the open
+  // state; the noop branch when already-open keeps this effect's body
+  // free of conditional setState (no rule violation, only ref writes).
   useEffect(() => {
-    try {
-      const done = window.localStorage.getItem(STORAGE_KEY) === "1";
-      if (!done) {
-        openerRef.current = document.activeElement as HTMLElement | null;
-        setOpen(true);
-      }
-    } catch {
-      /* private browsing — just skip the tour */
+    if (!open) return;
+    if (openerRef.current === null && typeof document !== "undefined") {
+      openerRef.current = document.activeElement as HTMLElement | null;
     }
-  }, []);
+  }, [open]);
 
   // Restore focus to the opener on close.
   useEffect(() => {
@@ -86,11 +120,14 @@ export function OnboardingTour() {
     if (markCompleted) {
       try {
         window.localStorage.setItem(STORAGE_KEY, "1");
+        // Notify the external-store subscriber in this same tab so the
+        // useSyncExternalStore snapshot re-reads the flag immediately.
+        window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
       } catch {
         /* ignore */
       }
     }
-    setOpen(false);
+    setManuallyClosed(true);
   }, []);
 
   // Keyboard affordances: Esc to dismiss, → to advance.

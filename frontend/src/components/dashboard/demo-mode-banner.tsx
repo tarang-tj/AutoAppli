@@ -1,26 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Sparkles, X } from "lucide-react";
 import { disableDemoMode, isDemoMode } from "@/lib/demo-mode";
+
+// SSR-safe demo-flag sync: server snapshot is always `false` (no flash for
+// real users), client snapshot reads localStorage. The `storage` event
+// covers cross-tab toggles; same-tab toggles still require a refresh
+// (matches the previous useEffect-on-mount behaviour exactly).
+const subscribeDemoFlag = (cb: () => void) => {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", cb);
+  return () => window.removeEventListener("storage", cb);
+};
+const getDemoFlagServerSnapshot = () => false;
 
 /**
  * DemoModeBanner — top-of-dashboard nudge that appears when the visitor
  * is exploring with seeded demo data (see /lib/demo-mode.ts).
  *
- * - Only renders after the first client-side effect tick so SSR doesn't
+ * - Only renders after the first client-side hydration so SSR doesn't
  *   flash the banner to authenticated users.
  * - "Sign up" clears the demo flag first so the auth flow lands the user
  *   on their real (empty) board, not the demo data.
  */
 export function DemoModeBanner() {
-  const [visible, setVisible] = useState(false);
+  const visible = useSyncExternalStore(
+    subscribeDemoFlag,
+    isDemoMode,
+    getDemoFlagServerSnapshot,
+  );
   const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    setVisible(isDemoMode());
-  }, []);
 
   if (!visible || dismissed) return null;
 

@@ -1,7 +1,13 @@
 "use client";
 
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api";
-import type { AutomationRule, AutomationSuggestion, Job } from "@/types";
+import type {
+  AutomationAction,
+  AutomationRule,
+  AutomationSuggestion,
+  AutomationTrigger,
+  Job,
+} from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -153,8 +159,8 @@ function NewRuleForm({
     try {
       await onCreateRule({
         name: name || "New Rule",
-        trigger: trigger as any,
-        action: action as any,
+        trigger: trigger as AutomationTrigger,
+        action: action as AutomationAction,
         action_config:
           trigger === "no_response_days"
             ? { days, target_status: targetStatus }

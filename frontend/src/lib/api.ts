@@ -58,7 +58,6 @@ import type {
   Resume,
   OutreachMessage,
   GeneratedDocument,
-  GeneratedCoverLetter,
   ResumeReview,
   UserProfile,
   AnalyticsData,
@@ -71,8 +70,9 @@ import type {
   CRMContact,
   TimelineEvent,
   DocTemplate,
+  AutomationAction,
   AutomationRule,
-  AutomationSuggestion,
+  AutomationTrigger,
   CoverLetterTone,
 } from "@/types";
 
@@ -949,8 +949,8 @@ function handleDemoPost(path: string, body?: unknown): unknown {
     const rule: AutomationRule = {
       id: `rule-${Date.now().toString(36)}`,
       name: b.name || "New Rule",
-      trigger: (b.trigger as any) || "manual",
-      action: (b.action as any) || "move_to_status",
+      trigger: (b.trigger as AutomationTrigger) || "manual",
+      action: (b.action as AutomationAction) || "move_to_status",
       action_config: b.action_config || {},
       is_active: b.is_active !== false,
       created_at: now,
