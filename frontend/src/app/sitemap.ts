@@ -19,6 +19,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "/" ? 1 : 0.5,
   }));
 
+  // Trust-building marketing surfaces — slightly higher priority than blog/vs.
+  const trustEntries: MetadataRoute.Sitemap = [
+    "/pricing",
+    "/about",
+  ].map((path) => ({
+    url: `${base}${path}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
+  }));
+
   // Programmatic SEO: /vs/<competitor>/ comparison pages.
   const vsEntries: MetadataRoute.Sitemap = [
     "/vs/lazyapply",
@@ -74,6 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...baseEntries,
+    ...trustEntries,
     ...vsEntries,
     ...toolEntries,
     ...blogIndexEntry,
