@@ -266,6 +266,10 @@ export function CommandPalette() {
 
   if (!open) return null;
 
+  const listboxId = "command-palette-listbox";
+  const activeOptionId =
+    flatList[highlight] ? `command-palette-option-${flatList[highlight].id}` : undefined;
+
   return (
     <div
       role="dialog"
@@ -276,9 +280,9 @@ export function CommandPalette() {
         if (e.target === e.currentTarget) setOpen(false);
       }}
     >
-      <div className="w-full max-w-xl rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl overflow-hidden">
+      <div className="w-full max-w-xl rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl overflow-hidden overscroll-contain">
         <div className="flex items-center gap-2 px-3 border-b border-zinc-800">
-          <Search className="h-4 w-4 text-zinc-500 shrink-0" aria-hidden />
+          <Search aria-hidden="true" className="h-4 w-4 text-zinc-500 shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -291,22 +295,34 @@ export function CommandPalette() {
             placeholder="Type a command or search…"
             className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 py-3 focus:outline-none"
             aria-label="Command search"
+            role="combobox"
+            aria-expanded={true}
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-activedescendant={activeOptionId}
+            autoComplete="off"
             spellCheck={false}
           />
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400">
+          <kbd aria-hidden="true" className="hidden sm:inline-flex items-center gap-0.5 rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400">
             esc
           </kbd>
         </div>
 
-        <div ref={listRef} className="max-h-[55vh] overflow-y-auto py-2">
+        <div
+          ref={listRef}
+          id={listboxId}
+          role="listbox"
+          aria-label="Available commands"
+          className="max-h-[55vh] overflow-y-auto py-2"
+        >
           {grouped.length === 0 ? (
             <div className="px-4 py-10 text-center text-sm text-zinc-500">
               No matches for &ldquo;{query}&rdquo;
             </div>
           ) : (
             grouped.map((g) => (
-              <div key={g.group} className="mb-2 last:mb-0">
-                <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+              <div key={g.group} className="mb-2 last:mb-0" role="group" aria-label={g.group}>
+                <div aria-hidden="true" className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
                   {g.group}
                 </div>
                 {g.items.map((cmd) => {
@@ -316,7 +332,10 @@ export function CommandPalette() {
                   return (
                     <button
                       key={cmd.id}
+                      id={`command-palette-option-${cmd.id}`}
                       type="button"
+                      role="option"
+                      aria-selected={active}
                       data-cmd-index={idx}
                       onMouseEnter={() => setHighlight(idx)}
                       onClick={() => execute(cmd)}
@@ -327,6 +346,7 @@ export function CommandPalette() {
                       }`}
                     >
                       <Icon
+                        aria-hidden="true"
                         className={`h-4 w-4 shrink-0 ${
                           active ? "text-blue-300" : "text-zinc-500"
                         }`}
@@ -338,7 +358,7 @@ export function CommandPalette() {
                         </span>
                       )}
                       {active && (
-                        <CornerDownLeft className="h-3.5 w-3.5 text-blue-300" />
+                        <CornerDownLeft aria-hidden="true" className="h-3.5 w-3.5 text-blue-300" />
                       )}
                     </button>
                   );
@@ -349,7 +369,7 @@ export function CommandPalette() {
         </div>
 
         <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-zinc-800 bg-zinc-950/40 text-[11px] text-zinc-500">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" aria-hidden="true">
             <span className="inline-flex items-center gap-1">
               <kbd className="rounded border border-zinc-700 px-1.5 font-mono">↑↓</kbd>
               navigate
@@ -360,8 +380,8 @@ export function CommandPalette() {
             </span>
           </div>
           <span className="inline-flex items-center gap-1">
-            <ArrowRight className="h-3 w-3" />
-            {flatList.length} commands
+            <ArrowRight aria-hidden="true" className="h-3 w-3" />
+            {flatList.length} {flatList.length === 1 ? "command" : "commands"}
           </span>
         </div>
       </div>

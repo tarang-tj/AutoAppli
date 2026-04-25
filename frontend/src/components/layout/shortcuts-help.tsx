@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
 /**
@@ -37,8 +37,24 @@ function isTypingTarget(el: Element | null): boolean {
 
 export function ShortcutsHelp() {
   const [open, setOpen] = useState(false);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
-  const close = useCallback(() => setOpen(false), []);
+  const close = useCallback(() => {
+    setOpen(false);
+    // Return focus to whoever opened the modal.
+    previouslyFocusedRef.current?.focus();
+  }, []);
+
+  // When opening, remember what was focused so we can restore it on close,
+  // and move focus into the dialog so SR/keyboard users land here.
+  useEffect(() => {
+    if (open) {
+      previouslyFocusedRef.current =
+        (document.activeElement as HTMLElement | null) ?? null;
+      setTimeout(() => closeBtnRef.current?.focus(), 10);
+    }
+  }, [open]);
 
   useEffect(() => {
     const openEvt = () => setOpen(true);
@@ -55,7 +71,8 @@ export function ShortcutsHelp() {
         // Don't reopen if some other modal already owns focus.
         if (e.metaKey || e.ctrlKey || e.altKey) return;
         e.preventDefault();
-        setOpen((o) => !o);
+        if (open) close();
+        else setOpen(true);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -77,18 +94,19 @@ export function ShortcutsHelp() {
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="relative w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl">
+      <div className="relative w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl overscroll-contain">
         <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
           <h2 id="shortcuts-title" className="text-sm font-semibold text-zinc-100">
             Keyboard shortcuts
           </h2>
           <button
+            ref={closeBtnRef}
             type="button"
-            aria-label="Close"
+            aria-label="Close keyboard shortcuts"
             onClick={close}
-            className="rounded-md p-1 text-zinc-500 hover:text-white hover:bg-zinc-800"
+            className="rounded-md p-1 text-zinc-500 hover:text-white hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           >
-            <X className="h-4 w-4" />
+            <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
         <ul className="divide-y divide-zinc-800">

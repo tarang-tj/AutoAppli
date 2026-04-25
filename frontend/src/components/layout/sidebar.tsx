@@ -24,7 +24,7 @@ import {
   Compass,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FeedbackWidget } from "@/components/layout/feedback-widget";
 
 type NavItem = { href: string; label: string; icon: React.ElementType };
@@ -78,17 +78,39 @@ const navGroups: NavGroup[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
+
+  // Close on Esc when the mobile drawer is open; return focus to the toggle.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
     <>
       <Button
+        ref={toggleRef}
         variant="ghost"
         size="icon"
+        aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+        aria-expanded={open}
+        aria-controls="primary-sidebar"
         className="fixed top-4 left-4 z-50 md:hidden text-zinc-300"
         onClick={() => setOpen(!open)}
       >
-        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {open ? <X aria-hidden="true" className="h-5 w-5" /> : <Menu aria-hidden="true" className="h-5 w-5" />}
       </Button>
       <aside
+        id="primary-sidebar"
+        aria-label="Main navigation"
         className={cn(
           "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-950 border-r border-zinc-800 transform transition-transform duration-200 md:translate-x-0 flex flex-col",
           open ? "translate-x-0" : "-translate-x-full"
@@ -97,15 +119,19 @@ export function Sidebar() {
         <Link
           href="/"
           onClick={() => setOpen(false)}
+          aria-label="AutoAppli home"
           className="flex items-center gap-2.5 px-6 py-5 border-b border-zinc-800 shrink-0 hover:bg-zinc-900/50 transition-colors"
         >
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20">
+          <div
+            aria-hidden="true"
+            className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20"
+          >
             A
           </div>
           <span className="text-lg font-semibold text-white tracking-tight">AutoAppli</span>
         </Link>
 
-        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
+        <nav aria-label="Primary" className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
           {navGroups.map((group) => (
             <div key={group.title}>
               <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
@@ -120,14 +146,16 @@ export function Sidebar() {
                       key={item.href}
                       href={item.href}
                       onClick={() => setOpen(false)}
+                      aria-current={isActive ? "page" : undefined}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150",
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150",
                         isActive
                           ? "bg-blue-600/15 text-blue-400 shadow-sm shadow-blue-500/5"
                           : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60"
                       )}
                     >
                       <item.icon
+                        aria-hidden="true"
                         className={cn("h-4.5 w-4.5 shrink-0", isActive && "text-blue-400")}
                       />
                       {item.label}
@@ -149,7 +177,7 @@ export function Sidebar() {
             >
               Privacy
             </Link>
-            <span className="text-zinc-700" aria-hidden>
+            <span className="text-zinc-700" aria-hidden="true">
               ·
             </span>
             <Link
@@ -164,6 +192,7 @@ export function Sidebar() {
       </aside>
       {open && (
         <div
+          aria-hidden="true"
           className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={() => setOpen(false)}
         />

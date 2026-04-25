@@ -45,6 +45,9 @@ export function Header() {
           <span
             className="flex items-center gap-1.5 text-xs text-zinc-500"
             title={apiTitle}
+            role="status"
+            aria-live="polite"
+            aria-label={apiTitle}
           >
             <span
               className={cn(
@@ -53,18 +56,18 @@ export function Header() {
                 apiHealth === "ok" && "bg-emerald-500",
                 apiHealth === "error" && "bg-red-500"
               )}
-              aria-hidden
+              aria-hidden="true"
             />
             <span className="hidden sm:inline truncate">{apiTitle}</span>
           </span>
         ) : null}
       </div>
       <DropdownMenu>
-        <DropdownMenuTrigger>
-          <span className="flex items-center gap-2 outline-none cursor-pointer">
+        <DropdownMenuTrigger aria-label={user?.email ? `Account menu for ${user.email}` : "Account menu"}>
+          <span className="flex items-center gap-2 cursor-pointer">
             <span className="text-sm text-zinc-200 hidden sm:block">{user?.email}</span>
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-blue-600 text-white text-xs">{initials}</AvatarFallback>
+              <AvatarFallback aria-hidden="true" className="bg-blue-600 text-white text-xs">{initials}</AvatarFallback>
             </Avatar>
           </span>
         </DropdownMenuTrigger>
@@ -73,11 +76,11 @@ export function Header() {
             className="text-zinc-300 cursor-pointer"
             onClick={() => router.push("/settings")}
           >
-            <Settings className="h-4 w-4 mr-2" />
+            <Settings aria-hidden="true" className="h-4 w-4 mr-2" />
             Settings
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout} className="text-zinc-300 cursor-pointer">
-            <LogOut className="h-4 w-4 mr-2" />
+            <LogOut aria-hidden="true" className="h-4 w-4 mr-2" />
             Log out
           </DropdownMenuItem>
         </DropdownMenuContent>
