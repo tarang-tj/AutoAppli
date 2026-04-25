@@ -39,7 +39,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+    <div
+      className="min-h-screen bg-zinc-950 flex items-center justify-center px-4"
+      style={{ colorScheme: "dark" }}
+    >
       <Card className="w-full max-w-md bg-zinc-900 border-zinc-800">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-white">Reset password</CardTitle>
@@ -48,14 +51,22 @@ export default function ForgotPasswordPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+          <form
+            onSubmit={(e) => void handleSubmit(e)}
+            aria-busy={loading}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="email" className="text-zinc-300">
                 Email
               </Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
+                inputMode="email"
+                autoComplete="email"
+                spellCheck={false}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -67,12 +78,16 @@ export default function ForgotPasswordPage() {
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700"
               disabled={loading}
+              aria-busy={loading}
             >
               {loading ? "Sending…" : "Send reset link"}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-zinc-400">
-            <Link href="/login" className="text-blue-400 hover:underline">
+            <Link
+              href="/login"
+              className="text-blue-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
+            >
               Back to sign in
             </Link>
           </p>
