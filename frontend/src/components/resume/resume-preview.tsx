@@ -1,7 +1,9 @@
 "use client";
 
 import { ResumeFormattedView } from "@/components/resume/resume-formatted-view";
-import { ResumeDiffView } from "@/components/resume/resume-diff-view";
+// ResumeDiffView is lazy-loaded — only the Diff tab needs it, and the
+// component is ~600 lines + per-line word-diff math. See lib/dynamic-imports.
+import { ResumeDiffView } from "@/lib/dynamic-imports";
 import { TemplatePicker } from "@/components/resume/template-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

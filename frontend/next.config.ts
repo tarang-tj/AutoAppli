@@ -1,3 +1,8 @@
+// To enable bundle analysis, install the analyzer once and re-run with ANALYZE=true:
+//   npm install -D @next/bundle-analyzer
+//   ANALYZE=true npm run build
+// The require() below is wrapped in a try/catch so the build does not fail when
+// the package is absent — production deploys (Vercel) don't carry devDependencies.
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -21,4 +26,26 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Optional bundle analyzer wrapper. Activated only when ANALYZE=true is set
+// AND @next/bundle-analyzer is installed (see top-of-file comment for setup).
+// Kept defensive so missing package never breaks `next build`.
+type ConfigWrapper = (config: NextConfig) => NextConfig;
+let withBundleAnalyzer: ConfigWrapper = (cfg) => cfg;
+if (process.env.ANALYZE === "true") {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- guarded optional dep
+    const bundleAnalyzer = require("@next/bundle-analyzer") as
+      | ((opts: { enabled: boolean }) => ConfigWrapper)
+      | { default: (opts: { enabled: boolean }) => ConfigWrapper };
+    const factory = typeof bundleAnalyzer === "function" ? bundleAnalyzer : bundleAnalyzer.default;
+    withBundleAnalyzer = factory({ enabled: true });
+  } catch {
+    // Package not installed — print a hint and fall through unwrapped.
+    console.warn(
+      "[next.config] ANALYZE=true but @next/bundle-analyzer is not installed.\n" +
+        "  Run: npm install -D @next/bundle-analyzer",
+    );
+  }
+}
+
+export default withBundleAnalyzer(nextConfig);
