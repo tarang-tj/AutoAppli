@@ -1,0 +1,5 @@
+# Playwright artefacts produced inside the e2e/ folder, if any.
+# (Top-level test-results/ and playwright-report/ live in frontend/.gitignore.)
+trace/
+snapshots/
+*-snapshots/

@@ -12,7 +12,10 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:install": "playwright install chromium"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -44,6 +47,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.169.0",
+    "@playwright/test": "^1.50.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "@testing-library/dom": "^10.4.0",
