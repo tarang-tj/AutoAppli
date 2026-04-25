@@ -17,6 +17,7 @@ from typing import Any
 from app.models.mock_interview_models import (
     DimensionScores,
     EndResponse,
+    ResumeResponse,
     SessionListItem,
     SessionState,
     TurnRecord,
@@ -247,6 +248,7 @@ async def _persist_session(state: SessionState, settings: Settings) -> None:
         "complete": state.complete,
         "turns": turns_data,
         "scorecard": scorecard_data,
+        "questions_cache": state.questions,
     }
     client.table("mock_interview_sessions").upsert(row).execute()
 
@@ -401,6 +403,67 @@ async def get_session_persisted(
     if not rows:
         return None
     return _state_from_row(rows[0])
+
+
+async def resume_session(
+    session_id: str,
+    user_id: str | None = None,
+    settings: Settings | None = None,
+) -> ResumeResponse:
+    """Return hydrated resume state for mid-session continuation.
+
+    If questions_cache is NULL (legacy session) and the session is incomplete,
+    regenerates remaining questions from the answered turns so the user can
+    continue. Raises KeyError if session is not found.
+    """
+    if settings is None:
+        settings = get_settings()
+
+    if _use_supabase(settings, user_id):
+        state = await get_session_persisted(user_id, session_id, settings)  # type: ignore[arg-type]
+        if state is None:
+            raise KeyError(session_id)
+    else:
+        state = _sessions.get(session_id)
+        if state is None:
+            raise KeyError(session_id)
+
+    # Determine remaining questions (those at index >= question_index).
+    # The questions list grows lazily: process_turn appends one question per
+    # turn. So at question_index=N we only expect N+1 questions to exist
+    # (the current question), not all future ones.
+    # Graceful degradation for legacy sessions (questions_cache IS NULL):
+    # if the current question is missing (empty remaining), regenerate just
+    # that one question so the user can continue.
+    remaining: list[str] = []
+    if not state.complete:
+        # Questions already populated from the current index onward
+        remaining = list(state.questions[state.question_index:])
+
+        # Legacy / sparse cache: current question is missing — regenerate it.
+        if not remaining:
+            system = _system_prompt(state.job_description, state.role, state.num_questions)
+            history = _build_history(state)
+            new_q = await generate_question(system, history)
+            remaining = [new_q]
+            # Persist the regenerated current question so future resumes reuse it
+            state.questions = list(state.questions[:state.question_index]) + remaining
+            if _use_supabase(settings, user_id):
+                await _persist_session(state, settings)
+            else:
+                _sessions[session_id] = state
+
+    return ResumeResponse(
+        session_id=state.session_id,
+        role=state.role,
+        job_description=state.job_description,
+        num_questions=state.num_questions,
+        question_index=state.question_index,
+        complete=state.complete,
+        turns=state.turns,
+        remaining_questions=remaining,
+        scorecard=state.scorecard,
+    )
 
 
 async def list_sessions(

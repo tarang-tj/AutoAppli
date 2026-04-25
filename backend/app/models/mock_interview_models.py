@@ -78,3 +78,24 @@ class SessionListItem(BaseModel):
     complete: bool
     overall_score: int | None
     created_at: str
+
+
+class ResumeResponse(BaseModel):
+    """Hydrated session state returned by GET /mock-interview/sessions/{id}/resume.
+
+    Contains everything the frontend needs to re-enter an active session:
+    - answered turns (with question + answer + feedback)
+    - remaining questions not yet answered
+    - current position (question_index) and totals
+    - role / job description for context display
+    """
+
+    session_id: str
+    role: str
+    job_description: str
+    num_questions: int
+    question_index: int
+    complete: bool
+    turns: list[TurnRecord]
+    remaining_questions: list[str]
+    scorecard: EndResponse | None = None

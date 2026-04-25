@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bot, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { Bot, CheckCircle2, Clock, ArrowRight, Play } from "lucide-react";
 import { listSessions, type SessionListItem } from "@/lib/mock-interview/api";
 
 // ── Constants ─────────────────────────────────────────────────────────────
@@ -64,9 +64,8 @@ function SessionRow({ item }: { item: SessionListItem }) {
   const roleLabel = ROLE_LABELS[item.role] ?? item.role;
 
   return (
-    <Link
-      href={`/interview/mock?session=${item.session_id}`}
-      className="group flex items-center justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3.5 hover:border-zinc-700 hover:bg-zinc-800/70 transition-colors"
+    <div
+      className="flex items-center justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3.5 hover:border-zinc-700 hover:bg-zinc-800/70 transition-colors"
       data-testid="history-session-row"
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -97,12 +96,29 @@ function SessionRow({ item }: { item: SessionListItem }) {
           </span>
         ) : item.complete ? (
           <span className="text-xs text-zinc-500">Completed</span>
+        ) : null}
+
+        {!item.complete ? (
+          <Link
+            href={`/interview/mock?session=${item.session_id}`}
+            className="inline-flex items-center gap-1 rounded-md bg-blue-600 hover:bg-blue-500 px-2.5 py-1 text-xs font-medium text-white transition-colors"
+            data-testid="resume-session-btn"
+            aria-label={`Resume ${roleLabel} interview`}
+          >
+            <Play className="h-3 w-3" aria-hidden />
+            Resume
+          </Link>
         ) : (
-          <span className="text-xs text-zinc-500">In progress</span>
+          <Link
+            href={`/interview/mock?session=${item.session_id}`}
+            className="group"
+            aria-label={`View ${roleLabel} interview`}
+          >
+            <ArrowRight className="h-3.5 w-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors" aria-hidden />
+          </Link>
         )}
-        <ArrowRight className="h-3.5 w-3.5 text-zinc-600 group-hover:text-zinc-400 transition-colors" aria-hidden />
       </div>
-    </Link>
+    </div>
   );
 }
 

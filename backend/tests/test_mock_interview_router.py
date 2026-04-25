@@ -478,3 +478,125 @@ def test_persisted_session_survives_memory_clear(app: FastAPI):
     assert state.role == "swe-intern"
     assert state.questions == [_MOCK_QUESTION]
     assert state.turns == []
+
+
+# ── GET /sessions/{id}/resume ─────────────────────────────────────────────
+
+
+def test_resume_session_returns_remaining_questions(authed_client: TestClient):
+    """Resume on an in-progress session returns the next question as remaining."""
+    with patch(
+        "app.services.mock_interview_service.generate_question",
+        new=AsyncMock(return_value=_MOCK_QUESTION),
+    ):
+        session = authed_client.post(
+            "/api/v1/mock-interview/sessions",
+            json={"job_description": _JD, "role": "swe-intern", "num_questions": 3},
+        ).json()
+
+    sid = session["session_id"]
+
+    r = authed_client.get(f"/api/v1/mock-interview/sessions/{sid}/resume")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["session_id"] == sid
+    assert body["role"] == "swe-intern"
+    assert body["question_index"] == 0
+    assert body["complete"] is False
+    assert len(body["remaining_questions"]) >= 1
+    assert body["remaining_questions"][0] == _MOCK_QUESTION
+    assert body["turns"] == []
+
+
+def test_resume_session_after_one_turn(authed_client: TestClient):
+    """After one answered turn, resume reflects question_index=1 and answered turn in turns."""
+    with patch(
+        "app.services.mock_interview_service.generate_question",
+        new=AsyncMock(return_value=_MOCK_QUESTION),
+    ):
+        session = authed_client.post(
+            "/api/v1/mock-interview/sessions",
+            json={"job_description": _JD, "role": "swe-intern", "num_questions": 3},
+        ).json()
+
+    sid = session["session_id"]
+
+    with (
+        patch("app.services.mock_interview_service.generate_feedback", new=AsyncMock(return_value=_MOCK_FEEDBACK)),
+        patch("app.services.mock_interview_service.generate_question", new=AsyncMock(return_value=_MOCK_QUESTION_2)),
+    ):
+        authed_client.post(f"/api/v1/mock-interview/sessions/{sid}/turn", json={"answer": "My answer"})
+
+    r = authed_client.get(f"/api/v1/mock-interview/sessions/{sid}/resume")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["question_index"] == 1
+    assert len(body["turns"]) == 1
+    assert body["turns"][0]["question"] == _MOCK_QUESTION
+    assert body["turns"][0]["feedback"] == _MOCK_FEEDBACK
+    assert body["remaining_questions"][0] == _MOCK_QUESTION_2
+
+
+def test_resume_session_complete_has_no_remaining_questions(authed_client: TestClient):
+    """A completed session returns empty remaining_questions."""
+    with patch(
+        "app.services.mock_interview_service.generate_question",
+        new=AsyncMock(return_value=_MOCK_QUESTION),
+    ):
+        session = authed_client.post(
+            "/api/v1/mock-interview/sessions",
+            json={"job_description": _JD, "role": "swe-intern", "num_questions": 1},
+        ).json()
+
+    sid = session["session_id"]
+
+    with patch("app.services.mock_interview_service.generate_feedback", new=AsyncMock(return_value=_MOCK_FEEDBACK)):
+        authed_client.post(f"/api/v1/mock-interview/sessions/{sid}/turn", json={"answer": "My answer"})
+
+    r = authed_client.get(f"/api/v1/mock-interview/sessions/{sid}/resume")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["complete"] is True
+    assert body["remaining_questions"] == []
+
+
+def test_resume_session_unknown_404(authed_client: TestClient):
+    r = authed_client.get("/api/v1/mock-interview/sessions/does-not-exist/resume")
+    assert r.status_code == 404
+
+
+def test_resume_session_legacy_null_cache_regenerates(authed_client: TestClient):
+    """Sessions where questions_cache=None (legacy) regenerate the current question gracefully.
+
+    Only the current (missing) question is regenerated — future questions are
+    still produced lazily by process_turn. This matches the lazy-generation
+    design and avoids unnecessary Claude calls on resume.
+    """
+    from app.models.mock_interview_models import SessionState, TurnRecord
+
+    legacy_state = SessionState(
+        session_id="legacy-session-001",
+        user_id=_FAKE_USER,
+        job_description=_JD,
+        role="swe-intern",
+        num_questions=3,
+        question_index=1,
+        # Only Q1 is known; Q2 was never cached (legacy session)
+        questions=[_MOCK_QUESTION],
+        turns=[TurnRecord(question=_MOCK_QUESTION, answer="A1", feedback=_MOCK_FEEDBACK)],
+        complete=False,
+    )
+    svc._sessions["legacy-session-001"] = legacy_state
+
+    with patch(
+        "app.services.mock_interview_service.generate_question",
+        new=AsyncMock(return_value=_MOCK_QUESTION_2),
+    ):
+        r = authed_client.get("/api/v1/mock-interview/sessions/legacy-session-001/resume")
+
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["question_index"] == 1
+    # Only the current question (Q2) is regenerated; Q3 is produced lazily on the next turn
+    assert len(body["remaining_questions"]) == 1
+    assert body["remaining_questions"][0] == _MOCK_QUESTION_2

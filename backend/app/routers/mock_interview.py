@@ -1,11 +1,12 @@
 """Mock Interview router — AI-powered turn-based interview practice.
 
 Endpoints (mount under /api/v1 by orchestrator in main.py):
-  GET  /mock-interview/sessions               list user's sessions (history)
-  POST /mock-interview/sessions               start a new session
-  POST /mock-interview/sessions/{id}/turn     submit an answer, get feedback
-  POST /mock-interview/sessions/{id}/end      get scorecard
-  GET  /mock-interview/sessions/{id}          fetch full session state
+  GET  /mock-interview/sessions                    list user's sessions (history)
+  POST /mock-interview/sessions                    start a new session
+  POST /mock-interview/sessions/{id}/turn          submit an answer, get feedback
+  POST /mock-interview/sessions/{id}/end           get scorecard
+  GET  /mock-interview/sessions/{id}/resume        hydrated state for mid-session resume
+  GET  /mock-interview/sessions/{id}               fetch full session state (legacy)
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ from app.config import Settings, get_settings
 from app.deps.jobs_auth import get_jobs_user_id
 from app.models.mock_interview_models import (
     EndResponse,
+    ResumeResponse,
     SessionListItem,
     SessionStartRequest,
     SessionStartResponse,
@@ -113,6 +115,31 @@ async def end_session(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return scorecard
+
+
+@router.get("/mock-interview/sessions/{session_id}/resume", response_model=ResumeResponse)
+async def resume_session(
+    session_id: str,
+    user_id: str | None = Depends(get_jobs_user_id),
+    settings: Settings = Depends(get_settings),
+):
+    """Return hydrated session state for mid-session resume.
+
+    Includes answered turns, remaining questions (regenerated if cache is
+    missing), current question_index, role, and job description.
+    """
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authorization required")
+    try:
+        return await svc.resume_session(
+            session_id=session_id,
+            user_id=user_id,
+            settings=settings,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Session not found")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.get("/mock-interview/sessions/{session_id}")
