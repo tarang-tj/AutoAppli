@@ -56,7 +56,7 @@ export default function ExportPage() {
     if (!displayReport) return;
     try {
       setExporting(true);
-      toast.info("Generating PDF report...");
+      toast.info("Generating PDF report…");
       await generatePdfReport(displayReport, jobs);
       toast.success("PDF report downloaded");
     } catch (e: unknown) {
@@ -70,8 +70,8 @@ export default function ExportPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Download className="h-7 w-7 text-blue-400" aria-hidden />
-          Export {"&"} Reports
+          <Download className="h-7 w-7 text-blue-400" aria-hidden="true" />
+          Export &amp; Reports
         </h1>
         <p className="text-zinc-400 text-sm mt-1 max-w-2xl">
           Download your job applications data or view a summary report of your job search activity.
@@ -90,28 +90,31 @@ export default function ExportPage() {
               <Button
                 onClick={handleExportCsv}
                 disabled={exporting || jobs.length === 0}
+                aria-busy={exporting}
                 className="bg-blue-600 hover:bg-blue-700 text-white w-full"
               >
-                <FileDown className="h-4 w-4 mr-2" aria-hidden />
+                <FileDown className="h-4 w-4 mr-2" aria-hidden="true" />
                 Export CSV
               </Button>
               <Button
                 onClick={handleExportJson}
                 disabled={exporting || jobs.length === 0}
+                aria-busy={exporting}
                 className="bg-blue-600 hover:bg-blue-700 text-white w-full"
               >
-                <FileDown className="h-4 w-4 mr-2" aria-hidden />
+                <FileDown className="h-4 w-4 mr-2" aria-hidden="true" />
                 Export JSON
               </Button>
               <Button
                 onClick={handleDownloadPdf}
                 disabled={exporting || jobs.length === 0}
+                aria-busy={exporting}
                 className="bg-blue-600 hover:bg-blue-700 text-white w-full"
               >
                 {exporting ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden />
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin motion-reduce:animate-none" aria-hidden="true" />
                 ) : (
-                  <FileText className="h-4 w-4 mr-2" aria-hidden />
+                  <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                 )}
                 Download Report (PDF)
               </Button>
@@ -129,7 +132,7 @@ export default function ExportPage() {
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-blue-400" aria-hidden />
+                <BarChart3 className="h-5 w-5 text-blue-400" aria-hidden="true" />
                 Summary Report
               </CardTitle>
               <CardDescription className="text-zinc-500">Overview of your job search activity</CardDescription>
@@ -190,7 +193,7 @@ export default function ExportPage() {
               {displayReport.top_companies.length > 0 && (
                 <div>
                   <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-blue-400" aria-hidden />
+                    <Building2 className="h-4 w-4 text-blue-400" aria-hidden="true" />
                     Top Companies
                   </h3>
                   <div className="space-y-2">
@@ -211,7 +214,7 @@ export default function ExportPage() {
               {Object.keys(displayReport.by_source).length > 0 && (
                 <div>
                   <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-blue-400" aria-hidden />
+                    <Globe className="h-4 w-4 text-blue-400" aria-hidden="true" />
                     Applications by Source
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

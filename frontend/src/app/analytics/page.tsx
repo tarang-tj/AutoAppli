@@ -63,8 +63,9 @@ function StatCard({
         <div
           className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0"
           style={{ backgroundColor: `${colour}20` }}
+          aria-hidden="true"
         >
-          <Icon className="h-6 w-6" style={{ color: colour }} />
+          <Icon className="h-6 w-6" style={{ color: colour }} aria-hidden="true" />
         </div>
         <div className="min-w-0">
           <p className="text-2xl font-bold text-white tabular-nums">{value}</p>
@@ -96,7 +97,7 @@ function HBar({
           </div>
           <div className="h-3 rounded-full bg-zinc-800 overflow-hidden">
             <div
-              className="h-full rounded-full transition-all duration-500"
+              className="h-full rounded-full [transition:width_500ms,background-color_500ms] motion-reduce:transition-none"
               style={{
                 width: `${(item.value / max) * 100}%`,
                 backgroundColor: colourMap[item.label] || "#6b7280",
@@ -124,7 +125,7 @@ function FunnelChart({ stages }: { stages: { stage: string; count: number }[] })
             </span>
             <div className="flex-1 h-9 relative">
               <div
-                className="h-full rounded-lg flex items-center px-3 transition-all duration-500"
+                className="h-full rounded-lg flex items-center px-3 [transition:width_500ms,background-color_500ms,opacity_500ms] motion-reduce:transition-none"
                 style={{
                   width: `${width}%`,
                   backgroundColor: STATUS_COLOURS[s.stage] || "#6b7280",
@@ -159,7 +160,13 @@ function ConversionGauge({ label, pct }: { label: string; pct: number }) {
 
   return (
     <div className="flex flex-col items-center">
-      <svg width="120" height="70" viewBox="0 0 120 70">
+      <svg
+        width="120"
+        height="70"
+        viewBox="0 0 120 70"
+        role="img"
+        aria-label={`${label}: ${pct}%`}
+      >
         <path
           d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
           fill="none"
@@ -195,7 +202,7 @@ function WeeklyBarChart({ data }: { data: { week_end: string; jobs_added: number
         <div key={i} className="flex-1 flex flex-col items-center gap-1">
           <span className="text-xs text-zinc-400 tabular-nums">{d.jobs_added}</span>
           <div
-            className="w-full rounded-t-md bg-blue-500/80 transition-all duration-500"
+            className="w-full rounded-t-md bg-blue-500/80 [transition:height_500ms] motion-reduce:transition-none"
             style={{ height: `${Math.max((d.jobs_added / max) * 100, 4)}%` }}
           />
           <span className="text-[10px] text-zinc-500 leading-tight text-center">
@@ -343,7 +350,12 @@ export default function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6 animate-pulse">
+      <div
+        className="p-6 space-y-6 animate-pulse motion-reduce:animate-none"
+        role="status"
+        aria-busy="true"
+        aria-label="Loading analytics"
+      >
         <div className="h-8 w-48 bg-zinc-800 rounded" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -382,7 +394,7 @@ export default function AnalyticsPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <BarChart3 className="h-7 w-7 text-blue-400" aria-hidden />
+          <BarChart3 className="h-7 w-7 text-blue-400" aria-hidden="true" />
           Analytics
         </h1>
         <p className="text-zinc-400 text-sm mt-1 max-w-2xl leading-relaxed">
@@ -424,7 +436,7 @@ export default function AnalyticsPage() {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-400" aria-hidden />
+              <BarChart3 className="h-5 w-5 text-blue-400" aria-hidden="true" />
               Pipeline Funnel
             </CardTitle>
           </CardHeader>
@@ -437,22 +449,22 @@ export default function AnalyticsPage() {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-400" aria-hidden />
+              <TrendingUp className="h-5 w-5 text-emerald-400" aria-hidden="true" />
               Conversion Rates
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
               <ConversionGauge
-                label="Bookmarked &rarr; Applied"
+                label="Bookmarked → Applied"
                 pct={conversions.bookmarked_to_applied}
               />
               <ConversionGauge
-                label="Applied &rarr; Interview"
+                label="Applied → Interview"
                 pct={conversions.applied_to_interviewing}
               />
               <ConversionGauge
-                label="Interview &rarr; Offer"
+                label="Interview → Offer"
                 pct={conversions.interviewing_to_offer}
               />
             </div>
@@ -479,7 +491,7 @@ export default function AnalyticsPage() {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-amber-400" aria-hidden />
+              <Clock className="h-5 w-5 text-amber-400" aria-hidden="true" />
               Average Time (days)
             </CardTitle>
           </CardHeader>
@@ -489,13 +501,13 @@ export default function AnalyticsPage() {
                 <p className="text-2xl font-bold text-white tabular-nums">
                   {dur.bookmarked_to_applied ?? "\u2014"}
                 </p>
-                <p className="text-xs text-zinc-500 mt-1">Bookmark &rarr; Apply</p>
+                <p className="text-xs text-zinc-500 mt-1">Bookmark \u2192 Apply</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-white tabular-nums">
                   {dur.applied_to_latest ?? "\u2014"}
                 </p>
-                <p className="text-xs text-zinc-500 mt-1">Apply &rarr; Response</p>
+                <p className="text-xs text-zinc-500 mt-1">Apply \u2192 Response</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-white tabular-nums">
@@ -511,7 +523,7 @@ export default function AnalyticsPage() {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white text-lg flex items-center gap-2">
-              <Target className="h-5 w-5 text-purple-400" aria-hidden />
+              <Target className="h-5 w-5 text-purple-400" aria-hidden="true" />
               Response Rate
             </CardTitle>
           </CardHeader>
@@ -704,7 +716,7 @@ function RichFieldAnalytics({ jobs }: { jobs: Job[] }) {
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader>
               <CardTitle className="text-white text-lg flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-emerald-400" aria-hidden />
+                <DollarSign className="h-5 w-5 text-emerald-400" aria-hidden="true" />
                 Salary Overview
               </CardTitle>
             </CardHeader>
@@ -750,7 +762,7 @@ function RichFieldAnalytics({ jobs }: { jobs: Job[] }) {
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader>
               <CardTitle className="text-white text-lg flex items-center gap-2">
-                <Laptop className="h-5 w-5 text-sky-400" aria-hidden />
+                <Laptop className="h-5 w-5 text-sky-400" aria-hidden="true" />
                 Work Model Breakdown
               </CardTitle>
             </CardHeader>
@@ -770,7 +782,7 @@ function RichFieldAnalytics({ jobs }: { jobs: Job[] }) {
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader>
               <CardTitle className="text-white text-lg flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-violet-400" aria-hidden />
+                <Sparkles className="h-5 w-5 text-violet-400" aria-hidden="true" />
                 Top Skills Tracked
               </CardTitle>
             </CardHeader>
@@ -795,7 +807,7 @@ function RichFieldAnalytics({ jobs }: { jobs: Job[] }) {
           <Card className="bg-zinc-900 border-zinc-800">
             <CardHeader>
               <CardTitle className="text-white text-lg flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-rose-400" aria-hidden />
+                <MapPin className="h-5 w-5 text-rose-400" aria-hidden="true" />
                 Locations
               </CardTitle>
             </CardHeader>
@@ -811,7 +823,7 @@ function RichFieldAnalytics({ jobs }: { jobs: Job[] }) {
                       </div>
                       <div className="h-3 rounded-full bg-zinc-800 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-rose-500/80 transition-all duration-500"
+                          className="h-full rounded-full bg-rose-500/80 [transition:width_500ms] motion-reduce:transition-none"
                           style={{ width: `${pct}%` }}
                         />
                       </div>

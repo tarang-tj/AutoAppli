@@ -29,8 +29,8 @@ const CATEGORY_CONFIG: Record<string, { label: string; color: string; bg: string
 };
 
 const TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
-  resume: { label: "Resume", icon: <FileStack className="h-4 w-4" /> },
-  cover_letter: { label: "Cover Letter", icon: <FileStack className="h-4 w-4" /> },
+  resume: { label: "Resume", icon: <FileStack className="h-4 w-4" aria-hidden="true" /> },
+  cover_letter: { label: "Cover Letter", icon: <FileStack className="h-4 w-4" aria-hidden="true" /> },
 };
 
 function CategoryBadge({ cat }: { cat: string }) {
@@ -88,7 +88,7 @@ function NewTemplateForm({ onCreated }: { onCreated: () => void }) {
   if (!open) {
     return (
       <Button variant="outline" onClick={() => setOpen(true)} className="gap-1.5">
-        <Plus className="h-4 w-4" /> New Template
+        <Plus className="h-4 w-4" aria-hidden="true" /> New Template
       </Button>
     );
   }
@@ -99,13 +99,17 @@ function NewTemplateForm({ onCreated }: { onCreated: () => void }) {
         <CardTitle className="text-base">Create New Template</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" aria-busy={submitting}>
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Template Name *</label>
+            <label htmlFor="new-template-name" className="text-xs text-zinc-400 block mb-1">Template Name *</label>
             <Input
+              id="new-template-name"
+              name="template_name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My Tech Resume"
+              autoComplete="off"
+              spellCheck={false}
               className="bg-zinc-800 border-zinc-700"
               required
             />
@@ -113,22 +117,26 @@ function NewTemplateForm({ onCreated }: { onCreated: () => void }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Type</label>
+              <label htmlFor="new-template-type" className="text-xs text-zinc-400 block mb-1">Type</label>
               <select
+                id="new-template-type"
+                name="template_type"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-sm text-white"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 <option value="resume">Resume</option>
                 <option value="cover_letter">Cover Letter</option>
               </select>
             </div>
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Category</label>
+              <label htmlFor="new-template-category" className="text-xs text-zinc-400 block mb-1">Category</label>
               <select
+                id="new-template-category"
+                name="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-sm text-white"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 <option value="tech">Technology</option>
                 <option value="finance">Finance</option>
@@ -139,14 +147,17 @@ function NewTemplateForm({ onCreated }: { onCreated: () => void }) {
           </div>
 
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">
+            <label htmlFor="new-template-content" className="text-xs text-zinc-400 block mb-1">
               {"Content * (use {{placeholder}} for variables)"}
             </label>
             <Textarea
+              id="new-template-content"
+              name="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder={"Dear {{hiring_manager}}, I am writing to apply for the {{role}} position at {{company}}..."}
+              placeholder={"Dear {{hiring_manager}}, I am writing to apply for the {{role}} position at {{company}}…"}
               rows={8}
+              autoComplete="off"
               className="bg-zinc-800 border-zinc-700 text-sm"
               required
             />
@@ -161,7 +172,7 @@ function NewTemplateForm({ onCreated }: { onCreated: () => void }) {
               disabled={submitting || !name.trim() || !content.trim()}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              Create
+              {submitting ? "Creating…" : "Create"}
             </Button>
             <Button
               type="button"
@@ -260,21 +271,24 @@ function TemplateCard({ template, onRefresh }: { template: DocTemplate; onRefres
             size="icon"
             onClick={() => setExpanded(!expanded)}
             className="text-zinc-400 hover:text-white"
+            aria-expanded={expanded}
+            aria-controls={`template-${template.id}-panel`}
+            aria-label={expanded ? `Collapse template "${template.name}"` : `Expand template "${template.name}"`}
           >
-            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {expanded ? <ChevronUp className="h-4 w-4" aria-hidden="true" /> : <ChevronDown className="h-4 w-4" aria-hidden="true" />}
           </Button>
         </div>
       </CardHeader>
 
       {expanded && (
-        <CardContent className="space-y-4">
+        <CardContent id={`template-${template.id}-panel`} className="space-y-4">
           {!editing && (
             <>
               <div>
                 <p className="text-xs text-zinc-400 mb-2">Preview</p>
                 <p className="text-sm text-zinc-300 whitespace-pre-wrap max-h-32 overflow-y-auto font-mono">
                   {template.content.slice(0, 300)}
-                  {template.content.length > 300 ? "..." : ""}
+                  {template.content.length > 300 ? "…" : ""}
                 </p>
               </div>
 
@@ -296,19 +310,26 @@ function TemplateCard({ template, onRefresh }: { template: DocTemplate; onRefres
           {editing && (
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-zinc-400 block mb-1">Name</label>
+                <label htmlFor={`template-${template.id}-edit-name`} className="text-xs text-zinc-400 block mb-1">Name</label>
                 <Input
+                  id={`template-${template.id}-edit-name`}
+                  name="template_name"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
                   className="bg-zinc-800 border-zinc-700"
                 />
               </div>
               <div>
-                <label className="text-xs text-zinc-400 block mb-1">Content</label>
+                <label htmlFor={`template-${template.id}-edit-content`} className="text-xs text-zinc-400 block mb-1">Content</label>
                 <Textarea
+                  id={`template-${template.id}-edit-content`}
+                  name="content"
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   rows={6}
+                  autoComplete="off"
                   className="bg-zinc-800 border-zinc-700 text-sm"
                 />
               </div>
@@ -316,19 +337,25 @@ function TemplateCard({ template, onRefresh }: { template: DocTemplate; onRefres
           )}
 
           {showRender && (
-            <div className="space-y-3 border-t border-zinc-700 pt-4">
+            <div id={`template-${template.id}-render`} className="space-y-3 border-t border-zinc-700 pt-4">
               <p className="text-xs text-zinc-400">Fill in variables to render</p>
-              {placeholders.map((p) => (
-                <div key={p}>
-                  <label className="text-xs text-zinc-400 block mb-1">{"{{" + p + "}}"}</label>
-                  <Input
-                    value={renderVars[p] || ""}
-                    onChange={(e) => setRenderVars({ ...renderVars, [p]: e.target.value })}
-                    placeholder={`Enter ${p}`}
-                    className="bg-zinc-800 border-zinc-700 text-sm"
-                  />
-                </div>
-              ))}
+              {placeholders.map((p) => {
+                const fieldId = `template-${template.id}-var-${p}`;
+                return (
+                  <div key={p}>
+                    <label htmlFor={fieldId} className="text-xs text-zinc-400 block mb-1">{"{{" + p + "}}"}</label>
+                    <Input
+                      id={fieldId}
+                      name={p}
+                      value={renderVars[p] || ""}
+                      onChange={(e) => setRenderVars({ ...renderVars, [p]: e.target.value })}
+                      placeholder={`Enter ${p}`}
+                      autoComplete="off"
+                      className="bg-zinc-800 border-zinc-700 text-sm"
+                    />
+                  </div>
+                );
+              })}
               {renderedContent && (
                 <div>
                   <p className="text-xs text-zinc-400 mb-2">Rendered Output</p>
@@ -350,17 +377,20 @@ function TemplateCard({ template, onRefresh }: { template: DocTemplate; onRefres
                   variant="outline"
                   size="sm"
                   onClick={() => setShowRender(!showRender)}
+                  aria-expanded={showRender}
+                  aria-controls={`template-${template.id}-render`}
                   className="gap-1.5"
                 >
-                  <Eye className="h-4 w-4" /> Use Template
+                  <Eye className="h-4 w-4" aria-hidden="true" /> Use Template
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setEditing(true)}
+                  aria-label={`Edit template "${template.name}"`}
                   className="gap-1.5"
                 >
-                  <Edit2 className="h-4 w-4" /> Edit
+                  <Edit2 className="h-4 w-4" aria-hidden="true" /> Edit
                 </Button>
               </>
             )}
@@ -370,9 +400,10 @@ function TemplateCard({ template, onRefresh }: { template: DocTemplate; onRefres
                   size="sm"
                   onClick={handleSave}
                   disabled={saving}
+                  aria-busy={saving}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  Save
+                  {saving ? "Saving…" : "Save"}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
                   Cancel
@@ -384,9 +415,11 @@ function TemplateCard({ template, onRefresh }: { template: DocTemplate; onRefres
               size="sm"
               onClick={handleDelete}
               disabled={deleting}
+              aria-busy={deleting}
+              aria-label={`Delete template "${template.name}"`}
               className="gap-1.5 text-red-400 hover:text-red-300 border-red-400/20"
             >
-              <Trash2 className="h-4 w-4" /> Delete
+              <Trash2 className="h-4 w-4" aria-hidden="true" /> {deleting ? "Deleting…" : "Delete"}
             </Button>
           </div>
         </CardContent>
@@ -412,7 +445,7 @@ export default function TemplatesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
-              <FileStack className="h-8 w-8 text-blue-400" />
+              <FileStack className="h-8 w-8 text-blue-400" aria-hidden="true" />
               Document Templates
             </h1>
             <p className="text-zinc-400 mt-1">
@@ -424,7 +457,7 @@ export default function TemplatesPage() {
 
         {templates.length === 0 ? (
           <Card className="border-zinc-700 bg-zinc-900 text-center py-12">
-            <FileStack className="h-12 w-12 text-zinc-600 mx-auto mb-3" />
+            <FileStack className="h-12 w-12 text-zinc-600 mx-auto mb-3" aria-hidden="true" />
             <p className="text-zinc-400">No templates yet. Create your first one!</p>
           </Card>
         ) : (

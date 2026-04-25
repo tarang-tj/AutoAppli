@@ -143,6 +143,9 @@ export function ResumeDiffView({
           </span>
           {totalChangeRows > 0 ? (
             <span
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
               className={cn(
                 "rounded-full px-2 py-0.5 border",
                 rejectedCount === 0
@@ -159,58 +162,79 @@ export function ResumeDiffView({
             <button
               type="button"
               onClick={resetAll}
-              className="inline-flex items-center gap-1 rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+              className="inline-flex items-center gap-1 rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               title="Restore every AI suggestion"
+              aria-label={`Reset: restore all ${rejectedCount} reverted AI suggestion${rejectedCount === 1 ? "" : "s"}`}
             >
-              <RotateCcw className="h-3 w-3" />
+              <RotateCcw className="h-3 w-3" aria-hidden="true" />
               Reset
             </button>
           ) : null}
           <button
             type="button"
             onClick={copyHybrid}
-            className="inline-flex items-center gap-1 rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-800"
+            className="inline-flex items-center gap-1 rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs text-zinc-200 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             title="Copy the current hybrid to clipboard"
+            aria-label={
+              rejectedCount > 0
+                ? `Copy hybrid resume to clipboard, with ${rejectedCount} change${rejectedCount === 1 ? "" : "s"} reverted`
+                : "Copy hybrid resume to clipboard"
+            }
           >
-            <Copy className="h-3 w-3" />
+            <Copy className="h-3 w-3" aria-hidden="true" />
             Copy hybrid
           </button>
           {onApplyHybrid ? (
             <button
               type="button"
               onClick={applyHybrid}
-              className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/15 px-2 py-1 text-xs text-emerald-200 hover:bg-emerald-500/25"
+              className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/15 px-2 py-1 text-xs text-emerald-200 hover:bg-emerald-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               title="Replace the tailored resume with this hybrid"
+              aria-label={
+                totalChangeRows > 0
+                  ? `Apply hybrid resume, keeping ${keptCount} of ${totalChangeRows} AI changes`
+                  : "Apply hybrid resume"
+              }
             >
-              <Check className="h-3 w-3" />
+              <Check className="h-3 w-3" aria-hidden="true" />
               Apply hybrid
             </button>
           ) : null}
-          <div className="flex items-center gap-1 rounded-md border border-zinc-800 bg-zinc-900 p-0.5">
+          <fieldset className="flex items-center gap-1 rounded-md border border-zinc-800 bg-zinc-900 p-0.5">
+            <legend className="sr-only">Diff layout</legend>
             <ModeBtn
               active={mode === "split"}
               onClick={() => setMode("split")}
-              icon={<SplitSquareHorizontal className="h-3.5 w-3.5" />}
+              icon={<SplitSquareHorizontal className="h-3.5 w-3.5" aria-hidden="true" />}
               label="Side-by-side"
+              name="resume-diff-mode"
+              value="split"
             />
             <ModeBtn
               active={mode === "unified"}
               onClick={() => setMode("unified")}
-              icon={<AlignJustify className="h-3.5 w-3.5" />}
+              icon={<AlignJustify className="h-3.5 w-3.5" aria-hidden="true" />}
               label="Unified"
+              name="resume-diff-mode"
+              value="unified"
             />
-          </div>
+          </fieldset>
         </div>
       </div>
 
-      {mode === "split" ? (
-        <SplitView rows={rows} rejectedRows={rejectedRows} onToggle={toggleRow} />
-      ) : (
-        <UnifiedView rows={rows} rejectedRows={rejectedRows} onToggle={toggleRow} />
-      )}
+      <div
+        role="region"
+        aria-label={`Resume diff, ${mode === "split" ? "side-by-side" : "unified"} layout, ${totalChangeRows} change block${totalChangeRows === 1 ? "" : "s"}`}
+      >
+        {mode === "split" ? (
+          <SplitView rows={rows} rejectedRows={rejectedRows} onToggle={toggleRow} />
+        ) : (
+          <UnifiedView rows={rows} rejectedRows={rejectedRows} onToggle={toggleRow} />
+        )}
+      </div>
 
       <p className="text-[11px] text-zinc-500 flex items-center gap-1">
-        <FileText className="h-3 w-3" />
+        <FileText className="h-3 w-3" aria-hidden="true" />
         Click the ✕ next to any change to revert just that block — use Copy
         hybrid (or Apply) to take the final cherry-picked version.
       </p>
@@ -236,8 +260,9 @@ function StatChip({
         op === "added" && "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20",
         op === "removed" && "bg-rose-500/10 text-rose-300 border border-rose-500/20"
       )}
+      aria-label={`${count} line${count === 1 ? "" : "s"} ${label}`}
     >
-      <Icon className="h-3 w-3" />
+      <Icon className="h-3 w-3" aria-hidden="true" />
       {count} {label}
     </span>
   );
@@ -248,26 +273,36 @@ function ModeBtn({
   onClick,
   icon,
   label,
+  name,
+  value,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
+  name: string;
+  value: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <label
       className={cn(
-        "inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition-colors",
+        "inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition-colors cursor-pointer focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-400",
         active
           ? "bg-zinc-100 text-zinc-900"
           : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
       )}
     >
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={active}
+        onChange={onClick}
+        className="sr-only"
+      />
       {icon}
       {label}
-    </button>
+    </label>
   );
 }
 
@@ -331,6 +366,7 @@ function UnifiedView({
             <UnifiedChangeGroup
               key={i}
               row={row}
+              rowIndex={i}
               rejected={Boolean(rejectedRows[i])}
               onToggle={() => onToggle(i)}
             />
@@ -352,14 +388,17 @@ function UnifiedSameLine({ text }: { text: string }) {
 
 function UnifiedChangeGroup({
   row,
+  rowIndex,
   rejected,
   onToggle,
 }: {
   row: Extract<SplitRow, { kind: "change" }>;
+  rowIndex: number;
   rejected: boolean;
   onToggle: () => void;
 }) {
   const lineClass = "flex items-start gap-3 px-3 py-0.5 whitespace-pre-wrap";
+  const preview = row.added[0] || row.removed[0] || "";
   return (
     <div>
       {row.removed.map((line, k) => (
@@ -372,9 +411,9 @@ function UnifiedChangeGroup({
         >
           <span className="select-none w-4 shrink-0 flex items-start justify-center">
             {k === 0 ? (
-              <RowToggle rejected={rejected} onToggle={onToggle} />
+              <RowToggle rejected={rejected} onToggle={onToggle} rowIndex={rowIndex} preview={preview} />
             ) : (
-              <span className="text-rose-400">−</span>
+              <span className="text-rose-400" aria-hidden="true">−</span>
             )}
           </span>
           <span
@@ -393,7 +432,7 @@ function UnifiedChangeGroup({
               key={`a-${k}`}
               className={cn(lineClass, "bg-emerald-500/10 text-emerald-100")}
             >
-              <span className="select-none text-emerald-400 w-4 shrink-0">+</span>
+              <span className="select-none text-emerald-400 w-4 shrink-0" aria-hidden="true">+</span>
               <span className="flex-1">{line || " "}</span>
             </div>
           ))
@@ -427,6 +466,7 @@ function SplitView({
           <SplitRowView
             key={i}
             row={row}
+            rowIndex={i}
             rejected={Boolean(rejectedRows[i])}
             onToggle={() => onToggle(i)}
           />
@@ -438,10 +478,12 @@ function SplitView({
 
 function SplitRowView({
   row,
+  rowIndex,
   rejected,
   onToggle,
 }: {
   row: SplitRow;
+  rowIndex: number;
   rejected: boolean;
   onToggle: () => void;
 }) {
@@ -463,6 +505,7 @@ function SplitRowView({
   // highlighting. Only the first marker cell shows the toggle — subsequent
   // pairs in the block share the decision.
   const pairCount = Math.max(row.removed.length, row.added.length);
+  const preview = row.added[0] || row.removed[0] || "";
   const out: React.ReactNode[] = [];
   for (let i = 0; i < pairCount; i++) {
     const l = row.removed[i];
@@ -478,7 +521,14 @@ function SplitRowView({
           rejected && "bg-zinc-900/40"
         )}
       >
-        {i === 0 ? <RowToggle rejected={rejected} onToggle={onToggle} /> : null}
+        {i === 0 ? (
+          <RowToggle
+            rejected={rejected}
+            onToggle={onToggle}
+            rowIndex={rowIndex}
+            preview={preview}
+          />
+        ) : null}
       </div>
     );
 
@@ -559,10 +609,17 @@ function SplitRowView({
 function RowToggle({
   rejected,
   onToggle,
+  rowIndex,
+  preview,
 }: {
   rejected: boolean;
   onToggle: () => void;
+  rowIndex: number;
+  preview?: string;
 }) {
+  const blockLabel = preview
+    ? `change block ${rowIndex + 1} (${truncate(preview, 60)})`
+    : `change block ${rowIndex + 1}`;
   return (
     <button
       type="button"
@@ -572,15 +629,25 @@ function RowToggle({
           ? "Restore the AI suggestion"
           : "Revert this change (keep the original)"
       }
-      aria-label={rejected ? "Restore AI suggestion" : "Revert to original"}
+      aria-label={
+        rejected
+          ? `Restore AI suggestion for ${blockLabel}`
+          : `Revert ${blockLabel} to original`
+      }
+      aria-pressed={rejected}
       className={cn(
-        "h-5 w-5 rounded flex items-center justify-center transition-colors",
+        "h-5 w-5 rounded flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
         rejected
           ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
           : "bg-zinc-800 text-zinc-400 hover:bg-rose-500/20 hover:text-rose-300"
       )}
     >
-      {rejected ? <RotateCcw className="h-3 w-3" /> : <X className="h-3 w-3" />}
+      {rejected ? <RotateCcw className="h-3 w-3" aria-hidden="true" /> : <X className="h-3 w-3" aria-hidden="true" />}
     </button>
   );
+}
+
+function truncate(s: string, n: number): string {
+  const trimmed = s.trim();
+  return trimmed.length <= n ? trimmed : `${trimmed.slice(0, n - 1)}…`;
 }

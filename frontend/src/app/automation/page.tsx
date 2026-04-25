@@ -40,6 +40,7 @@ function Calendar({ className }: { className?: string }) {
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <path
         strokeLinecap="round"
@@ -77,8 +78,9 @@ function RuleCard({
               <div
                 className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: `${triggerInfo.color}20` }}
+                aria-hidden="true"
               >
-                <TriggerIcon className="h-4 w-4" style={{ color: triggerInfo.color }} />
+                <TriggerIcon className="h-4 w-4" style={{ color: triggerInfo.color }} aria-hidden="true" />
               </div>
               <div className="text-sm text-zinc-400">
                 <span className="font-medium text-white">{triggerInfo.label}</span>
@@ -102,22 +104,27 @@ function RuleCard({
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 ml-4">
             <button
+              type="button"
               onClick={() => onToggle(rule.id, !rule.is_active)}
-              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
                 rule.is_active
                   ? "bg-blue-600/20 text-blue-400"
                   : "bg-zinc-800 text-zinc-500"
               }`}
               title={rule.is_active ? "Disable" : "Enable"}
+              aria-label={rule.is_active ? `Disable rule "${rule.name}"` : `Enable rule "${rule.name}"`}
+              aria-pressed={rule.is_active}
             >
-              <Zap className="h-4 w-4" />
+              <Zap className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={() => onDelete(rule.id)}
-              className="w-10 h-10 rounded-lg flex items-center justify-center bg-zinc-800 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 transition-colors"
+              className="w-10 h-10 rounded-lg flex items-center justify-center bg-zinc-800 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               title="Delete rule"
+              aria-label={`Delete rule "${rule.name}"`}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -167,34 +174,40 @@ function NewRuleForm({
     <Card className="bg-zinc-900 border-zinc-800">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Plus className="h-5 w-5" />
+          <Plus className="h-5 w-5" aria-hidden="true" />
           New Rule
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1">
+            <label htmlFor="automation-rule-name" className="block text-sm font-medium text-zinc-300 mb-1">
               Rule Name
             </label>
             <input
+              id="automation-rule-name"
+              name="rule_name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Custom ghosting rule"
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="off"
+              spellCheck={false}
+              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
+              <label htmlFor="automation-rule-trigger" className="block text-sm font-medium text-zinc-300 mb-1">
                 Trigger
               </label>
               <select
+                id="automation-rule-trigger"
+                name="trigger"
                 value={trigger}
                 onChange={(e) => setTrigger(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 {Object.entries(TRIGGER_CONFIG).map(([key, info]) => (
                   <option key={key} value={key}>
@@ -204,13 +217,15 @@ function NewRuleForm({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
+              <label htmlFor="automation-rule-action" className="block text-sm font-medium text-zinc-300 mb-1">
                 Action
               </label>
               <select
+                id="automation-rule-action"
+                name="action"
                 value={action}
                 onChange={(e) => setAction(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 {Object.entries(ACTION_CONFIG).map(([key, info]) => (
                   <option key={key} value={key}>
@@ -224,25 +239,30 @@ function NewRuleForm({
           {trigger === "no_response_days" && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label htmlFor="automation-rule-days" className="block text-sm font-medium text-zinc-300 mb-1">
                   Days Threshold
                 </label>
                 <input
+                  id="automation-rule-days"
+                  name="days"
                   type="number"
                   min="1"
+                  inputMode="numeric"
                   value={days}
                   onChange={(e) => setDays(parseInt(e.target.value, 10))}
-                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label htmlFor="automation-rule-target-status" className="block text-sm font-medium text-zinc-300 mb-1">
                   Target Status
                 </label>
                 <select
+                  id="automation-rule-target-status"
+                  name="target_status"
                   value={targetStatus}
                   onChange={(e) => setTargetStatus(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
                   <option value="ghosted">Ghosted</option>
                   <option value="rejected">Rejected</option>
@@ -256,7 +276,7 @@ function NewRuleForm({
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           >
-            {loading ? "Creating..." : "Create Rule"}
+            {loading ? "Creating…" : "Create Rule"}
           </Button>
         </form>
       </CardContent>
@@ -303,10 +323,12 @@ function SuggestionCard({
           <Button
             onClick={handleApply}
             disabled={applying}
+            aria-busy={applying}
+            aria-label={`Apply suggestion: ${suggestion.suggested_action} for ${job.company} — ${job.title}`}
             size="sm"
             className="flex-shrink-0 ml-4 bg-green-600 hover:bg-green-700 text-white"
           >
-            {applying ? "Applying..." : "Apply"}
+            {applying ? "Applying…" : "Apply"}
           </Button>
         </div>
       </CardContent>
@@ -342,20 +364,23 @@ function StaleJobsSection({
   return (
     <div>
       <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-        <AlertTriangle className="h-5 w-5 text-amber-500" />
+        <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
         Stale Jobs ({staleJobs.length})
       </h2>
       <Card className="bg-zinc-900 border-zinc-800">
         <CardContent className="p-4">
           <button
+            type="button"
             onClick={() => setExpanded(!expanded)}
-            className="w-full text-left font-medium text-blue-400 hover:text-blue-300 text-sm mb-4"
+            aria-expanded={expanded}
+            aria-controls="stale-jobs-list"
+            className="w-full text-left font-medium text-blue-400 hover:text-blue-300 text-sm mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
           >
             {expanded ? "Hide" : "Show"} {staleJobs.length} stale job
             {staleJobs.length !== 1 ? "s" : ""}
           </button>
           {expanded && (
-            <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
+            <div id="stale-jobs-list" className="space-y-2 mb-4 max-h-64 overflow-y-auto">
               {staleJobs.map((job) => (
                 <div
                   key={job.id}
@@ -375,10 +400,11 @@ function StaleJobsSection({
           <Button
             onClick={handleMarkAsGhosted}
             disabled={applying}
+            aria-busy={applying}
             size="sm"
             className="w-full bg-amber-600 hover:bg-amber-700 text-white"
           >
-            {applying ? "Marking..." : "Mark All as Ghosted"}
+            {applying ? "Marking…" : "Mark All as Ghosted"}
           </Button>
         </CardContent>
       </Card>
@@ -456,7 +482,7 @@ export default function AutomationPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
-            <Zap className="h-8 w-8 text-blue-500" />
+            <Zap className="h-8 w-8 text-blue-500" aria-hidden="true" />
             Kanban Automation
           </h1>
           <p className="text-zinc-400">
@@ -467,9 +493,9 @@ export default function AutomationPage() {
         {/* Active Rules Section */}
         <div>
           <h2 className="text-lg font-semibold text-white mb-3">Active Rules</h2>
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-6" role="status" aria-live="polite">
             {rulesLoading ? (
-              <div className="text-zinc-400">Loading rules...</div>
+              <div className="text-zinc-400">Loading rules…</div>
             ) : (rules || []).length > 0 ? (
               (rules || []).map((rule) => (
                 <RuleCard
@@ -491,7 +517,7 @@ export default function AutomationPage() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Play className="h-5 w-5" />
+              <Play className="h-5 w-5" aria-hidden="true" />
               Suggested Actions
             </h2>
           </div>
