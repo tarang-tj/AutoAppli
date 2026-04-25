@@ -13,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/terms",
     "/bookmarklet",
     "/discover",
+    "/stories",
   ].map((path) => ({
     url: `${base}${path}`,
     changeFrequency: path === "/" ? "weekly" : "monthly",
@@ -60,6 +61,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${base}/tools/resume-keyword-extractor`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    },
+    {
+      url: `${base}/tools/ats-view`,
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.7,

@@ -22,6 +22,7 @@ import {
   FileDown,
   Download,
   Compass,
+  BookText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
@@ -46,6 +47,7 @@ const navGroups: NavGroup[] = [
       { href: "/cover-letter", label: "Cover Letter", icon: PenTool },
       { href: "/outreach", label: "Outreach", icon: Send },
       { href: "/interviews", label: "Interview Prep", icon: CalendarCheck },
+      { href: "/stories", label: "Stories", icon: BookText },
     ],
   },
   {
