@@ -21,10 +21,10 @@ from app.services.match_v2 import (
     CandidateProfile,
     JobProfile,
     RemoteType,
+    extract_skills,
     result_to_dict,
     score_match,
 )
-from app.services.taxonomy import extract_skills
 
 router = APIRouter(tags=["match"])
 

@@ -6,7 +6,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.config import get_settings
 from app.middleware.rate_limit import limiter
-from app.routers import analytics, automation, auth, contacts, cover_letter, export, interview, jobs, match, notifications, outreach, profile, resume, salary, search, templates, timeline
+from app.routers import analytics, automation, auth, contacts, cover_letter, export, interview, jobs, match, mock_interview, notifications, outreach, profile, resume, salary, search, stories, templates, timeline
 
 settings = get_settings()
 
@@ -41,6 +41,8 @@ app.include_router(cover_letter.router, prefix="/api/v1")
 app.include_router(templates.router, prefix="/api/v1")
 app.include_router(timeline.router, prefix="/api/v1")
 app.include_router(export.router, prefix="/api/v1")
+app.include_router(mock_interview.router, prefix="/api/v1")
+app.include_router(stories.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health")
