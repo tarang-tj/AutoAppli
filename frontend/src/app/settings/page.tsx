@@ -139,7 +139,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <User className="h-7 w-7 text-blue-400" aria-hidden />
+          <User aria-hidden="true" className="h-7 w-7 text-blue-400" />
           Settings
         </h1>
         <p className="text-zinc-400 text-sm mt-1 max-w-2xl">
@@ -156,103 +156,140 @@ export default function SettingsPage() {
             {storageHint}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-zinc-300">Display name</Label>
-              <Input
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Alex Morgan"
-                disabled={isLoading}
-                className="bg-zinc-800 border-zinc-700 text-white"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-zinc-300">Phone</Label>
-              <Input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="(555) 010-2030"
-                disabled={isLoading}
-                className="bg-zinc-800 border-zinc-700 text-white"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-zinc-300">Location</Label>
-            <Input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="San Francisco, CA"
-              disabled={isLoading}
-              className="bg-zinc-800 border-zinc-700 text-white"
-            />
-            <p className="text-xs text-zinc-500">
-              City and state. Shown on tailored resumes.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-zinc-300">Professional headline</Label>
-            <Textarea
-              value={headline}
-              onChange={(e) => setHeadline(e.target.value)}
-              placeholder="e.g. Senior Software Engineer · ML infra"
-              rows={2}
-              disabled={isLoading}
-              className="bg-zinc-800 border-zinc-700 text-white resize-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-zinc-300">LinkedIn URL</Label>
-              <Input
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
-                placeholder="https://linkedin.com/in/…"
-                disabled={isLoading}
-                className="bg-zinc-800 border-zinc-700 text-white"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-zinc-300">Portfolio / website</Label>
-              <Input
-                value={portfolioUrl}
-                onChange={(e) => setPortfolioUrl(e.target.value)}
-                placeholder="https://yourname.com"
-                disabled={isLoading}
-                className="bg-zinc-800 border-zinc-700 text-white"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-zinc-300">Short bio</Label>
-            <Textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="A 2–3 sentence summary — what you do, what you're looking for."
-              rows={4}
-              disabled={isLoading}
-              className="bg-zinc-800 border-zinc-700 text-white resize-none"
-            />
-            <p className="text-xs text-zinc-500">
-              Used as a starting point for cover letter openers.
-            </p>
-          </div>
-
-          <Button
-            type="button"
-            onClick={() => void handleSaveProfile()}
-            disabled={isLoading || savingProfile}
-            className="bg-blue-600 hover:bg-blue-700"
+        <CardContent>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSaveProfile();
+            }}
+            aria-busy={savingProfile}
+            className="space-y-4"
           >
-            {savingProfile ? "Saving…" : "Save profile"}
-          </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="settings-display-name" className="text-zinc-300">Display name</Label>
+                <Input
+                  id="settings-display-name"
+                  name="display_name"
+                  autoComplete="name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Alex Morgan"
+                  disabled={isLoading}
+                  className="bg-zinc-800 border-zinc-700 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="settings-phone" className="text-zinc-300">Phone</Label>
+                <Input
+                  id="settings-phone"
+                  name="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="(555) 010-2030"
+                  disabled={isLoading}
+                  className="bg-zinc-800 border-zinc-700 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="settings-location" className="text-zinc-300">Location</Label>
+              <Input
+                id="settings-location"
+                name="location"
+                autoComplete="address-level2"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="San Francisco, CA"
+                disabled={isLoading}
+                aria-describedby="settings-location-hint"
+                className="bg-zinc-800 border-zinc-700 text-white"
+              />
+              <p id="settings-location-hint" className="text-xs text-zinc-500">
+                City and state. Shown on tailored resumes.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="settings-headline" className="text-zinc-300">Professional headline</Label>
+              <Textarea
+                id="settings-headline"
+                name="headline"
+                value={headline}
+                onChange={(e) => setHeadline(e.target.value)}
+                placeholder="e.g. Senior Software Engineer · ML infra"
+                rows={2}
+                disabled={isLoading}
+                className="bg-zinc-800 border-zinc-700 text-white resize-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="settings-linkedin" className="text-zinc-300">LinkedIn URL</Label>
+                <Input
+                  id="settings-linkedin"
+                  name="linkedin_url"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
+                  spellCheck={false}
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://linkedin.com/in/…"
+                  disabled={isLoading}
+                  className="bg-zinc-800 border-zinc-700 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="settings-portfolio" className="text-zinc-300">Portfolio / website</Label>
+                <Input
+                  id="settings-portfolio"
+                  name="portfolio_url"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
+                  spellCheck={false}
+                  value={portfolioUrl}
+                  onChange={(e) => setPortfolioUrl(e.target.value)}
+                  placeholder="https://yourname.com"
+                  disabled={isLoading}
+                  className="bg-zinc-800 border-zinc-700 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="settings-bio" className="text-zinc-300">Short bio</Label>
+              <Textarea
+                id="settings-bio"
+                name="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="A 2–3 sentence summary — what you do, what you’re looking for."
+                rows={4}
+                disabled={isLoading}
+                aria-describedby="settings-bio-hint"
+                className="bg-zinc-800 border-zinc-700 text-white resize-none"
+              />
+              <p id="settings-bio-hint" className="text-xs text-zinc-500">
+                Used as a starting point for cover letter openers.
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading || savingProfile}
+              aria-busy={savingProfile}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {savingProfile ? "Saving…" : "Save profile"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 
@@ -260,7 +297,7 @@ export default function SettingsPage() {
       <Card className="bg-zinc-900 border-zinc-800 max-w-2xl">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <Briefcase className="h-5 w-5 text-emerald-400" aria-hidden />
+            <Briefcase aria-hidden="true" className="h-5 w-5 text-emerald-400" />
             Job preferences
           </CardTitle>
           <CardDescription className="text-zinc-500">
@@ -268,48 +305,59 @@ export default function SettingsPage() {
             recommendations rail.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-zinc-300">Remote preference</Label>
-            <Select
-              value={remotePreference}
-              onValueChange={(v) => setRemotePreference(v as RemotePrefValue)}
-            >
-              <SelectTrigger
-                disabled={isLoading}
-                className="bg-zinc-800 border-zinc-700 text-white w-full md:w-64"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-zinc-700">
-                <SelectItem value={NO_PREFERENCE} className="text-white">
-                  No preference
-                </SelectItem>
-                <SelectItem value="remote" className="text-white">
-                  Remote only
-                </SelectItem>
-                <SelectItem value="hybrid" className="text-white">
-                  Hybrid
-                </SelectItem>
-                <SelectItem value="onsite" className="text-white">
-                  Onsite
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-zinc-500">
-              Exact matches get a +8 bonus, overlapping setups (e.g. remote ↔
-              hybrid) get +3, opposite gets &minus;6.
-            </p>
-          </div>
-
-          <Button
-            type="button"
-            onClick={() => void handleSavePreferences()}
-            disabled={isLoading || savingPreferences}
-            className="bg-emerald-600 hover:bg-emerald-700"
+        <CardContent>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSavePreferences();
+            }}
+            aria-busy={savingPreferences}
+            className="space-y-4"
           >
-            {savingPreferences ? "Saving…" : "Save preferences"}
-          </Button>
+            <div className="space-y-2">
+              <Label htmlFor="settings-remote-preference" className="text-zinc-300">Remote preference</Label>
+              <Select
+                value={remotePreference}
+                onValueChange={(v) => setRemotePreference(v as RemotePrefValue)}
+              >
+                <SelectTrigger
+                  id="settings-remote-preference"
+                  disabled={isLoading}
+                  aria-describedby="settings-remote-preference-hint"
+                  className="bg-zinc-800 border-zinc-700 text-white w-full md:w-64"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-zinc-700">
+                  <SelectItem value={NO_PREFERENCE} className="text-white">
+                    No preference
+                  </SelectItem>
+                  <SelectItem value="remote" className="text-white">
+                    Remote only
+                  </SelectItem>
+                  <SelectItem value="hybrid" className="text-white">
+                    Hybrid
+                  </SelectItem>
+                  <SelectItem value="onsite" className="text-white">
+                    Onsite
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p id="settings-remote-preference-hint" className="text-xs text-zinc-500">
+                Exact matches get a +8 bonus, overlapping setups (e.g. remote ↔
+                hybrid) get +3, opposite gets &minus;6.
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading || savingPreferences}
+              aria-busy={savingPreferences}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {savingPreferences ? "Saving…" : "Save preferences"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
