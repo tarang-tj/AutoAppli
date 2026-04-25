@@ -3,7 +3,7 @@ import { getSiteUrl } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = getSiteUrl();
-  const paths = [
+  const baseEntries: MetadataRoute.Sitemap = [
     "/",
     "/login",
     "/signup",
@@ -12,10 +12,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terms",
     "/bookmarklet",
     "/discover",
-  ];
-  return paths.map((path) => ({
+  ].map((path) => ({
     url: `${base}${path}`,
     changeFrequency: path === "/" ? "weekly" : "monthly",
     priority: path === "/" ? 1 : 0.5,
   }));
+
+  // Programmatic SEO: /vs/<competitor>/ comparison pages.
+  const vsEntries: MetadataRoute.Sitemap = [
+    "/vs/lazyapply",
+    "/vs/simplify",
+    "/vs/huntr",
+  ].map((path) => ({
+    url: `${base}${path}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  return [...baseEntries, ...vsEntries];
 }
