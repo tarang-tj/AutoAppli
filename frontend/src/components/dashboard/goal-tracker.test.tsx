@@ -12,6 +12,21 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Job } from "@/types";
 
+// ── next/font mock ───────────────────────────────────────────────────────
+// jsdom doesn't compile `next/font/google`. Stub each font loader to return
+// the shape the component reads (`.variable` className). Hoisted by Vitest.
+vi.mock("next/font/google", () => {
+  const stub = () => ({ variable: "" , className: "" });
+  return {
+    VT323: stub,
+    Share_Tech_Mono: stub,
+    Inter: stub,
+    Sora: stub,
+    Fraunces: stub,
+    JetBrains_Mono: stub,
+  };
+});
+
 // ── localStorage stub ────────────────────────────────────────────────────
 
 const store: Record<string, string> = {};

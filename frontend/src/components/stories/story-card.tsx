@@ -1,36 +1,50 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   mapStoryToQuestions,
   type MappedQuestion,
 } from "@/lib/stories/question-mapper";
-import type { Story, StoryTag } from "@/lib/stories/storage";
+import type { Story } from "@/lib/stories/storage";
+import {
+  EditorialLink,
+  StarRow,
+  TagInk,
+} from "@/app/stories/_components/story-card-bits";
 
 /**
- * StoryCard — single row in the Story Library.
+ * StoryCard — a single filed entry.
  *
- * Top row: title, edit, delete. Tag chips below. A "Map to questions"
- * toggle expands a panel listing up to 5 common interview questions
- * the story could answer (computed lazily via useMemo).
- *
- * STAR fields aren't shown by default — they live behind a "Show story"
- * toggle to keep the list scannable. Editing brings them up in the
- * StoryForm dialog.
+ * Editorial archive treatment: an oldstyle index number in the gutter,
+ * a serif title, an ink-stroke tag row, and inline editorial controls
+ * for show story / map questions / edit / delete. STAR fields stay
+ * collapsed by default to keep the index scannable; expanded view
+ * renders each STAR row with a small-caps label and lead-paragraph
+ * body type.
  */
 
+const MONTHS = [
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+];
+
+function formatFiled(ts: number): string {
+  const d = new Date(ts);
+  return `${MONTHS[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")} · ${d.getFullYear()}`;
+}
+
 const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.965_0.012_85)] focus-visible:ring-[oklch(0.34_0.07_28)]";
 
 interface StoryCardProps {
   story: Story;
+  index: number;
   onEdit: (story: Story) => void;
   onDelete: (story: Story) => void;
 }
 
-export function StoryCard({ story, onEdit, onDelete }: StoryCardProps) {
+export function StoryCard({ story, index, onEdit, onDelete }: StoryCardProps) {
   const [showStory, setShowStory] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
   const questions = useMemo<MappedQuestion[]>(
@@ -38,148 +52,130 @@ export function StoryCard({ story, onEdit, onDelete }: StoryCardProps) {
     [story, showQuestions],
   );
 
+  const indexPad = String(index).padStart(2, "0");
+
   return (
     <article
       aria-labelledby={`story-${story.id}-title`}
-      className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 md:p-5"
+      className="group/entry relative grid gap-5 md:grid-cols-[5rem_1fr] md:gap-8"
     >
-      <div className="flex items-start gap-3">
-        <div className="flex-1 min-w-0">
-          <h3
-            id={`story-${story.id}-title`}
-            className="text-sm md:text-base font-semibold text-zinc-50 leading-snug"
-          >
-            {story.title}
-          </h3>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {story.tags.map((tag) => (
-              <TagChip key={tag} tag={tag} />
-            ))}
-          </div>
+      {/* Gutter: oldstyle figure index + filed-on date */}
+      <aside
+        aria-hidden="true"
+        className="flex flex-row items-baseline gap-3 md:flex-col md:items-end md:gap-2"
+      >
+        <span
+          className="font-[family-name:var(--font-stories-display)] text-[2.6rem] md:text-[3.2rem] leading-none font-light text-[oklch(0.55_0.05_40_/_0.85)]"
+          style={{ fontFeatureSettings: '"onum" 1, "lnum" 0' }}
+        >
+          №{indexPad}
+        </span>
+        <span className="font-[family-name:var(--font-stories-mono)] text-[10px] tracking-[0.22em] text-[oklch(0.45_0.05_38)] uppercase whitespace-nowrap">
+          Filed · {formatFiled(story.createdAt)}
+        </span>
+      </aside>
+
+      {/* Body */}
+      <div className="min-w-0">
+        <h3
+          id={`story-${story.id}-title`}
+          className="font-[family-name:var(--font-stories-display)] text-[1.5rem] md:text-[1.9rem] font-medium leading-[1.15] tracking-[-0.012em] text-[oklch(0.16_0.02_30)]"
+        >
+          {story.title}
+        </h3>
+
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5">
+          {story.tags.map((tag) => (
+            <TagInk key={tag} tag={tag} />
+          ))}
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+
+        {/* Inline editorial controls — links, not buttons-shaped buttons. */}
+        <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 font-[family-name:var(--font-stories-ui)] text-[13px] text-[oklch(0.30_0.04_30)]">
+          <EditorialLink
+            active={showQuestions}
+            onClick={() => setShowQuestions((v) => !v)}
+            controls={`story-${story.id}-questions`}
+          >
+            {showQuestions ? "Hide questions" : "Map to questions"}
+          </EditorialLink>
+          <EditorialLink
+            active={showStory}
+            onClick={() => setShowStory((v) => !v)}
+            controls={`story-${story.id}-body`}
+          >
+            {showStory ? "Hide entry" : "Read entry"}
+          </EditorialLink>
+          <span aria-hidden="true" className="text-[oklch(0.55_0.05_40_/_0.6)]">·</span>
           <button
             type="button"
-            aria-label={`Edit story: ${story.title}`}
             onClick={() => onEdit(story)}
+            aria-label={`Edit story: ${story.title}`}
             className={cn(
-              "rounded-md p-1.5 text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800",
+              "italic underline decoration-dotted underline-offset-[5px] decoration-[oklch(0.55_0.05_40_/_0.6)] hover:text-[oklch(0.32_0.07_28)] hover:decoration-[oklch(0.32_0.07_28)]",
               FOCUS_RING,
             )}
           >
-            <Pencil aria-hidden="true" className="h-4 w-4" />
+            Edit
           </button>
           <button
             type="button"
-            aria-label={`Delete story: ${story.title}`}
             onClick={() => onDelete(story)}
+            aria-label={`Delete story: ${story.title}`}
             className={cn(
-              "rounded-md p-1.5 text-zinc-500 hover:text-red-300 hover:bg-red-500/10",
+              "italic underline decoration-dotted underline-offset-[5px] decoration-[oklch(0.55_0.05_40_/_0.6)] hover:text-[oklch(0.42_0.18_28)] hover:decoration-[oklch(0.42_0.18_28)]",
               FOCUS_RING,
             )}
           >
-            <Trash2 aria-hidden="true" className="h-4 w-4" />
+            Strike out
           </button>
         </div>
-      </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setShowQuestions((v) => !v)}
-          aria-expanded={showQuestions}
-          aria-controls={`story-${story.id}-questions`}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-md border border-blue-500/30 bg-blue-600/10 px-2.5 py-1 text-xs font-medium text-blue-300 hover:bg-blue-600/20",
-            FOCUS_RING,
-          )}
-        >
-          <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
-          {showQuestions ? "Hide questions" : "Map to questions"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowStory((v) => !v)}
-          aria-expanded={showStory}
-          aria-controls={`story-${story.id}-body`}
-          className={cn(
-            "inline-flex items-center gap-1 rounded-md border border-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-300 hover:bg-zinc-800",
-            FOCUS_RING,
-          )}
-        >
-          <ChevronDown
-            aria-hidden="true"
-            className={cn(
-              "h-3.5 w-3.5 transition-transform",
-              showStory && "rotate-180",
-            )}
-          />
-          {showStory ? "Hide story" : "Show story"}
-        </button>
-      </div>
+        {showStory && (
+          <div
+            id={`story-${story.id}-body`}
+            className="mt-6 grid gap-4 border-l border-[oklch(0.55_0.05_40_/_0.35)] pl-5"
+          >
+            <StarRow label="Situation" body={story.situation} />
+            <StarRow label="Task" body={story.task} />
+            <StarRow label="Action" body={story.action} />
+            <StarRow label="Result" body={story.result} />
+          </div>
+        )}
 
-      {showStory && (
-        <div
-          id={`story-${story.id}-body`}
-          className="mt-3 grid gap-2.5 text-sm text-zinc-200"
-        >
-          <StarRow label="Situation" body={story.situation} />
-          <StarRow label="Task" body={story.task} />
-          <StarRow label="Action" body={story.action} />
-          <StarRow label="Result" body={story.result} />
-        </div>
-      )}
-
-      {showQuestions && (
-        <div
-          id={`story-${story.id}-questions`}
-          className="mt-3 rounded-lg border border-blue-500/20 bg-blue-500/5 p-3"
-        >
-          {questions.length === 0 ? (
-            <p className="text-xs text-zinc-400">
-              Add at least one tag to see matching questions.
+        {showQuestions && (
+          <div
+            id={`story-${story.id}-questions`}
+            className="mt-6 border-t border-dashed border-[oklch(0.55_0.05_40_/_0.45)] pt-5"
+          >
+            <p className="font-[family-name:var(--font-stories-mono)] smallcaps text-[10px] tracking-[0.28em] text-[oklch(0.45_0.05_38)]">
+              — Catalog cross-reference —
             </p>
-          ) : (
-            <ol className="space-y-2 text-sm text-zinc-100">
-              {questions.map((q) => (
-                <li key={q.question} className="flex items-start gap-2">
-                  <span aria-hidden="true" className="text-blue-400 mt-0.5">
-                    →
-                  </span>
-                  <div className="flex-1">
-                    <p className="leading-snug">{q.question}</p>
-                    <p className="mt-0.5 text-[11px] text-zinc-500">
-                      Hits:{" "}
-                      <span className="text-blue-300">
-                        {q.matchedTags.join(", ")}
-                      </span>
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-      )}
+            {questions.length === 0 ? (
+              <p className="mt-3 font-[family-name:var(--font-stories-display)] italic text-[oklch(0.40_0.04_38)]">
+                Add at least one tag to surface matching questions.
+              </p>
+            ) : (
+              <ol className="mt-3 space-y-3 font-[family-name:var(--font-stories-display)] text-[1rem] leading-[1.55] text-[oklch(0.20_0.02_30)]">
+                {questions.map((q) => (
+                  <li key={q.question} className="flex items-baseline gap-3">
+                    <span aria-hidden="true" className="font-[family-name:var(--font-stories-mono)] text-[10px] tracking-widest text-[oklch(0.45_0.05_38)] pt-1">
+                      ❧
+                    </span>
+                    <div className="flex-1">
+                      <p className="italic">&ldquo;{q.question}&rdquo;</p>
+                      <p className="mt-1 font-[family-name:var(--font-stories-mono)] text-[10px] tracking-[0.18em] text-[oklch(0.45_0.05_38)] uppercase">
+                        Answers: {q.matchedTags.join(" · ")}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        )}
+      </div>
     </article>
   );
 }
 
-function TagChip({ tag }: { tag: StoryTag }) {
-  return (
-    <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2 py-0.5 text-[11px] font-medium text-zinc-300 capitalize">
-      {tag}
-    </span>
-  );
-}
-
-function StarRow({ label, body }: { label: string; body: string }) {
-  return (
-    <div className="grid grid-cols-[5.5rem_1fr] gap-3">
-      <span className="text-[11px] uppercase tracking-widest text-zinc-500 pt-0.5">
-        {label}
-      </span>
-      <p className="leading-relaxed whitespace-pre-wrap">{body}</p>
-    </div>
-  );
-}

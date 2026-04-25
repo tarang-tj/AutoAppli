@@ -1,50 +1,36 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
-import { X } from "lucide-react";
+import { useCallback, useEffect, useId, useRef } from "react";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { NotebookDialogShell } from "@/app/stories/_components/dialog-shell";
+import { NotebookFieldRow } from "@/app/stories/_components/notebook-field-row";
+import { TagPicker } from "@/app/stories/_components/tag-picker";
 import {
-  STORY_TAGS,
-  writeStory,
-  type Story,
-  type StoryInput,
-  type StoryTag,
-} from "@/lib/stories/storage";
+  FormFooter,
+  FormHeader,
+  TitleField,
+} from "@/app/stories/_components/story-form-internals";
+import {
+  MAX_TITLE_LEN,
+  useStoryFormState,
+} from "@/app/stories/_components/use-story-form-state";
+import type { Story } from "@/lib/stories/storage";
 
 /**
- * StoryForm — add/edit dialog for a STAR-format story.
+ * StoryForm — "open a fresh page" dialog for a STAR-format entry.
  *
- * Renders a hand-rolled dialog (matches OnboardingTour pattern) so we
- * can hold focus, restore on close, and dismiss on Esc/backdrop. The
- * tag picker is a row of toggle buttons with `aria-pressed` — no native
- * multiselect, which screen-readers handle poorly on mobile.
+ * Cream-paper modal on top of the editorial canvas. Hand-rolled (vs
+ * shadcn's Dialog) so we keep:
+ *   - focus trap inside the panel
+ *   - opener focus restore on close
+ *   - Esc to close
+ *   - backdrop click to close
  *
- * State pattern: the inner `StoryFormBody` is keyed by `initial?.id ??
- * "new"`. React unmounts/remounts on a different story, which seeds
- * fresh state via lazy initializers — no setState-in-effect needed.
- *
- * Validation:
- *   - title required, &le; 80 chars
- *   - 1–3 tags
- *   - all four STAR fields non-empty
+ * Draft state, validation, tag toggling, and the save call live in
+ * `useStoryFormState`. The form body is keyed by `initial?.id ?? "new"`
+ * on the wrapper so React unmounts/remounts on a different story —
+ * fresh state via lazy initializers, no setState-in-effect.
  */
-
-const MAX_TITLE_LEN = 80;
-const MIN_TAGS = 1;
-const MAX_TAGS = 3;
-
-const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400";
 
 interface StoryFormProps {
   open: boolean;
@@ -77,20 +63,11 @@ function StoryFormBody({ initial, onClose, onSaved }: StoryFormBodyProps) {
   const openerRef = useRef<HTMLElement | null>(null);
   const titleId = useId();
 
-  // Lazy initializers — seed once from `initial`. Resets between stories
-  // happen via the `key` on the wrapper, not via effects.
-  const [title, setTitle] = useState(() => initial?.title ?? "");
-  const [tags, setTags] = useState<StoryTag[]>(() => initial?.tags ?? []);
-  const [situation, setSituation] = useState(() => initial?.situation ?? "");
-  const [task, setTask] = useState(() => initial?.task ?? "");
-  const [action, setAction] = useState(() => initial?.action ?? "");
-  const [result, setResult] = useState(() => initial?.result ?? "");
-  const [submitted, setSubmitted] = useState(false);
+  const s = useStoryFormState(initial);
 
   useFocusTrap(true, dialogRef);
 
-  // Capture opener on mount (so close restores focus) and pull focus
-  // into the title field. Both are mount-only — no setState here.
+  // Capture opener (so close restores focus) and pull focus into title.
   useEffect(() => {
     if (typeof document !== "undefined") {
       openerRef.current = document.activeElement as HTMLElement | null;
@@ -115,263 +92,73 @@ function StoryFormBody({ initial, onClose, onSaved }: StoryFormBodyProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const toggleTag = useCallback((tag: StoryTag) => {
-    setTags((prev) => {
-      if (prev.includes(tag)) return prev.filter((t) => t !== tag);
-      if (prev.length >= MAX_TAGS) return prev;
-      return [...prev, tag];
-    });
-  }, []);
-
-  const trimmedTitle = title.trim();
-  const errors = {
-    title:
-      !trimmedTitle
-        ? "Give it a one-line title."
-        : trimmedTitle.length > MAX_TITLE_LEN
-          ? `Keep it under ${MAX_TITLE_LEN} characters.`
-          : null,
-    tags:
-      tags.length < MIN_TAGS
-        ? "Pick at least one tag."
-        : tags.length > MAX_TAGS
-          ? `Pick up to ${MAX_TAGS} tags.`
-          : null,
-    situation: situation.trim() ? null : "Describe the situation.",
-    task: task.trim() ? null : "What was the task?",
-    action: action.trim() ? null : "What did you do?",
-    result: result.trim() ? null : "What happened?",
-  };
-  const canSubmit = Object.values(errors).every((e) => e === null);
-
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      setSubmitted(true);
-      if (!canSubmit) return;
-      const payload: StoryInput = {
-        id: initial?.id,
-        title: trimmedTitle,
-        tags,
-        situation: situation.trim(),
-        task: task.trim(),
-        action: action.trim(),
-        result: result.trim(),
-      };
-      const saved = writeStory(payload);
+      const saved = s.submit();
+      if (!saved) return;
       onSaved(saved);
       onClose();
     },
-    [
-      canSubmit,
-      initial?.id,
-      tags,
-      situation,
-      task,
-      action,
-      result,
-      trimmedTitle,
-      onSaved,
-      onClose,
-    ],
+    [s, onSaved, onClose],
   );
 
-  const showError = (msg: string | null) => submitted && msg !== null;
+  const showError = (msg: string | null) => s.submitted && msg !== null;
+
+  // STAR rows config-driven so the JSX stays compact and the order is
+  // canonical S-T-A-R for screen-reader users navigating linearly.
+  const starRows = [
+    { id: "story-situation", label: "Situation", hint: "Set the scene. One or two sentences.", value: s.situation, setValue: s.setSituation, error: showError(s.errors.situation) ? s.errors.situation : null },
+    { id: "story-task", label: "Task", hint: "What were you on the hook for?", value: s.task, setValue: s.setTask, error: showError(s.errors.task) ? s.errors.task : null },
+    { id: "story-action", label: "Action", hint: "What did you actually do? Use &lsquo;I,&rsquo; not &lsquo;we.&rsquo;", value: s.action, setValue: s.setAction, error: showError(s.errors.action) ? s.errors.action : null },
+    { id: "story-result", label: "Result", hint: "Numbers if you have them. What changed?", value: s.result, setValue: s.setResult, error: showError(s.errors.result) ? s.errors.result : null },
+  ];
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[8vh] bg-zinc-950/80 backdrop-blur-sm overflow-y-auto"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+    <NotebookDialogShell
+      ref={dialogRef}
+      ariaLabelledBy={titleId}
+      onBackdropClose={onClose}
+      onCloseClick={onClose}
     >
-      <div
-        ref={dialogRef}
-        className="relative w-full max-w-2xl rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-2xl"
+      <form
+        onSubmit={handleSubmit}
+        className="px-7 pb-7 pt-9 md:px-12 md:pb-10 md:pt-12"
+        noValidate
       >
-        <button
-          type="button"
-          aria-label="Close story form"
-          onClick={onClose}
-          className={cn(
-            "absolute top-3 right-3 rounded-md p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-800",
-            FOCUS_RING,
-          )}
-        >
-          <X aria-hidden="true" className="h-4 w-4" />
-        </button>
+        <FormHeader isEdit={Boolean(initial)} titleId={titleId} />
 
-        <form onSubmit={handleSubmit} className="p-6 md:p-7" noValidate>
-          <h2
-            id={titleId}
-            className="text-lg md:text-xl font-bold text-white tracking-tight"
-          >
-            {initial ? "Edit story" : "Add a story"}
-          </h2>
-          <p className="mt-1 text-sm text-zinc-400 leading-relaxed">
-            One example, four short paragraphs. You&rsquo;ll reuse this in every
-            interview round.
-          </p>
+        <div className="mt-8 space-y-7">
+          <TitleField
+            ref={titleInputRef}
+            value={s.title}
+            onChange={s.setTitle}
+            error={showError(s.errors.title) ? s.errors.title : null}
+            trimmedLength={s.trimmedTitle.length}
+            maxLength={MAX_TITLE_LEN}
+          />
 
-          <div className="mt-5 space-y-4">
-            {/* Title */}
-            <div>
-              <label
-                htmlFor="story-title"
-                className="block text-xs font-medium text-zinc-300 mb-1.5"
-              >
-                Title
-              </label>
-              <Input
-                ref={titleInputRef}
-                id="story-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Refactored a flaky CI pipeline that blocked merges"
-                maxLength={MAX_TITLE_LEN + 20}
-                aria-invalid={showError(errors.title) || undefined}
-                aria-describedby="story-title-help"
-              />
-              <div
-                id="story-title-help"
-                className="mt-1 flex items-center justify-between text-[11px]"
-              >
-                <span
-                  className={cn(
-                    "text-zinc-500",
-                    showError(errors.title) && "text-red-400",
-                  )}
-                >
-                  {showError(errors.title)
-                    ? errors.title
-                    : "One line. The shorter the title, the easier to recall."}
-                </span>
-                <span className="tabular-nums text-zinc-500">
-                  {trimmedTitle.length}/{MAX_TITLE_LEN}
-                </span>
-              </div>
-            </div>
+          <TagPicker
+            tags={s.tags}
+            onToggle={s.toggleTag}
+            error={showError(s.errors.tags) ? s.errors.tags : null}
+          />
 
-            {/* Tags */}
-            <div>
-              <span className="block text-xs font-medium text-zinc-300 mb-1.5">
-                Tags <span className="text-zinc-500">(1–3)</span>
-              </span>
-              <div role="group" aria-label="Story tags" className="flex flex-wrap gap-1.5">
-                {STORY_TAGS.map((tag) => {
-                  const active = tags.includes(tag);
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => toggleTag(tag)}
-                      className={cn(
-                        "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors capitalize",
-                        FOCUS_RING,
-                        active
-                          ? "border-blue-500/60 bg-blue-600/15 text-blue-300"
-                          : "border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600",
-                      )}
-                    >
-                      {tag}
-                    </button>
-                  );
-                })}
-              </div>
-              {showError(errors.tags) && (
-                <p className="mt-1 text-[11px] text-red-400">{errors.tags}</p>
-              )}
-            </div>
-
-            {/* STAR fields */}
-            <StarField
-              id="story-situation"
-              label="Situation"
-              hint="Set the scene. One or two sentences."
-              value={situation}
-              onChange={setSituation}
-              error={showError(errors.situation) ? errors.situation : null}
+          {starRows.map((row) => (
+            <NotebookFieldRow
+              key={row.id}
+              id={row.id}
+              label={row.label}
+              hint={row.hint}
+              value={row.value}
+              onChange={row.setValue}
+              error={row.error}
             />
-            <StarField
-              id="story-task"
-              label="Task"
-              hint="What were you on the hook for?"
-              value={task}
-              onChange={setTask}
-              error={showError(errors.task) ? errors.task : null}
-            />
-            <StarField
-              id="story-action"
-              label="Action"
-              hint="What did you actually do? Use &lsquo;I,&rsquo; not &lsquo;we.&rsquo;"
-              value={action}
-              onChange={setAction}
-              error={showError(errors.action) ? errors.action : null}
-            />
-            <StarField
-              id="story-result"
-              label="Result"
-              hint="Numbers if you have them. What changed?"
-              value={result}
-              onChange={setResult}
-              error={showError(errors.result) ? errors.result : null}
-            />
-          </div>
+          ))}
+        </div>
 
-          <div className="mt-6 flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="default">
-              {initial ? "Save changes" : "Save story"}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-interface StarFieldProps {
-  id: string;
-  label: string;
-  hint: string;
-  value: string;
-  onChange: (next: string) => void;
-  error: string | null;
-}
-
-function StarField({ id, label, hint, value, onChange, error }: StarFieldProps) {
-  const helpId = `${id}-help`;
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="block text-xs font-medium text-zinc-300 mb-1.5"
-      >
-        {label}
-      </label>
-      <Textarea
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={3}
-        aria-invalid={error !== null || undefined}
-        aria-describedby={helpId}
-      />
-      <p
-        id={helpId}
-        className={cn(
-          "mt-1 text-[11px] text-zinc-500",
-          error && "text-red-400",
-        )}
-      >
-        {error ?? hint}
-      </p>
-    </div>
+        <FormFooter isEdit={Boolean(initial)} onCancel={onClose} />
+      </form>
+    </NotebookDialogShell>
   );
 }
