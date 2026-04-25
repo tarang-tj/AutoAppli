@@ -87,6 +87,9 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+  verification: {
+    google: "njk6Zbcl4rOQw4baaPuYAjkg6UIvheIbQYSekz35Ums",
+  },
   category: "productivity",
 };
 
