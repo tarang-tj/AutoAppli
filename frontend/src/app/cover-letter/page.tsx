@@ -3,8 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
-import { apiPost, apiDelete, apiGet, isJobsApiConfigured } from "@/lib/api";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { apiPost, apiDelete, apiGet } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +27,6 @@ const TONE_OPTIONS: Array<{ value: CoverLetterTone; label: string }> = [
 ];
 
 function CoverLetterPageContent() {
-  const [demoMode] = useState(!isSupabaseConfigured());
   const [jobTitle, setJobTitle] = useState("");
   const [company, setCompany] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -121,7 +119,7 @@ function CoverLetterPageContent() {
     <div className="w-full">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
-          <PenTool className="h-6 w-6 text-blue-400" />
+          <PenTool aria-hidden="true" className="h-6 w-6 text-blue-400" />
           <h1 className="text-2xl font-bold text-white">AI Cover Letter Generator</h1>
         </div>
         <p className="text-zinc-400 text-sm">
@@ -137,10 +135,13 @@ function CoverLetterPageContent() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label htmlFor="cl-job-title" className="block text-sm font-medium text-zinc-300 mb-1">
                   Job Title
                 </label>
                 <Input
+                  id="cl-job-title"
+                  name="job_title"
+                  autoComplete="off"
                   placeholder="e.g., Senior Data Engineer"
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
@@ -149,8 +150,11 @@ function CoverLetterPageContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Company</label>
+                <label htmlFor="cl-company" className="block text-sm font-medium text-zinc-300 mb-1">Company</label>
                 <Input
+                  id="cl-company"
+                  name="company"
+                  autoComplete="off"
                   placeholder="e.g., Databricks"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
@@ -159,11 +163,13 @@ function CoverLetterPageContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label htmlFor="cl-job-description" className="block text-sm font-medium text-zinc-300 mb-1">
                   Job Description
                 </label>
                 <Textarea
-                  placeholder="Paste the job description here..."
+                  id="cl-job-description"
+                  name="job_description"
+                  placeholder="Paste the job description here…"
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
                   rows={4}
@@ -172,11 +178,13 @@ function CoverLetterPageContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label htmlFor="cl-resume-text" className="block text-sm font-medium text-zinc-300 mb-1">
                   Your Resume/Background
                 </label>
                 <Textarea
-                  placeholder="Paste your resume or background information..."
+                  id="cl-resume-text"
+                  name="resume_text"
+                  placeholder="Paste your resume or background information…"
                   value={resumeText}
                   onChange={(e) => setResumeText(e.target.value)}
                   rows={4}
@@ -185,9 +193,9 @@ function CoverLetterPageContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Tone</label>
+                <label htmlFor="cl-tone" className="block text-sm font-medium text-zinc-300 mb-1">Tone</label>
                 <Select value={tone} onValueChange={(v) => setTone(v as CoverLetterTone)}>
-                  <SelectTrigger className="bg-zinc-950 border-zinc-700 text-white">
+                  <SelectTrigger id="cl-tone" className="bg-zinc-950 border-zinc-700 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -201,11 +209,13 @@ function CoverLetterPageContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label htmlFor="cl-instructions" className="block text-sm font-medium text-zinc-300 mb-1">
                   Special Instructions (Optional)
                 </label>
                 <Textarea
-                  placeholder="Any specific points to emphasize or style preferences..."
+                  id="cl-instructions"
+                  name="instructions"
+                  placeholder="Any specific points to emphasize or style preferences…"
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
                   rows={3}
@@ -216,16 +226,17 @@ function CoverLetterPageContent() {
               <Button
                 onClick={handleGenerate}
                 disabled={isGenerating}
+                aria-busy={isGenerating}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2"
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating...
+                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+                    Generating…
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
+                    <Sparkles aria-hidden="true" className="h-4 w-4" />
                     Generate Cover Letter
                   </>
                 )}
@@ -246,17 +257,19 @@ function CoverLetterPageContent() {
                     variant="ghost"
                     size="sm"
                     onClick={handleCopyToClipboard}
+                    aria-label="Copy cover letter to clipboard"
                     className="text-zinc-400 hover:text-white"
                   >
-                    <Copy className="h-4 w-4" />
+                    <Copy aria-hidden="true" className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleDownload}
+                    aria-label="Download cover letter as text file"
                     className="text-zinc-400 hover:text-white"
                   >
-                    <Download className="h-4 w-4" />
+                    <Download aria-hidden="true" className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -279,23 +292,30 @@ function CoverLetterPageContent() {
           {/* History */}
           {history && history.length > 0 && (
             <Card className="bg-zinc-900 border-zinc-700 p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">History</h3>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {reversedHistory.map((letter) => (
-                  <div
-                    key={letter.id}
-                    onClick={() => setCurrentLetter(letter)}
-                    className={cn(
-                      "p-3 rounded cursor-pointer border transition-colors",
-                      currentLetter?.id === letter.id
-                        ? "bg-blue-600/20 border-blue-600/50"
-                        : "bg-zinc-800 border-zinc-700 hover:border-zinc-600"
-                    )}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
+              <h3 id="cl-history-heading" className="text-lg font-semibold text-white mb-4">History</h3>
+              <ul aria-labelledby="cl-history-heading" className="space-y-2 max-h-96 overflow-y-auto list-none p-0">
+                {reversedHistory.map((letter) => {
+                  const titleText = letter.company || letter.job_title || "Untitled";
+                  const isActive = currentLetter?.id === letter.id;
+                  return (
+                    <li
+                      key={letter.id}
+                      className={cn(
+                        "flex gap-1 items-stretch rounded border transition-colors",
+                        isActive
+                          ? "bg-blue-600/20 border-blue-600/50"
+                          : "bg-zinc-800 border-zinc-700 hover:border-zinc-600"
+                      )}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setCurrentLetter(letter)}
+                        aria-pressed={isActive}
+                        aria-label={`Load cover letter: ${titleText}${isActive ? " (currently selected)" : ""}`}
+                        className="flex-1 min-w-0 text-left p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
+                      >
                         <p className="text-sm font-medium text-white truncate">
-                          {letter.company || letter.job_title || "Untitled"}
+                          {titleText}
                         </p>
                         <p className="text-xs text-zinc-400">
                           {letter.job_title && letter.company
@@ -310,24 +330,27 @@ function CoverLetterPageContent() {
                             {letter.tone}
                           </span>
                         </div>
-                      </div>
+                      </button>
                       <button
+                        type="button"
                         onClick={(e) => handleDeleteLetter(e, letter.id)}
                         disabled={deletingId === letter.id}
-                        className="p-1 text-zinc-500 hover:text-red-400 transition-colors ml-2 flex-shrink-0"
+                        aria-busy={deletingId === letter.id}
+                        aria-label={`Delete cover letter for ${titleText}`}
+                        className="p-2 text-zinc-500 hover:text-red-400 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 aria-hidden="true" className="h-4 w-4" />
                       </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </Card>
           )}
 
           {!currentLetter && !history?.length && (
             <Card className="bg-zinc-900 border-zinc-700 border-dashed p-8 text-center">
-              <PenTool className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
+              <PenTool aria-hidden="true" className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
               <p className="text-zinc-400 text-sm">
                 Generate your first cover letter to see it here
               </p>

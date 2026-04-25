@@ -140,7 +140,7 @@ function OutreachPageContent() {
             <div>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
                 <h3 className="text-sm font-medium text-zinc-400">Saved drafts</h3>
-                <div className="flex flex-wrap gap-1.5">
+                <div role="group" aria-label="Filter saved drafts by purpose" className="flex flex-wrap gap-1.5">
                   {(
                     [
                       ["all", "All"],
@@ -153,6 +153,7 @@ function OutreachPageContent() {
                       type="button"
                       variant={historyFilter === key ? "secondary" : "ghost"}
                       size="sm"
+                      aria-pressed={historyFilter === key}
                       className={cn(
                         "h-8 text-xs",
                         historyFilter === key && "bg-zinc-800 text-white hover:bg-zinc-700"
@@ -185,7 +186,7 @@ function OutreachPageContent() {
                             <div className="flex shrink-0 items-center gap-1.5">
                               {ty === "thank_you" && (
                                 <span className="inline-flex items-center gap-0.5 rounded bg-rose-950/60 px-1.5 py-0.5 text-[10px] font-medium text-rose-200">
-                                  <Heart className="h-3 w-3" aria-hidden />
+                                  <Heart aria-hidden="true" className="h-3 w-3" />
                                   Thanks
                                 </span>
                               )}
@@ -203,10 +204,11 @@ function OutreachPageContent() {
                             size="icon"
                             className="h-9 w-9 text-zinc-500 hover:text-red-400 opacity-70 group-hover:opacity-100"
                             disabled={deletingId === msg.id}
-                            aria-label="Delete draft"
+                            aria-busy={deletingId === msg.id}
+                            aria-label={`Delete draft to ${msg.recipient_name}`}
                             onClick={(e) => void deleteMessage(e, msg.id)}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 aria-hidden="true" className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
