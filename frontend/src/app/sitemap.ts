@@ -33,6 +33,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Free interactive tools (programmatic SEO + product demo).
+  const toolEntries: MetadataRoute.Sitemap = [
+    {
+      url: `${base}/tools`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    },
+    {
+      url: `${base}/tools/subject-line-tester`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    },
+    {
+      url: `${base}/tools/resume-keyword-extractor`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    },
+  ];
+
   // Blog index + individual posts.
   const posts = await getAllPosts();
   const blogIndexEntry: MetadataRoute.Sitemap = [
@@ -53,6 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...baseEntries,
     ...vsEntries,
+    ...toolEntries,
     ...blogIndexEntry,
     ...blogPostEntries,
   ];
