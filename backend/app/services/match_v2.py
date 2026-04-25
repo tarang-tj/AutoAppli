@@ -76,6 +76,7 @@ class MatchResult:
     missing_skills: list[str]
     extra_skills: list[str]
     headline: str
+    explanations: dict[str, str] = field(default_factory=dict)
 
 
 DEFAULT_WEIGHTS: dict[Signal, float] = {
@@ -138,13 +139,39 @@ _SENIORITY_TOKENS = {
     "vp", "chief", "intern", "associate", "i", "ii", "iii", "iv", "v",
 }
 
+_TITLE_STOPWORDS = {
+    "a", "an", "the", "of", "in", "at", "for", "and", "or", "with", "to",
+    "on", "be", "as", "by", "is", "it", "its",
+}
+
+# Domain markers: when both titles share one → boost; when one has a strong
+# functional marker the other lacks → penalty
+_DOMAIN_MARKERS = {
+    "engineer", "engineering", "developer", "dev",
+    "scientist", "analyst", "designer", "manager",
+    "architect", "consultant", "specialist", "lead",
+    "researcher", "writer", "recruiter", "coordinator",
+}
+
+# Functional markers that signal a specific discipline — if one side has one
+# and the other has a *different* one, apply a mismatch penalty
+_FUNCTIONAL_MARKERS = {
+    "frontend", "front-end", "backend", "back-end",
+    "fullstack", "full-stack", "mobile", "ios", "android",
+    "data", "ml", "ai", "cloud", "devops", "security", "marketing",
+    "product", "growth", "finance", "legal", "operations",
+}
+
 
 def _title_tokens(title: str) -> list[str]:
     t = title.lower().strip()
     t = re.sub(r"\(.*?\)", "", t)
     t = re.sub(r"[,\-–—|].*$", "", t)
     t = re.sub(r"\s+", " ", t).strip()
-    return [tok for tok in t.split(" ") if tok and tok not in _SENIORITY_TOKENS]
+    return [
+        tok for tok in t.split(" ")
+        if tok and tok not in _SENIORITY_TOKENS and tok not in _TITLE_STOPWORDS
+    ]
 
 
 def detect_remote_type(text: Optional[str]) -> Optional[RemoteType]:
@@ -184,16 +211,50 @@ def _skills_score(job: JobProfile, cand: CandidateProfile) -> tuple[float, list[
     return max(0.0, min(1.0, score)), matched, missing, extra
 
 
-def _title_score(job: JobProfile, cand: CandidateProfile) -> float:
+def _title_score(job: JobProfile, cand: CandidateProfile) -> tuple[float, str]:
     if not cand.title:
-        return 0.5
+        return 0.5, "No candidate title available"
     job_t = set(_title_tokens(job.title))
     cand_t = set(_title_tokens(cand.title))
     if not job_t or not cand_t:
-        return 0.5
+        return 0.5, "Title too short to compare"
+
     overlap = len(job_t & cand_t)
     union = len(job_t | cand_t)
-    return overlap / union if union else 0.0
+    jaccard = overlap / union if union else 0.0
+
+    # Domain marker boost: both share a role-type token
+    job_domains = job_t & _DOMAIN_MARKERS
+    cand_domains = cand_t & _DOMAIN_MARKERS
+    shared_domains = job_domains & cand_domains
+    domain_boost = 0.1 if shared_domains else 0.0
+
+    # Functional marker penalty: one side has a discipline-specific token the other lacks
+    job_funcs = job_t & _FUNCTIONAL_MARKERS
+    cand_funcs = cand_t & _FUNCTIONAL_MARKERS
+    func_penalty = 0.0
+    func_note = ""
+    if job_funcs and cand_funcs and not (job_funcs & cand_funcs):
+        # Both have functional markers but they differ → clear mismatch
+        func_penalty = 0.2
+        func_note = f" Functional mismatch: job={sorted(job_funcs)}, you={sorted(cand_funcs)}."
+    elif job_funcs and not cand_funcs:
+        # Job specifies discipline, candidate doesn't signal it
+        func_penalty = 0.05
+
+    score = max(0.0, min(1.0, jaccard + domain_boost - func_penalty))
+
+    # Build explanation note
+    shared_tokens = sorted(job_t & cand_t)
+    if shared_tokens:
+        note = f"Token overlap on '{', '.join(shared_tokens[:3])}' (Jaccard={jaccard:.2f})."
+    else:
+        note = f"No token overlap (job='{job.title}', you='{cand.title}')."
+    if shared_domains:
+        note += f" Role match on '{', '.join(sorted(shared_domains))}'."
+    note += func_note
+
+    return score, note
 
 
 def _seniority_score(job: JobProfile, cand: CandidateProfile) -> tuple[float, str]:
@@ -315,6 +376,55 @@ def _headline(score: float, matched: int, missing: int) -> str:
     return "Weak fit — consider skipping or tailoring heavily"
 
 
+def _build_explanations(
+    *,
+    matched: list[str],
+    missing: list[str],
+    title_note: str,
+    sen_note: str,
+    sen_raw: float,
+    loc_note: str,
+    rem_note: str,
+    rec_note: str,
+    sal_note: str,
+    job: "JobProfile",
+    candidate: "CandidateProfile",
+) -> dict[str, str]:
+    """Return one human-readable explanation string per scoring dimension."""
+    total_required = len(matched) + len(missing)
+    if total_required:
+        top_matched = ", ".join(matched[:5])
+        top_missing = ", ".join(missing[:5])
+        extra_matched = f" and {len(matched) - 5} more" if len(matched) > 5 else ""
+        extra_missing = f" and {len(missing) - 5} more" if len(missing) > 5 else ""
+        skills_exp = (
+            f"Matched {len(matched)}/{total_required} required skills"
+            + (f" ({top_matched}{extra_matched})" if matched else "")
+            + (f". Missing {len(missing)} ({top_missing}{extra_missing})" if missing else ".")
+        )
+    else:
+        skills_exp = "No required skills detected on posting."
+
+    job_lvl = job.seniority or "mid"
+    cand_lvl = candidate.seniority or "mid"
+    if sen_raw >= 1.0:
+        sen_exp = f"Job: {job_lvl}. You: {cand_lvl}. Aligned."
+    elif sen_raw >= 0.7:
+        sen_exp = f"Job: {job_lvl}. You: {cand_lvl}. {sen_note}."
+    else:
+        sen_exp = f"Job: {job_lvl}. You: {cand_lvl}. {sen_note} — significant gap."
+
+    return {
+        "skills": skills_exp,
+        "title": title_note,
+        "seniority": sen_exp,
+        "location": loc_note,
+        "remote": rem_note,
+        "recency": rec_note,
+        "salary": sal_note,
+    }
+
+
 def score_match(
     job: JobProfile,
     candidate: CandidateProfile,
@@ -325,18 +435,20 @@ def score_match(
         raise ValueError(f"Invalid scoring weights — must sum to 1.0, got {w}")
 
     skills_raw, matched, missing, extra = _skills_score(job, candidate)
-    title_raw = _title_score(job, candidate)
+    title_raw, title_note = _title_score(job, candidate)
     sen_raw, sen_note = _seniority_score(job, candidate)
     loc_raw, loc_note = _location_score(job, candidate)
     rem_raw, rem_note = _remote_score(job, candidate)
     rec_raw, rec_note = _recency_score(job)
     sal_raw, sal_note = _salary_score(job, candidate)
 
+    skills_note = (
+        f"{len(matched)}/{len(matched)+len(missing)} required skills matched" if (matched or missing)
+        else "No skills detected on posting"
+    )
     breakdown = [
-        SignalContribution("skills", skills_raw, w["skills"], skills_raw * w["skills"] * 100,
-                           f"{len(matched)}/{len(matched)+len(missing)} required skills matched" if (matched or missing) else "No skills detected on posting"),
-        SignalContribution("title", title_raw, w["title"], title_raw * w["title"] * 100,
-                           f"Role-family overlap vs \"{candidate.title}\"" if candidate.title else "No candidate title available"),
+        SignalContribution("skills", skills_raw, w["skills"], skills_raw * w["skills"] * 100, skills_note),
+        SignalContribution("title", title_raw, w["title"], title_raw * w["title"] * 100, title_note),
         SignalContribution("seniority", sen_raw, w["seniority"], sen_raw * w["seniority"] * 100, sen_note),
         SignalContribution("location", loc_raw, w["location"], loc_raw * w["location"] * 100, loc_note),
         SignalContribution("remote", rem_raw, w["remote"], rem_raw * w["remote"] * 100, rem_note),
@@ -347,6 +459,15 @@ def score_match(
     score_exact = sum(b.points for b in breakdown)
     score = round(score_exact * 10) / 10
 
+    explanations = _build_explanations(
+        matched=matched, missing=missing,
+        title_note=title_note,
+        sen_note=sen_note, sen_raw=sen_raw,
+        loc_note=loc_note, rem_note=rem_note,
+        rec_note=rec_note, sal_note=sal_note,
+        job=job, candidate=candidate,
+    )
+
     return MatchResult(
         score=score,
         score_exact=score_exact,
@@ -355,6 +476,7 @@ def score_match(
         missing_skills=missing,
         extra_skills=extra,
         headline=_headline(score, len(matched), len(missing)),
+        explanations=explanations,
     )
 
 
@@ -388,4 +510,5 @@ def result_to_dict(r: MatchResult) -> dict:
         "missing_skills": r.missing_skills,
         "extra_skills": r.extra_skills,
         "headline": r.headline,
+        "explanations": r.explanations,
     }

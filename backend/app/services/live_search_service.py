@@ -32,6 +32,7 @@ from app.deps.jobs_auth import jobs_use_supabase
 from app.models.schemas import JobSearchResult
 from app.repositories import cached_jobs_supabase
 from app.services import scraper_service
+from app.services.search_ranking import rank_results
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +119,9 @@ async def live_search(
                 seen_urls.add(r.url)
                 results.append(r)
 
-    # Page slice — cached results are already ordered by last_seen_at desc.
+    # Rank by relevance (skipped when query is empty — preserve insertion order).
+    ranked = rank_results(query, results)
+
+    # Page slice.
     start = (page - 1) * per_page
-    return results[start : start + per_page]
+    return ranked[start : start + per_page]
