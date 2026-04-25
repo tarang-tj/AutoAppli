@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Mail, FileSearch, ScanLine } from "lucide-react";
+import { ArrowRight, Mail, FileSearch, ScanLine, Send } from "lucide-react";
 
 /**
  * /tools — index page for free, no-signup interactive tools.
@@ -78,6 +78,13 @@ const TOOLS: ToolCard[] = [
       "Paste your resume, see exactly what an ATS extracts and what it gets wrong. Heuristic warnings on contact info, dates, skills, and structure.",
     icon: <ScanLine className="h-5 w-5" aria-hidden="true" />,
   },
+  {
+    href: "/tools/cold-email-generator",
+    title: "Cold email generator",
+    blurb:
+      "Enter who you're reaching out to and why. Get 3 ready-to-edit templates — short curious, value-first, ask-for-advice. Browser-only, no AI.",
+    icon: <Send className="h-5 w-5" aria-hidden="true" />,
+  },
 ];
 
 const FOCUS_RING =
@@ -103,13 +110,13 @@ export default function ToolsIndexPage() {
           Free tools for the internship grind
         </h1>
         <p className="mt-5 text-lg text-zinc-400 max-w-2xl leading-relaxed text-pretty">
-          No signup. Nothing leaves your browser. Three small utilities we
-          built for the same students AutoAppli is built for — score a
-          cold-email subject before you send it, pull the keywords out of
-          a JD, and see what an ATS would actually extract from your resume.
+          No signup. No paywall. Nothing leaves your browser. Four small
+          utilities for the internship grind — generate cold email templates,
+          score a subject line before you send it, pull the keywords from a
+          JD, and see what an ATS actually extracts from your resume.
         </p>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
           {TOOLS.map((t) => (
             <Link
               key={t.href}

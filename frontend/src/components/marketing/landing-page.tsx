@@ -89,6 +89,12 @@ function MarketingHeader({ demoMode }: { demoMode: boolean }) {
         aria-label="Primary"
         className="hidden md:flex items-center gap-6 text-sm text-zinc-400"
       >
+        <Link
+          href="/tools"
+          className={`rounded-md hover:text-white transition-colors ${FOCUS_RING}`}
+        >
+          Tools
+        </Link>
         <a
           href="#how-it-works"
           className={`rounded-md hover:text-white transition-colors ${FOCUS_RING}`}
