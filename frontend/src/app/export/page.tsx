@@ -3,8 +3,21 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useJobs } from "@/hooks/use-jobs";
+import {
+  getDeadlinesDownloadUrl,
+  getDeadlinesWebcalUrl,
+} from "@/lib/ical-link";
 import type { Job } from "@/types";
-import { Download, FileDown, BarChart3, Building2, Globe, FileText, Loader2 } from "lucide-react";
+import {
+  BarChart3,
+  Building2,
+  CalendarDays,
+  Download,
+  FileDown,
+  FileText,
+  Globe,
+  Loader2,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -124,6 +137,47 @@ export default function ExportPage() {
                 Add some job applications to start exporting data.
               </p>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Calendar (iCal) — subscribe or download deadlines */}
+        <Card className="bg-zinc-900 border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-blue-400" aria-hidden="true" />
+              Calendar (iCal)
+            </CardTitle>
+            <CardDescription className="text-zinc-500">
+              Add your saved-job deadlines to Google Calendar, Apple Calendar, or
+              Outlook. Updates as you save new roles.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              aria-describedby="ical-note"
+            >
+              <a
+                href={getDeadlinesDownloadUrl()}
+                download="autoappli-deadlines.ics"
+                aria-label="Download saved-job deadlines as an iCal (.ics) file"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+              >
+                <FileDown className="h-4 w-4" aria-hidden="true" />
+                Download .ics
+              </a>
+              <a
+                href={getDeadlinesWebcalUrl()}
+                aria-label="Subscribe to your AutoAppli deadlines in your calendar app"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white text-sm font-medium px-4 py-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+              >
+                <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                Subscribe in Calendar
+              </a>
+            </div>
+            <p id="ical-note" className="text-zinc-400 text-xs mt-3">
+              The webcal subscription updates daily. Download is a one-time snapshot.
+            </p>
           </CardContent>
         </Card>
 

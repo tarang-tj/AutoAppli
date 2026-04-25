@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import Response
+from fastapi.responses import PlainTextResponse, Response
 
 from app.config import Settings, get_settings
 from app.deps.jobs_auth import get_jobs_user_id, jobs_use_supabase
@@ -14,6 +14,7 @@ from app.services.export_service import (
     export_jobs_json,
     generate_summary_report,
 )
+from app.services.ical_service import build_deadlines_ical
 
 router = APIRouter(tags=["export"])
 
@@ -64,3 +65,27 @@ async def export_report(
     jobs = _all_jobs(settings, user_id)
     report = generate_summary_report(jobs)
     return report
+
+
+@router.get("/export/deadlines.ics", response_class=PlainTextResponse)
+async def export_deadlines_ics(
+    user_id: str | None = Depends(get_jobs_user_id),
+    settings: Settings = Depends(get_settings),
+):
+    """Export saved-job deadlines as an RFC 5545 iCalendar feed.
+
+    Each job with a ``deadline`` (or legacy ``closing_date``) becomes an
+    all-day VEVENT. Jobs without a deadline are skipped silently. The
+    response is suitable for both one-time download and ``webcal://``
+    subscription — calendar apps will re-fetch periodically.
+    """
+    jobs = _all_jobs(settings, user_id)
+    body = build_deadlines_ical(jobs, calendar_name="AutoAppli — Deadlines")
+    return PlainTextResponse(
+        content=body,
+        media_type="text/calendar; charset=utf-8",
+        headers={
+            "Content-Disposition": 'attachment; filename="autoappli-deadlines.ics"',
+            "Cache-Control": "private, no-cache",
+        },
+    )
