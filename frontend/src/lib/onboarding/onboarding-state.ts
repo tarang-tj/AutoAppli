@@ -110,17 +110,34 @@ export function resetOnboarding(): void {
 
 const SERVER_SNAPSHOT: OnboardingState = { step: "done", seen: true };
 
+// Module-level cache so `getOnboardingSnapshot` returns a stable reference
+// between store events. `useSyncExternalStore` (React 19) calls getSnapshot
+// more than once per render to verify stability — without caching, every
+// call returns a fresh `{ step, seen }` object literal, so React sees the
+// store as "changed" each time, schedules another render, calls again,
+// gets another new object → infinite loop → React error #185.
+let _cache: OnboardingState | null = null;
+
+function invalidateCache(): void {
+  _cache = null;
+}
+
 export function subscribeOnboarding(cb: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   const handler = (e: StorageEvent) => {
-    if (e.key === SEEN_KEY || e.key === STEP_KEY || e.key === null) cb();
+    if (e.key === SEEN_KEY || e.key === STEP_KEY || e.key === null) {
+      invalidateCache();
+      cb();
+    }
   };
   window.addEventListener("storage", handler);
   return () => window.removeEventListener("storage", handler);
 }
 
 export function getOnboardingSnapshot(): OnboardingState {
-  return readOnboardingState();
+  if (_cache !== null) return _cache;
+  _cache = readOnboardingState();
+  return _cache;
 }
 
 export function getOnboardingServerSnapshot(): OnboardingState {
