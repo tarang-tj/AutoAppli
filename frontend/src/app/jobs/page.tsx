@@ -203,13 +203,13 @@ export default function JobsPage() {
         </div>
       )}
       {searched && results.length === 0 && (
-        <div className="text-center py-12">
+        <div role="status" className="text-center py-12">
           <p className="text-zinc-300">No jobs found. Try different search terms.</p>
         </div>
       )}
       {results.length > 0 && (
         <div className="mt-4 mb-2 flex items-center justify-between">
-          <span className="text-xs text-zinc-500">
+          <span role="status" aria-live="polite" className="text-xs text-zinc-500">
             {filtered.length} of {results.length} result
             {results.length === 1 ? "" : "s"}
             {candidate ? " — ranked by fit" : ""}

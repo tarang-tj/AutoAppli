@@ -120,16 +120,16 @@ export function JobListingCard({ job }: { job: JobSearchResult }) {
             <h3 className="text-sm font-medium text-white leading-snug">{job.title}</h3>
             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
               <span className="flex items-center gap-1 text-xs text-zinc-400">
-                <Building2 className="h-3 w-3 shrink-0" />
+                <Building2 aria-hidden="true" className="h-3 w-3 shrink-0" />
                 {job.company}
               </span>
               <span className="flex items-center gap-1 text-xs text-zinc-400">
-                <MapPin className="h-3 w-3 shrink-0" />
+                <MapPin aria-hidden="true" className="h-3 w-3 shrink-0" />
                 {job.location}
               </span>
               {job.salary && (
                 <span className="flex items-center gap-1 text-xs text-emerald-400">
-                  <DollarSign className="h-3 w-3 shrink-0" />
+                  <DollarSign aria-hidden="true" className="h-3 w-3 shrink-0" />
                   {job.salary}
                 </span>
               )}
@@ -142,34 +142,43 @@ export function JobListingCard({ job }: { job: JobSearchResult }) {
                 variant="ghost"
                 size="icon"
                 title="Save to tracker"
+                aria-label={
+                  saved
+                    ? `${job.title} at ${job.company} — saved`
+                    : `Save ${job.title} at ${job.company} to tracker`
+                }
+                aria-busy={saving}
                 onClick={handleSave}
                 disabled={saving || importing || saved}
                 className={saved ? "text-blue-400" : "text-zinc-500 hover:text-white"}
               >
-                <Bookmark className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
+                <Bookmark aria-hidden="true" className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 title="Save and pull full job description from posting (slower)"
+                aria-label={`Save ${job.title} and scrape full description (slower)`}
+                aria-busy={importing}
                 onClick={handleImportDescription}
                 disabled={saving || importing || saved || !job.url?.trim()}
                 className="text-zinc-500 hover:text-amber-400"
               >
-                <FileText className="h-4 w-4" />
+                <FileText aria-hidden="true" className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => window.open(job.url, "_blank")}
+                aria-label={`Open ${job.title} at ${job.company} posting in new tab`}
                 className="text-zinc-500 hover:text-white"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink aria-hidden="true" className="h-4 w-4" />
               </Button>
             </div>
             {(saving || importing) && (
-              <span className="text-[10px] text-zinc-500">
-                {importing ? "Scraping..." : "Saving..."}
+              <span role="status" aria-live="polite" className="text-[10px] text-zinc-500">
+                {importing ? "Scraping…" : "Saving…"}
               </span>
             )}
           </div>
@@ -186,7 +195,7 @@ export function JobListingCard({ job }: { job: JobSearchResult }) {
             </Badge>
             {postedFormatted && (
               <span className="flex items-center gap-1 text-[10px] text-zinc-500">
-                <Calendar className="h-2.5 w-2.5" />
+                <Calendar aria-hidden="true" className="h-2.5 w-2.5" />
                 Posted {postedFormatted}
               </span>
             )}
@@ -201,7 +210,7 @@ export function JobListingCard({ job }: { job: JobSearchResult }) {
                   : "text-zinc-500"
               }`}
             >
-              <CalendarClock className="h-2.5 w-2.5" />
+              <CalendarClock aria-hidden="true" className="h-2.5 w-2.5" />
               {pastDeadline ? "Closed" : closingSoon ? "Closing soon:" : "Closes"}{" "}
               {closingFormatted}
             </span>
