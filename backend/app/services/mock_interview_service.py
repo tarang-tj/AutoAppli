@@ -1,29 +1,31 @@
 """AI Mock Interview service — turn-based interview practice with Claude.
 
 Architecture:
-- Sessions stored in-memory keyed by UUID (user_id scoped).
+- Dual-mode: when Supabase credentials are available and user_id is set,
+  sessions are persisted to `mock_interview_sessions` table. Otherwise falls
+  back to in-memory dict (useful for tests and local dev without .env).
 - System prompt + JD use prompt-caching (cache_control: ephemeral) so
   repeated turns within a session don't re-process the JD.
-- Future migration path: persist SessionState to a `mock_interview_sessions`
-  Supabase table when multi-device support is needed.
 """
 from __future__ import annotations
 
 import json
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from app.models.mock_interview_models import (
     DimensionScores,
     EndResponse,
+    SessionListItem,
     SessionState,
     TurnRecord,
 )
 from app.services.claude_service import _get_client
-from app.config import get_settings
+from app.config import Settings, get_settings
 
-# ── In-memory store ────────────────────────────────────────────────────────
-# Keyed by session_id. Fine for v1 (single process, Render free tier).
+# ── In-memory fallback store ───────────────────────────────────────────────
+# Keyed by session_id. Used when Supabase credentials are absent.
 _sessions: dict[str, SessionState] = {}
 
 
@@ -174,6 +176,81 @@ def _build_transcript(session: SessionState) -> str:
     return "\n".join(lines)
 
 
+# ── Supabase helpers ───────────────────────────────────────────────────────
+
+def _use_supabase(settings: Settings, user_id: str | None) -> bool:
+    """Return True only when Supabase is configured AND a user_id is present."""
+    return bool(
+        user_id
+        and settings.SUPABASE_URL.strip()
+        and settings.SUPABASE_KEY.strip()
+    )
+
+
+def _get_supabase_client(settings: Settings):
+    """Return a Supabase client. Only call when _use_supabase() is True."""
+    from supabase import create_client  # type: ignore[import-untyped]
+    return create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+
+
+def _state_from_row(row: dict[str, Any]) -> SessionState:
+    """Convert a Supabase DB row back into a SessionState."""
+    turns_raw = row.get("turns") or []
+    turns = [TurnRecord(**t) for t in turns_raw]
+
+    scorecard: EndResponse | None = None
+    if row.get("scorecard"):
+        sc = row["scorecard"]
+        scorecard = EndResponse(
+            overall=int(sc["overall"]),
+            dimensions=DimensionScores(**sc["dimensions"]),
+            top_strengths=sc["top_strengths"],
+            top_improvements=sc["top_improvements"],
+        )
+
+    # Reconstruct questions list from turns; first question is stored separately
+    # in the questions_cache field if present, else rebuild from turns.
+    questions_cache = row.get("questions_cache") or []
+    if not questions_cache:
+        # Rebuild from turns for backwards compat
+        questions_cache = [t.question for t in turns]
+
+    return SessionState(
+        session_id=str(row["id"]),
+        user_id=str(row["user_id"]),
+        job_description=row["job_description"],
+        role=row["role"],
+        num_questions=int(row["num_questions"]),
+        question_index=int(row["question_index"]),
+        questions=questions_cache,
+        turns=turns,
+        complete=bool(row.get("complete", False)),
+        scorecard=scorecard,
+    )
+
+
+async def _persist_session(state: SessionState, settings: Settings) -> None:
+    """Upsert the full session state to Supabase."""
+    client = _get_supabase_client(settings)
+    turns_data = [t.model_dump() for t in state.turns]
+    scorecard_data = None
+    if state.scorecard is not None:
+        scorecard_data = state.scorecard.model_dump()
+
+    row: dict[str, Any] = {
+        "id": state.session_id,
+        "user_id": state.user_id,
+        "job_description": state.job_description,
+        "role": state.role,
+        "num_questions": state.num_questions,
+        "question_index": state.question_index,
+        "complete": state.complete,
+        "turns": turns_data,
+        "scorecard": scorecard_data,
+    }
+    client.table("mock_interview_sessions").upsert(row).execute()
+
+
 # ── Public service API ─────────────────────────────────────────────────────
 
 async def create_session(
@@ -181,7 +258,11 @@ async def create_session(
     role: str,
     num_questions: int,
     user_id: str | None,
+    settings: Settings | None = None,
 ) -> SessionState:
+    if settings is None:
+        settings = get_settings()
+
     session_id = str(uuid.uuid4())
     system = _system_prompt(job_description, role, num_questions)
     first_question = await generate_question(system, [])
@@ -195,21 +276,36 @@ async def create_session(
         questions=[first_question],
         turns=[],
     )
-    _sessions[session_id] = state
+
+    if _use_supabase(settings, user_id):
+        await _persist_session(state, settings)
+    else:
+        _sessions[session_id] = state
+
     return state
 
 
 async def process_turn(
     session_id: str,
     answer: str,
+    user_id: str | None = None,
+    settings: Settings | None = None,
 ) -> tuple[str, str | None, int, bool]:
     """Record the answer, generate feedback, advance to next question.
 
     Returns (feedback, next_question_or_None, new_question_index, complete).
     """
-    state = _sessions.get(session_id)
-    if state is None:
-        raise KeyError(session_id)
+    if settings is None:
+        settings = get_settings()
+
+    if _use_supabase(settings, user_id):
+        state = await get_session_persisted(user_id, session_id, settings)  # type: ignore[arg-type]
+        if state is None:
+            raise KeyError(session_id)
+    else:
+        state = _sessions.get(session_id)
+        if state is None:
+            raise KeyError(session_id)
 
     current_q = state.questions[state.question_index]
     system = _system_prompt(state.job_description, state.role, state.num_questions)
@@ -234,15 +330,31 @@ async def process_turn(
     else:
         state.complete = True
 
-    _sessions[session_id] = state
+    if _use_supabase(settings, user_id):
+        await _persist_session(state, settings)
+    else:
+        _sessions[session_id] = state
+
     return feedback, next_question, new_index, complete
 
 
-async def end_session(session_id: str) -> EndResponse:
+async def end_session(
+    session_id: str,
+    user_id: str | None = None,
+    settings: Settings | None = None,
+) -> EndResponse:
     """Generate and cache the scorecard for the session."""
-    state = _sessions.get(session_id)
-    if state is None:
-        raise KeyError(session_id)
+    if settings is None:
+        settings = get_settings()
+
+    if _use_supabase(settings, user_id):
+        state = await get_session_persisted(user_id, session_id, settings)  # type: ignore[arg-type]
+        if state is None:
+            raise KeyError(session_id)
+    else:
+        state = _sessions.get(session_id)
+        if state is None:
+            raise KeyError(session_id)
 
     if state.scorecard is not None:
         return state.scorecard
@@ -251,12 +363,92 @@ async def end_session(session_id: str) -> EndResponse:
     transcript = _build_transcript(state)
     scorecard = await generate_scorecard(system, transcript)
     state.scorecard = scorecard
-    _sessions[session_id] = state
+
+    if _use_supabase(settings, user_id):
+        await _persist_session(state, settings)
+    else:
+        _sessions[session_id] = state
+
     return scorecard
 
 
 def get_session(session_id: str) -> SessionState:
+    """Retrieve session from in-memory store (fallback path)."""
     state = _sessions.get(session_id)
     if state is None:
         raise KeyError(session_id)
     return state
+
+
+async def get_session_persisted(
+    user_id: str,
+    session_id: str,
+    settings: Settings | None = None,
+) -> SessionState | None:
+    """Fetch a session from Supabase, enforcing user ownership. Returns None if not found."""
+    if settings is None:
+        settings = get_settings()
+    client = _get_supabase_client(settings)
+    resp = (
+        client.table("mock_interview_sessions")
+        .select("*")
+        .eq("id", session_id)
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    rows = resp.data or []
+    if not rows:
+        return None
+    return _state_from_row(rows[0])
+
+
+async def list_sessions(
+    user_id: str,
+    settings: Settings | None = None,
+    limit: int = 50,
+) -> list[SessionListItem]:
+    """Return recent sessions for a user, newest first. Uses Supabase when available."""
+    if settings is None:
+        settings = get_settings()
+
+    if _use_supabase(settings, user_id):
+        client = _get_supabase_client(settings)
+        resp = (
+            client.table("mock_interview_sessions")
+            .select("id, role, complete, scorecard, created_at")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        rows = resp.data or []
+        result: list[SessionListItem] = []
+        for row in rows:
+            overall: int | None = None
+            if row.get("scorecard") and isinstance(row["scorecard"], dict):
+                overall = row["scorecard"].get("overall")
+            result.append(
+                SessionListItem(
+                    session_id=str(row["id"]),
+                    role=row["role"],
+                    complete=bool(row.get("complete", False)),
+                    overall_score=overall,
+                    created_at=row.get("created_at", ""),
+                )
+            )
+        return result
+
+    # In-memory fallback: scan all sessions belonging to the user
+    user_sessions = [s for s in _sessions.values() if s.user_id == user_id]
+    user_sessions.sort(key=lambda s: s.session_id, reverse=True)
+    return [
+        SessionListItem(
+            session_id=s.session_id,
+            role=s.role,
+            complete=s.complete,
+            overall_score=s.scorecard.overall if s.scorecard else None,
+            created_at="",
+        )
+        for s in user_sessions[:limit]
+    ]

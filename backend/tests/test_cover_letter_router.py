@@ -109,9 +109,9 @@ def test_generate_rejects_non_dict_body(authed_client: TestClient):
 
 
 def test_generate_anthropic_runtime_error_500(authed_client: TestClient):
-    """When generate_text raises, the router surfaces 500 with the message."""
+    """When generate_cover_letter raises, the router surfaces 500 with the message."""
     with patch(
-        "app.services.cover_letter_service.generate_text",
+        "app.routers.cover_letter.generate_cover_letter",
         new=AsyncMock(side_effect=RuntimeError("Claude blew up")),
     ):
         r = authed_client.post(
@@ -123,11 +123,19 @@ def test_generate_anthropic_runtime_error_500(authed_client: TestClient):
 
 
 def test_generate_uses_mocked_anthropic_text(authed_client: TestClient):
-    """When we patch generate_text per-test, the router returns that exact body."""
+    """When we patch generate_cover_letter per-test, the router returns that exact body."""
     canned = "Custom mocked cover letter content here."
+    import uuid as _uuid
+    fake_id = f"cl-{_uuid.uuid4().hex[:12]}"
+    fake_result = {
+        "id": fake_id,
+        "content": canned,
+        "tone": "enthusiastic",
+        "created_at": "2026-01-01T00:00:00+00:00",
+    }
     with patch(
-        "app.services.cover_letter_service.generate_text",
-        new=AsyncMock(return_value=canned),
+        "app.routers.cover_letter.generate_cover_letter",
+        new=AsyncMock(return_value=fake_result),
     ):
         r = authed_client.post(
             "/api/v1/cover-letter/generate",

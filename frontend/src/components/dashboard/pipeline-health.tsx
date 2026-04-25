@@ -51,6 +51,13 @@ const SIGNAL_HREF: Record<SignalLabel, string> = {
   "follow-up": "/outreach",
 };
 
+const SIGNAL_UNLOCK_HINT: Record<SignalLabel, string> = {
+  velocity: "Add 3+ jobs over 2 weeks to start tracking pace.",
+  conversion:
+    "Move at least one job to Interviewing or Offer to compute response rate.",
+  "follow-up": "Mark a job 'Applied' to start the 14-day follow-up clock.",
+};
+
 function categoryFromValue(value: number, max: number): HealthCategory {
   // Mirror the same thresholds the total uses, scaled to a 0-33 sub-score.
   const pct = (value / max) * 100;
@@ -66,6 +73,7 @@ function SignalBar({ signal }: { signal: SignalScore }) {
   const pct = isNull ? 0 : Math.min(100, (value / max) * 100);
   const tone = isNull ? "weak" : categoryFromValue(value, max);
   const valueText = isNull ? "—" : `${value}/${max}`;
+  const hintId = `signal-hint-${signal.label}`;
   // aria-valuetext gives screen readers the full sentence ("3.2 apps per
   // week") instead of the bare number. Keep it concise.
   const ariaValueText = isNull
@@ -86,6 +94,11 @@ function SignalBar({ signal }: { signal: SignalScore }) {
               {signal.benchmark}
             </p>
           ) : null}
+          {isNull ? (
+            <p id={hintId} className="text-[10px] text-zinc-500 mt-0.5">
+              {SIGNAL_UNLOCK_HINT[signal.label]}
+            </p>
+          ) : null}
         </div>
         <span
           className={`text-[11px] tabular-nums font-medium ${isNull ? "text-zinc-500" : CATEGORY_TONE[tone]}`}
@@ -99,6 +112,7 @@ function SignalBar({ signal }: { signal: SignalScore }) {
         aria-valuemin={0}
         aria-valuemax={max}
         aria-valuetext={ariaValueText}
+        aria-describedby={isNull ? hintId : undefined}
         className="h-1.5 rounded-full bg-zinc-800 overflow-hidden"
       >
         <div

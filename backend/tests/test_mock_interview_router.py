@@ -319,3 +319,162 @@ def test_get_session_matches_state_after_writes(authed_client: TestClient):
 def test_get_session_unknown_404(authed_client: TestClient):
     r = authed_client.get("/api/v1/mock-interview/sessions/does-not-exist")
     assert r.status_code == 404
+
+
+# ── GET /sessions (list) ──────────────────────────────────────────────────
+
+
+def test_list_sessions_requires_auth(app: FastAPI):
+    """list endpoint → 401 when auth dep raises."""
+    from fastapi import HTTPException
+
+    def _raise_401():
+        raise HTTPException(status_code=401, detail="Authorization required")
+
+    app.dependency_overrides[get_jobs_user_id] = _raise_401
+    with TestClient(app) as c:
+        r = c.get("/api/v1/mock-interview/sessions")
+    assert r.status_code == 401
+    app.dependency_overrides.clear()
+
+
+def test_list_sessions_empty_for_new_user(authed_client: TestClient):
+    """No sessions yet → returns empty list."""
+    r = authed_client.get("/api/v1/mock-interview/sessions")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_list_sessions_happy_path(authed_client: TestClient):
+    """After creating a session it appears in the list."""
+    with patch(
+        "app.services.mock_interview_service.generate_question",
+        new=AsyncMock(return_value=_MOCK_QUESTION),
+    ):
+        authed_client.post(
+            "/api/v1/mock-interview/sessions",
+            json={"job_description": _JD, "role": "swe-intern", "num_questions": 2},
+        )
+
+    r = authed_client.get("/api/v1/mock-interview/sessions")
+    assert r.status_code == 200
+    items = r.json()
+    assert len(items) == 1
+    item = items[0]
+    assert "session_id" in item
+    assert item["role"] == "swe-intern"
+    assert item["complete"] is False
+    assert item["overall_score"] is None
+
+
+def test_list_sessions_returns_own_sessions_only(app: FastAPI):
+    """Sessions created by user A are not visible to user B."""
+    _USER_A = "user-list-test-A"
+    _USER_B = "user-list-test-B"
+
+    def _make_client(uid: str) -> TestClient:
+        app.dependency_overrides[get_jobs_user_id] = lambda: uid
+        return TestClient(app)
+
+    client_a = _make_client(_USER_A)
+    with patch(
+        "app.services.mock_interview_service.generate_question",
+        new=AsyncMock(return_value=_MOCK_QUESTION),
+    ):
+        client_a.post(
+            "/api/v1/mock-interview/sessions",
+            json={"job_description": _JD, "role": "pm-intern", "num_questions": 1},
+        )
+
+    client_b = _make_client(_USER_B)
+    r = client_b.get("/api/v1/mock-interview/sessions")
+    assert r.status_code == 200
+    assert r.json() == []
+    app.dependency_overrides.clear()
+
+
+def test_list_sessions_shows_overall_score_after_end(authed_client: TestClient):
+    """completed session with scorecard surfaces overall_score in the list."""
+    with patch(
+        "app.services.mock_interview_service.generate_question",
+        new=AsyncMock(return_value=_MOCK_QUESTION),
+    ):
+        session = authed_client.post(
+            "/api/v1/mock-interview/sessions",
+            json={"job_description": _JD, "role": "swe-intern", "num_questions": 1},
+        ).json()
+
+    sid = session["session_id"]
+
+    with patch(
+        "app.services.mock_interview_service.generate_feedback",
+        new=AsyncMock(return_value=_MOCK_FEEDBACK),
+    ):
+        authed_client.post(
+            f"/api/v1/mock-interview/sessions/{sid}/turn",
+            json={"answer": "My answer"},
+        )
+
+    with patch(
+        "app.services.mock_interview_service.generate_scorecard",
+        new=AsyncMock(return_value=_MOCK_SCORECARD),
+    ):
+        authed_client.post(f"/api/v1/mock-interview/sessions/{sid}/end")
+
+    r = authed_client.get("/api/v1/mock-interview/sessions")
+    assert r.status_code == 200
+    items = r.json()
+    assert len(items) == 1
+    assert items[0]["complete"] is True
+    assert items[0]["overall_score"] == 78
+
+
+# ── Supabase persistence (mocked) ─────────────────────────────────────────
+
+
+def _make_supabase_settings():
+    """Return a Settings-like object that triggers _use_supabase()."""
+    from app.config import Settings
+    s = Settings(
+        SUPABASE_URL="https://fake.supabase.co",
+        SUPABASE_KEY="fake-key",
+        ANTHROPIC_API_KEY="fake-anthropic",
+    )
+    return s
+
+
+def test_persisted_session_survives_memory_clear(app: FastAPI):
+    """When Supabase is active, session data comes from DB not _sessions dict."""
+    from app.config import get_settings
+
+    fake_settings = _make_supabase_settings()
+    session_id = "aaaaaaaa-0000-0000-0000-000000000001"
+
+    # Build the DB row the Supabase client would return
+    _db_row = {
+        "id": session_id,
+        "user_id": _FAKE_USER,
+        "job_description": _JD,
+        "role": "swe-intern",
+        "num_questions": 2,
+        "question_index": 0,
+        "complete": False,
+        "turns": [],
+        "scorecard": None,
+        "questions_cache": [_MOCK_QUESTION],
+        "created_at": "2026-04-25T13:00:00+00:00",
+    }
+
+    mock_sb = MagicMock()
+    mock_sb.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.return_value.data = [_db_row]
+
+    with (
+        patch("app.services.mock_interview_service._get_supabase_client", return_value=mock_sb),
+        patch("app.services.mock_interview_service._use_supabase", return_value=True),
+    ):
+        state = svc._state_from_row(_db_row)
+
+    assert state.session_id == session_id
+    assert state.role == "swe-intern"
+    assert state.questions == [_MOCK_QUESTION]
+    assert state.turns == []

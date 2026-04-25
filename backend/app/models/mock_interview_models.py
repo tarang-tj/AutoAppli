@@ -68,3 +68,13 @@ class SessionState(BaseModel):
     scorecard: EndResponse | None = None
 
     model_config = {"arbitrary_types_allowed": True}
+
+
+class SessionListItem(BaseModel):
+    """Summary row returned by GET /mock-interview/sessions (history list)."""
+
+    session_id: str
+    role: str
+    complete: bool
+    overall_score: int | None
+    created_at: str
