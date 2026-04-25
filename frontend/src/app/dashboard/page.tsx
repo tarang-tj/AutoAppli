@@ -8,6 +8,7 @@ import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
 import { ActivationChecklist } from "@/components/dashboard/activation-checklist";
 import { WeeklyDigest } from "@/components/dashboard/weekly-digest";
 import { ActionRadar } from "@/components/dashboard/action-radar";
+import { PipelineHealth } from "@/components/dashboard/pipeline-health";
 import { OutcomesBreakdown } from "@/components/dashboard/outcomes-breakdown";
 import { StaleJobsNudge } from "@/components/dashboard/stale-jobs-nudge";
 import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton";
@@ -524,6 +525,7 @@ function DashboardContent() {
       />
       <WeeklyDigest jobs={jobs} />
       <ActionRadar />
+      <PipelineHealth />
       <InsightsCards jobs={jobs} />
       <OutcomesBreakdown jobs={jobs} />
       <PipelineStats jobs={filteredJobs} allJobCount={jobs.length} />
