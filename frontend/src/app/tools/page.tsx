@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Mail, FileSearch } from "lucide-react";
+import { ArrowRight, Mail, FileSearch, ScanLine } from "lucide-react";
 
 /**
  * /tools — index page for free, no-signup interactive tools.
@@ -14,13 +14,14 @@ import { ArrowRight, Mail, FileSearch } from "lucide-react";
 export const metadata: Metadata = {
   title: "Free tools for the internship grind — AutoAppli",
   description:
-    "Free, no-signup tools for college students running an internship search. Score your cold-email subject lines, extract ATS keywords from a JD. Runs in your browser.",
+    "Free, no-signup tools for college students running an internship search. Score your cold-email subject lines, extract ATS keywords from a JD, and see what an ATS actually parses from your resume. Runs in your browser.",
   keywords: [
     "free job search tools",
     "internship tools",
     "cold email subject line tester",
     "ats keyword extractor",
     "resume keyword finder",
+    "ats resume checker",
   ],
   alternates: { canonical: "/tools" },
   robots: {
@@ -37,14 +38,14 @@ export const metadata: Metadata = {
     type: "website",
     title: "Free tools for the internship grind — AutoAppli",
     description:
-      "Two no-signup tools for the student job search: a cold-email subject line tester and an ATS keyword extractor. Browser-only, no data sent anywhere.",
+      "No-signup tools for the student job search: cold-email subject line tester, ATS keyword extractor, and an ATS resume parser view. Browser-only, no data sent anywhere.",
     url: "/tools",
   },
   twitter: {
     card: "summary_large_image",
     title: "Free tools for the internship grind",
     description:
-      "Cold-email subject line tester + ATS keyword extractor. No signup, no data sent anywhere.",
+      "Subject line tester, ATS keyword extractor, ATS resume view. No signup, no data sent anywhere.",
   },
 };
 
@@ -69,6 +70,13 @@ const TOOLS: ToolCard[] = [
     blurb:
       "Paste a job description, get the 18 terms an ATS or recruiter is most likely to scan for. Optionally paste your resume to see what’s missing.",
     icon: <FileSearch className="h-5 w-5" aria-hidden="true" />,
+  },
+  {
+    href: "/tools/ats-view",
+    title: "ATS resume checker",
+    blurb:
+      "Paste your resume, see exactly what an ATS extracts and what it gets wrong. Heuristic warnings on contact info, dates, skills, and structure.",
+    icon: <ScanLine className="h-5 w-5" aria-hidden="true" />,
   },
 ];
 
@@ -95,13 +103,13 @@ export default function ToolsIndexPage() {
           Free tools for the internship grind
         </h1>
         <p className="mt-5 text-lg text-zinc-400 max-w-2xl leading-relaxed text-pretty">
-          No signup. Nothing leaves your browser. Two small utilities we built
-          for the same students AutoAppli is built for — score a cold-email
-          subject before you send it, pull the keywords out of a JD before
-          you tailor your resume.
+          No signup. Nothing leaves your browser. Three small utilities we
+          built for the same students AutoAppli is built for — score a
+          cold-email subject before you send it, pull the keywords out of
+          a JD, and see what an ATS would actually extract from your resume.
         </p>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map((t) => (
             <Link
               key={t.href}
