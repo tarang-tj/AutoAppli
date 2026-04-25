@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { disableDemoMode, enableDemoMode, isDemoMode } from "@/lib/demo-mode";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 /**
  * CommandPalette — global ⌘K / Ctrl+K modal.
@@ -115,7 +116,11 @@ export function CommandPalette() {
   const [highlight, setHighlight] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const [demoOn, setDemoOn] = useState(false);
+
+  // Trap Tab inside the dialog so aria-modal="true" actually holds.
+  useFocusTrap(open, dialogRef);
 
   // Refresh demo flag whenever the modal opens; localStorage is the source
   // of truth and may have changed while the palette was unmounted.
@@ -272,6 +277,7 @@ export function CommandPalette() {
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Command palette"

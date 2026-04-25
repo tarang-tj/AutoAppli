@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 /**
  * ShortcutsHelp — global "?" overlay listing keyboard shortcuts.
@@ -39,6 +40,10 @@ export function ShortcutsHelp() {
   const [open, setOpen] = useState(false);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+
+  // Trap Tab inside the dialog so aria-modal="true" actually holds.
+  useFocusTrap(open, dialogRef);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -86,6 +91,7 @@ export function ShortcutsHelp() {
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="shortcuts-title"

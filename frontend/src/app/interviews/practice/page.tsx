@@ -670,7 +670,10 @@ function InterviewPracticeContent() {
           <MessageBubble key={i} message={m} />
         ))}
         {pending && (
-          <div role="status" aria-live="polite" className="flex items-center gap-2 text-xs text-zinc-500 pl-11">
+          // Bare div — the parent log container's aria-live="polite" already
+          // announces this addition. Wrapping with role="status" + aria-live
+          // here would double-announce on NVDA/JAWS.
+          <div className="flex items-center gap-2 text-xs text-zinc-500 pl-11">
             <Loader2 aria-hidden="true" className="h-3 w-3 animate-spin motion-reduce:animate-none" />
             Interviewer is typing…
           </div>

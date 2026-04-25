@@ -237,11 +237,16 @@ function AppPreview() {
   return (
     <section
       className="px-6 py-12 max-w-6xl mx-auto w-full"
-      aria-label="AutoAppli kanban dashboard preview"
+      aria-label="AutoAppli kanban dashboard preview — mock four-column board with sample job cards"
     >
+      {/*
+        Entire mock is decorative. Earlier we used role="img" on this wrapper,
+        but Safari+VoiceOver still announces children of a labeled image.
+        aria-hidden="true" + the section's aria-label guarantees SR users
+        hear one summary and skip the fake company names inside.
+      */}
       <div
-        role="img"
-        aria-label="Mock dashboard showing four kanban columns — Bookmarked, Applied, Interviewing, Offer — with sample job cards"
+        aria-hidden="true"
         className="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950 p-3 shadow-2xl shadow-blue-500/5"
       >
         {/* Fake window chrome */}

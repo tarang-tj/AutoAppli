@@ -12,7 +12,7 @@
  * separate `fetchTopCachedJobSkills()` / `fetchCachedJobCompanies()` calls
  * so we don't re-query them on every keystroke).
  */
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { Search, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -120,13 +120,11 @@ export function DiscoverFiltersPanel({
         <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-200">
           <Filter aria-hidden="true" className="h-4 w-4 text-zinc-400" /> Filters
         </h2>
-        <span className="text-xs text-zinc-500" role="status" aria-live="polite">
-          {isLoading
-            ? "Loading…"
-            : typeof totalCount === "number"
-              ? `${totalCount.toLocaleString()} match${totalCount === 1 ? "" : "es"}`
-              : ""}
-        </span>
+        <DeferredCountStatus
+          isLoading={isLoading}
+          totalCount={totalCount}
+          className="text-xs text-zinc-500"
+        />
       </header>
 
       {/* Search */}
@@ -349,5 +347,34 @@ export function DiscoverFiltersPanel({
         Reset filters
       </Button>
     </aside>
+  );
+}
+
+/**
+ * Match-count status text that announces via aria-live="polite", but
+ * defers the inner string so a fast-typed query doesn't fire one
+ * announcement per keystroke. React's useDeferredValue lets the
+ * visible (non-deferred) DOM render keep up with input while the
+ * deferred copy SR reads from settles.
+ */
+function DeferredCountStatus({
+  isLoading,
+  totalCount,
+  className,
+}: {
+  isLoading: boolean | undefined;
+  totalCount: number | undefined;
+  className?: string;
+}) {
+  const text = isLoading
+    ? "Loading…"
+    : typeof totalCount === "number"
+      ? `${totalCount.toLocaleString()} match${totalCount === 1 ? "" : "es"}`
+      : "";
+  const deferredText = useDeferredValue(text);
+  return (
+    <span className={className} role="status" aria-live="polite">
+      {deferredText}
+    </span>
   );
 }
