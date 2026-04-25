@@ -425,13 +425,13 @@ function InterviewPracticeContent() {
             <button
               type="button"
               onClick={exitViewing}
-              className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200 mb-1"
+              className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200 mb-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
             >
-              <ArrowLeft className="h-3 w-3" />
+              <ArrowLeft aria-hidden="true" className="h-3 w-3" />
               Back to setup
             </button>
             <div className="flex items-center gap-2 text-xs text-zinc-500">
-              <Briefcase className="h-3 w-3" />
+              <Briefcase aria-hidden="true" className="h-3 w-3" />
               <span className="truncate">
                 {viewingSession.job_title} · {viewingSession.company}
               </span>
@@ -458,6 +458,8 @@ function InterviewPracticeContent() {
 
         <div
           ref={scrollRef}
+          role="log"
+          aria-label="Past interview transcript"
           className="flex-1 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4"
         >
           {rendered.length === 0 ? (
@@ -481,15 +483,15 @@ function InterviewPracticeContent() {
         <button
           type="button"
           onClick={() => router.push("/interviews")}
-          className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200 mb-4"
+          className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200 mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft aria-hidden="true" className="h-3 w-3" />
           Back to Interview Prep
         </button>
 
         <div className="mb-5">
           <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs text-violet-200 mb-3">
-            <Sparkles className="h-3 w-3" />
+            <Sparkles aria-hidden="true" className="h-3 w-3" />
             New — AI practice sessions
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
@@ -507,11 +509,13 @@ function InterviewPracticeContent() {
           {/* Setup form */}
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
+              <label htmlFor="practice-saved-job" className="block text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
                 Use a saved job
               </label>
               {jobs.length > 0 ? (
                 <select
+                  id="practice-saved-job"
+                  name="job_id"
                   value={jobId}
                   onChange={(e) => setJobId(e.target.value)}
                   className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2"
@@ -532,34 +536,45 @@ function InterviewPracticeContent() {
             </div>
 
             {!jobId && (
-              <div className="border-t border-zinc-800 pt-5 space-y-3">
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+              <fieldset className="border-t border-zinc-800 pt-5 space-y-3">
+                <legend className="block text-xs font-semibold text-zinc-400 uppercase tracking-widest">
                   Or describe a role manually
-                </label>
+                </legend>
                 <div className="grid grid-cols-2 gap-3">
                   <input
+                    id="practice-custom-title"
+                    name="custom_title"
                     type="text"
                     value={customTitle}
                     onChange={(e) => setCustomTitle(e.target.value)}
                     placeholder="Job title"
+                    aria-label="Job title"
+                    autoComplete="off"
                     className="rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2 placeholder:text-zinc-500"
                   />
                   <input
+                    id="practice-custom-company"
+                    name="custom_company"
                     type="text"
                     value={customCompany}
                     onChange={(e) => setCustomCompany(e.target.value)}
                     placeholder="Company"
+                    aria-label="Company"
+                    autoComplete="off"
                     className="rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2 placeholder:text-zinc-500"
                   />
                 </div>
                 <textarea
+                  id="practice-custom-jd"
+                  name="custom_job_description"
                   value={customJD}
                   onChange={(e) => setCustomJD(e.target.value)}
                   rows={5}
                   placeholder="Paste the job description (optional but improves question quality)"
+                  aria-label="Job description (optional)"
                   className="w-full rounded-md bg-zinc-800 border border-zinc-700 text-sm text-white px-3 py-2 placeholder:text-zinc-500 resize-y"
                 />
-              </div>
+              </fieldset>
             )}
 
             <div className="border-t border-zinc-800 pt-4 flex items-center justify-between gap-2">
@@ -571,17 +586,18 @@ function InterviewPracticeContent() {
               <button
                 type="button"
                 disabled={!canStart || pending}
+                aria-busy={pending}
                 onClick={() => void start()}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-600/20"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white shadow-lg shadow-blue-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
               >
                 {pending ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />
                     Starting…
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
+                    <Sparkles aria-hidden="true" className="h-4 w-4" />
                     Start practice
                   </>
                 )}
@@ -610,7 +626,7 @@ function InterviewPracticeContent() {
       <div className="flex items-center justify-between mb-3 gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-xs text-zinc-500">
-            <Briefcase className="h-3 w-3" />
+            <Briefcase aria-hidden="true" className="h-3 w-3" />
             <span className="truncate">
               Practicing: {activeContext.job_title} · {activeContext.company}
             </span>
@@ -623,18 +639,20 @@ function InterviewPracticeContent() {
           <button
             type="button"
             onClick={reset}
-            className="inline-flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800"
+            aria-label="Start a new practice session"
+            className="inline-flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           >
-            <RotateCcw className="h-3 w-3" />
+            <RotateCcw aria-hidden="true" className="h-3 w-3" />
             New session
           </button>
           <button
             type="button"
             onClick={endSession}
             disabled={pending}
-            className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-200 hover:bg-amber-500/20 disabled:opacity-50"
+            aria-label="End the interview and request a debrief"
+            className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-200 hover:bg-amber-500/20 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
           >
-            <StopCircle className="h-3 w-3" />
+            <StopCircle aria-hidden="true" className="h-3 w-3" />
             End &amp; debrief
           </button>
         </div>
@@ -642,14 +660,18 @@ function InterviewPracticeContent() {
 
       <div
         ref={scrollRef}
+        role="log"
+        aria-label="Interview transcript"
+        aria-live="polite"
+        aria-relevant="additions"
         className="flex-1 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4"
       >
         {stripKickoff(messages).map((m, i) => (
           <MessageBubble key={i} message={m} />
         ))}
         {pending && (
-          <div className="flex items-center gap-2 text-xs text-zinc-500 pl-11">
-            <Loader2 className="h-3 w-3 animate-spin" />
+          <div role="status" aria-live="polite" className="flex items-center gap-2 text-xs text-zinc-500 pl-11">
+            <Loader2 aria-hidden="true" className="h-3 w-3 animate-spin motion-reduce:animate-none" />
             Interviewer is typing…
           </div>
         )}
@@ -660,24 +682,36 @@ function InterviewPracticeContent() {
           e.preventDefault();
           void send(draft);
         }}
+        aria-busy={pending}
+        aria-label="Send a reply"
         className="mt-3 flex items-end gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-2"
       >
+        <label htmlFor="practice-reply" className="sr-only">
+          Your reply
+        </label>
         <textarea
           ref={inputRef}
+          id="practice-reply"
+          name="reply"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
           rows={2}
           placeholder="Type your answer… (Enter to send, Shift+Enter for a new line)"
+          aria-describedby="practice-reply-hint"
           className="flex-1 bg-transparent text-sm text-white placeholder:text-zinc-500 resize-none focus:outline-none px-2 py-1.5"
           disabled={pending}
         />
+        <span id="practice-reply-hint" className="sr-only">
+          Press Enter to send. Shift plus Enter for a new line.
+        </span>
         <button
           type="submit"
           disabled={!draft.trim() || pending}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed px-3 py-2 text-sm font-medium text-white"
+          aria-busy={pending}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed px-3 py-2 text-sm font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
         >
-          <Send className="h-3.5 w-3.5" />
+          <Send aria-hidden="true" className="h-3.5 w-3.5" />
           Send
         </button>
       </form>
@@ -687,17 +721,18 @@ function InterviewPracticeContent() {
 
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
+  const speaker = isUser ? "You" : "Interviewer";
   return (
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
       <div
+        aria-hidden="true"
         className={`h-8 w-8 shrink-0 rounded-full flex items-center justify-center ${
           isUser
             ? "bg-blue-600/20 text-blue-300 border border-blue-500/30"
             : "bg-violet-600/20 text-violet-300 border border-violet-500/30"
         }`}
-        aria-hidden
       >
-        {isUser ? <User className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+        {isUser ? <User aria-hidden="true" className="h-4 w-4" /> : <Sparkles aria-hidden="true" className="h-4 w-4" />}
       </div>
       <div
         className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
@@ -706,6 +741,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             : "bg-zinc-800 text-zinc-100 border border-zinc-700 rounded-tl-sm"
         }`}
       >
+        <span className="sr-only">{speaker}: </span>
         {message.content}
       </div>
     </div>

@@ -40,7 +40,7 @@ function StatusBadge({ status }: { status: string }) {
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.bg} ${cfg.color}`}>
-      <Icon className="h-3 w-3" />
+      <Icon aria-hidden="true" className="h-3 w-3" />
       {cfg.label}
     </span>
   );
@@ -53,7 +53,7 @@ function PrepSection({ title, icon: Icon, items }: { title: string; icon: typeof
   return (
     <div className="space-y-1.5">
       <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-        <Icon className="h-3.5 w-3.5" />
+        <Icon aria-hidden="true" className="h-3.5 w-3.5" />
         {title}
       </h4>
       <ul className="space-y-1 pl-5 list-disc text-sm text-zinc-300">
@@ -71,7 +71,7 @@ function PrepMaterialCard({ prep }: { prep: InterviewPrepMaterial }) {
       {prep.company_overview && (
         <div>
           <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-            <Briefcase className="h-3.5 w-3.5" /> Company Overview
+            <Briefcase aria-hidden="true" className="h-3.5 w-3.5" /> Company Overview
           </h4>
           <p className="text-sm text-zinc-300">{prep.company_overview}</p>
         </div>
@@ -79,7 +79,7 @@ function PrepMaterialCard({ prep }: { prep: InterviewPrepMaterial }) {
       {prep.role_insights && (
         <div>
           <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 mb-1">
-            <Lightbulb className="h-3.5 w-3.5" /> Role Insights
+            <Lightbulb aria-hidden="true" className="h-3.5 w-3.5" /> Role Insights
           </h4>
           <p className="text-sm text-zinc-300">{prep.role_insights}</p>
         </div>
@@ -134,7 +134,7 @@ function NewInterviewForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => v
   if (!open) {
     return (
       <Button variant="outline" onClick={() => setOpen(true)} className="gap-1.5">
-        <Plus className="h-4 w-4" /> Add Interview
+        <Plus aria-hidden="true" className="h-4 w-4" /> Add Interview
       </Button>
     );
   }
@@ -145,10 +145,12 @@ function NewInterviewForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => v
         <CardTitle className="text-base">New Interview Round</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} aria-busy={submitting} className="space-y-3">
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Job *</label>
+            <label htmlFor="iv-job" className="text-xs text-zinc-400 block mb-1">Job *</label>
             <select
+              id="iv-job"
+              name="job_id"
               className="w-full rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100"
               value={jobId}
               onChange={(e) => setJobId(e.target.value)}
@@ -164,36 +166,47 @@ function NewInterviewForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => v
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Round Name</label>
+              <label htmlFor="iv-round" className="text-xs text-zinc-400 block mb-1">Round Name</label>
               <Input
+                id="iv-round"
+                name="round_name"
                 placeholder="e.g. Phone Screen, Technical"
                 value={roundName}
                 onChange={(e) => setRoundName(e.target.value)}
+                autoComplete="off"
                 className="bg-zinc-800 border-zinc-700"
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Scheduled At</label>
+              <label htmlFor="iv-scheduled" className="text-xs text-zinc-400 block mb-1">Scheduled At</label>
               <Input
+                id="iv-scheduled"
+                name="scheduled_at"
                 type="datetime-local"
                 value={scheduledAt}
                 onChange={(e) => setScheduledAt(e.target.value)}
+                autoComplete="off"
                 className="bg-zinc-800 border-zinc-700"
               />
             </div>
           </div>
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Interviewer</label>
+            <label htmlFor="iv-interviewer" className="text-xs text-zinc-400 block mb-1">Interviewer</label>
             <Input
+              id="iv-interviewer"
+              name="interviewer_name"
               placeholder="Interviewer name (optional)"
               value={interviewer}
               onChange={(e) => setInterviewer(e.target.value)}
+              autoComplete="off"
               className="bg-zinc-800 border-zinc-700"
             />
           </div>
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Notes</label>
+            <label htmlFor="iv-notes" className="text-xs text-zinc-400 block mb-1">Notes</label>
             <Textarea
+              id="iv-notes"
+              name="notes"
               placeholder="Preparation notes, what to focus on…"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -202,7 +215,7 @@ function NewInterviewForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => v
             />
           </div>
           <div className="flex gap-2">
-            <Button type="submit" disabled={submitting || !jobId} size="sm">
+            <Button type="submit" disabled={submitting || !jobId} aria-busy={submitting} size="sm">
               {submitting ? "Saving…" : "Save"}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
@@ -283,7 +296,7 @@ function InterviewCard({
             <div className="flex items-center gap-3 mt-1.5 text-xs text-zinc-500">
               {scheduledDate && (
                 <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" /> {scheduledDate}
+                  <Calendar aria-hidden="true" className="h-3 w-3" /> {scheduledDate}
                 </span>
               )}
               {note.interviewer_name && (
@@ -302,10 +315,16 @@ function InterviewCard({
                 size="sm"
                 onClick={handleGeneratePrep}
                 disabled={loadingPrep}
+                aria-busy={loadingPrep}
+                aria-label={
+                  loadingPrep
+                    ? `Generating AI prep for ${note.round_name}`
+                    : `Generate AI prep for ${note.round_name}`
+                }
                 className="h-7 px-2 text-xs gap-1"
                 title="Generate AI prep"
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
                 {loadingPrep ? "…" : "Prep"}
               </Button>
             )}
@@ -315,8 +334,13 @@ function InterviewCard({
               onClick={handleStatusToggle}
               className="h-7 px-2"
               title={note.status === "upcoming" ? "Mark completed" : "Mark upcoming"}
+              aria-label={
+                note.status === "upcoming"
+                  ? `Mark ${note.round_name} as completed`
+                  : `Mark ${note.round_name} as upcoming`
+              }
             >
-              <CheckCircle2 className="h-3.5 w-3.5" />
+              <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
@@ -324,8 +348,9 @@ function InterviewCard({
               onClick={handleDelete}
               className="h-7 px-2 text-red-400 hover:text-red-300"
               title="Delete"
+              aria-label={`Delete ${note.round_name} interview`}
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -333,14 +358,21 @@ function InterviewCard({
         {note.prep_material && (
           <div>
             <button
+              type="button"
               onClick={() => setExpanded(!expanded)}
-              className="mt-2 flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+              aria-expanded={expanded}
+              aria-controls={`interview-prep-${note.id}`}
+              className="mt-2 flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
             >
-              <Sparkles className="h-3 w-3" />
+              <Sparkles aria-hidden="true" className="h-3 w-3" />
               {expanded ? "Hide" : "Show"} AI Prep Material
-              {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {expanded ? <ChevronUp aria-hidden="true" className="h-3 w-3" /> : <ChevronDown aria-hidden="true" className="h-3 w-3" />}
             </button>
-            {expanded && <PrepMaterialCard prep={note.prep_material} />}
+            {expanded && (
+              <div id={`interview-prep-${note.id}`}>
+                <PrepMaterialCard prep={note.prep_material} />
+              </div>
+            )}
           </div>
         )}
       </CardContent>
@@ -385,9 +417,9 @@ export default function InterviewsPage() {
         <div className="flex items-center gap-2">
           <a
             href="/interviews/practice"
-            className="inline-flex items-center gap-1.5 rounded-md border border-violet-500/40 bg-violet-500/10 px-3 py-1.5 text-sm text-violet-200 hover:bg-violet-500/20 transition-colors no-underline"
+            className="inline-flex items-center gap-1.5 rounded-md border border-violet-500/40 bg-violet-500/10 px-3 py-1.5 text-sm text-violet-200 hover:bg-violet-500/20 transition-colors no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
           >
-            <Sparkles className="h-4 w-4" />
+            <Sparkles aria-hidden="true" className="h-4 w-4" />
             Practice with AI
           </a>
           <NewInterviewForm
@@ -401,9 +433,9 @@ export default function InterviewsPage() {
       </div>
 
       {/* Upcoming */}
-      <section>
-        <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-          <Clock className="h-4 w-4" /> Upcoming ({upcoming.length})
+      <section aria-labelledby="iv-upcoming-heading">
+        <h2 id="iv-upcoming-heading" className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+          <Clock aria-hidden="true" className="h-4 w-4" /> Upcoming ({upcoming.length})
         </h2>
         {upcoming.length === 0 ? (
           <p className="text-sm text-zinc-500 italic">
@@ -425,9 +457,9 @@ export default function InterviewsPage() {
 
       {/* Past */}
       {past.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4" /> Past ({past.length})
+        <section aria-labelledby="iv-past-heading">
+          <h2 id="iv-past-heading" className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <CheckCircle2 aria-hidden="true" className="h-4 w-4" /> Past ({past.length})
           </h2>
           <div className="space-y-3">
             {past.map((note) => (
