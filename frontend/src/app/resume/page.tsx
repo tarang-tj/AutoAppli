@@ -172,7 +172,7 @@ function ResumeBuilderContent() {
             className="border-zinc-600 text-zinc-200"
             onClick={handleLoadSample}
           >
-            <FileStack className="h-4 w-4 mr-2" />
+            <FileStack aria-hidden="true" className="h-4 w-4 mr-2" />
             Load sample (resumes + JD)
           </Button>
         </div>
@@ -203,13 +203,14 @@ function ResumeBuilderContent() {
           <Button
             onClick={handleGenerate}
             disabled={generating || !selectedResumeId || !jobDescription.trim()}
+            aria-busy={generating}
             className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base"
           >
             {generating ? (
-              "Generating tailored resume..."
+              "Generating tailored resume…"
             ) : (
               <>
-                <Sparkles className="h-5 w-5 mr-2" />
+                <Sparkles aria-hidden="true" className="h-5 w-5 mr-2" />
                 Generate Tailored Resume
               </>
             )}
@@ -224,7 +225,7 @@ function ResumeBuilderContent() {
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader className="pb-2">
                 <CardTitle className="text-white text-base flex items-center gap-2">
-                  <History className="h-4 w-4 text-blue-400" aria-hidden />
+                  <History aria-hidden="true" className="h-4 w-4 text-blue-400" />
                   Saved tailored resumes
                 </CardTitle>
                 <p className="text-xs text-zinc-500">
@@ -259,8 +260,8 @@ function ResumeBuilderContent() {
                     <button
                       type="button"
                       title="Remove from saved list"
-                      aria-label="Remove from saved list"
-                      className="shrink-0 px-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-900 border-l border-zinc-800"
+                      aria-label={`Remove "${s.title || "tailored resume"}" from saved list`}
+                      className="shrink-0 px-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-900 border-l border-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                       onClick={(e) => {
                         e.stopPropagation();
                         void (async () => {
@@ -277,7 +278,7 @@ function ResumeBuilderContent() {
                         })();
                       }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 aria-hidden="true" className="h-4 w-4" />
                     </button>
                   </div>
                 ))}

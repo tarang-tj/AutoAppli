@@ -35,7 +35,7 @@ export function ResumeReviewPanel({
     <Card className="bg-zinc-900 border-zinc-800">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
         <CardTitle className="text-white text-lg flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-zinc-400" />
+          <ClipboardList aria-hidden="true" className="h-5 w-5 text-zinc-400" />
           Resume feedback
         </CardTitle>
         <Button
@@ -43,12 +43,13 @@ export function ResumeReviewPanel({
           variant="outline"
           size="sm"
           disabled={disabled || loading}
+          aria-busy={loading}
           onClick={onRequestReview}
           className="border-zinc-600 text-zinc-200 shrink-0"
         >
           {loading ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 aria-hidden="true" className="h-4 w-4 mr-2 animate-spin motion-reduce:animate-none" />
               Analyzing…
             </>
           ) : (

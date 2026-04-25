@@ -120,7 +120,7 @@ export function ResumePreview({
     return (
       <Card className="bg-zinc-900 border-zinc-800 h-full min-h-[400px] flex items-center justify-center">
         <CardContent className="text-center">
-          <FileText className="h-12 w-12 mx-auto text-zinc-600 mb-3" />
+          <FileText aria-hidden="true" className="h-12 w-12 mx-auto text-zinc-600 mb-3" />
           <p className="text-zinc-300">Your tailored resume will appear here</p>
           <p className="text-zinc-500 text-sm mt-1 max-w-xs mx-auto leading-relaxed">
             Upload a resume, paste a job description, then generate. You’ll get a formatted preview, PDF
@@ -149,23 +149,31 @@ export function ResumePreview({
 
   const pdfIframeSrc = hasPdfUrl ? du : pdfObjectUrl;
 
-  const tabBtn = (value: PreviewTab, label: string, icon: ReactNode, disabled?: boolean) => (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={() => setTab(value)}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-        tab === value
-          ? "bg-zinc-100 text-zinc-900 shadow-sm"
-          : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100",
-        disabled && "opacity-40 pointer-events-none"
-      )}
-    >
-      {icon}
-      {label}
-    </button>
-  );
+  const tabBtn = (value: PreviewTab, label: string, icon: ReactNode, disabled?: boolean) => {
+    const selected = tab === value;
+    return (
+      <button
+        type="button"
+        role="tab"
+        id={`resume-tab-${value}`}
+        aria-selected={selected}
+        aria-controls={`resume-tabpanel-${value}`}
+        tabIndex={selected ? 0 : -1}
+        disabled={disabled}
+        onClick={() => setTab(value)}
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
+          selected
+            ? "bg-zinc-100 text-zinc-900 shadow-sm"
+            : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100",
+          disabled && "opacity-40 pointer-events-none"
+        )}
+      >
+        {icon}
+        {label}
+      </button>
+    );
+  };
 
   return (
     <Card className="bg-zinc-900 border-zinc-800 overflow-hidden">
@@ -174,7 +182,7 @@ export function ResumePreview({
           Generated resume
           {hybridActive ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-200">
-              <Sparkles className="h-3 w-3" />
+              <Sparkles aria-hidden="true" className="h-3 w-3" />
               Hybrid
             </span>
           ) : null}
@@ -186,8 +194,9 @@ export function ResumePreview({
               size="sm"
               className="border-zinc-600 text-zinc-100 bg-zinc-800/80 hover:bg-zinc-800"
               onClick={() => du && window.open(du, "_blank")}
+              aria-label="Open PDF download in new tab"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download aria-hidden="true" className="h-4 w-4 mr-2" />
               PDF
             </Button>
           ) : hasPdfBase64 ? (
@@ -197,7 +206,7 @@ export function ResumePreview({
               className="border-zinc-600 text-zinc-100 bg-zinc-800/80 hover:bg-zinc-800"
               onClick={downloadPdfFromBase64}
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download aria-hidden="true" className="h-4 w-4 mr-2" />
               Download PDF
             </Button>
           ) : null}
@@ -214,8 +223,9 @@ export function ResumePreview({
                     templateId,
                   )
                 }
+                aria-label="Download resume as HTML"
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download aria-hidden="true" className="h-4 w-4 mr-2" />
                 HTML
               </Button>
               <Button
@@ -223,8 +233,9 @@ export function ResumePreview({
                 size="sm"
                 className="border-zinc-600 text-zinc-100 bg-zinc-800/80 hover:bg-zinc-800"
                 onClick={() => openResumePrintWindow(effectiveContent, templateId)}
+                aria-label="Open print preview"
               >
-                <Printer className="h-4 w-4 mr-2" />
+                <Printer aria-hidden="true" className="h-4 w-4 mr-2" />
                 Print
               </Button>
               <Button
@@ -239,8 +250,9 @@ export function ResumePreview({
                       : "Resume text copied"
                   );
                 }}
+                aria-label="Copy resume text to clipboard"
               >
-                <Copy className="h-4 w-4 mr-2" />
+                <Copy aria-hidden="true" className="h-4 w-4 mr-2" />
                 Copy text
               </Button>
             </>
@@ -251,7 +263,7 @@ export function ResumePreview({
         {hybridActive ? (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-100">
             <span className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-300" />
+              <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-emerald-300" />
               Showing your cherry-picked hybrid. The PDF tab still reflects the
               original AI version.
             </span>
@@ -261,9 +273,9 @@ export function ResumePreview({
                 setHybridContent(null);
                 toast.success("Reverted to AI tailored version");
               }}
-              className="inline-flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-200 hover:bg-zinc-800"
+              className="inline-flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-200 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
-              <RotateCcw className="h-3 w-3" />
+              <RotateCcw aria-hidden="true" className="h-3 w-3" />
               Reset to AI version
             </button>
           </div>
@@ -275,18 +287,18 @@ export function ResumePreview({
             role="tablist"
             aria-label="Resume preview mode"
           >
-            {tabBtn("formatted", "Formatted", <LayoutTemplate className="h-4 w-4" />)}
+            {tabBtn("formatted", "Formatted", <LayoutTemplate aria-hidden="true" className="h-4 w-4" />)}
             {tabBtn(
               "pdf",
               "PDF preview",
-              <FileText className="h-4 w-4" />,
+              <FileText aria-hidden="true" className="h-4 w-4" />,
               !pdfIframeSrc
             )}
-            {tabBtn("source", "Plain text", <ScrollText className="h-4 w-4" />, !effectiveContent)}
+            {tabBtn("source", "Plain text", <ScrollText aria-hidden="true" className="h-4 w-4" />, !effectiveContent)}
             {tabBtn(
               "diff",
               "Diff",
-              <GitCompareArrows className="h-4 w-4" />,
+              <GitCompareArrows aria-hidden="true" className="h-4 w-4" />,
               !content || !originalText?.trim()
             )}
           </div>
@@ -297,13 +309,23 @@ export function ResumePreview({
         </div>
 
         {tab === "formatted" && effectiveContent ? (
-          <div className="max-h-[min(72vh,880px)] overflow-y-auto rounded-md bg-zinc-950 p-4">
+          <div
+            id="resume-tabpanel-formatted"
+            role="tabpanel"
+            aria-labelledby="resume-tab-formatted"
+            className="max-h-[min(72vh,880px)] overflow-y-auto rounded-md bg-zinc-950 p-4"
+          >
             <ResumeFormattedView text={effectiveContent} templateId={templateId} />
           </div>
         ) : null}
 
         {tab === "pdf" && pdfIframeSrc ? (
-          <div className="rounded-lg border border-zinc-700 overflow-hidden bg-zinc-950">
+          <div
+            id="resume-tabpanel-pdf"
+            role="tabpanel"
+            aria-labelledby="resume-tab-pdf"
+            className="rounded-lg border border-zinc-700 overflow-hidden bg-zinc-950"
+          >
             <iframe
               title="Tailored resume PDF"
               src={pdfIframeSrc}
@@ -317,7 +339,12 @@ export function ResumePreview({
         ) : null}
 
         {tab === "source" && effectiveContent ? (
-          <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 max-h-[min(72vh,720px)] overflow-y-auto">
+          <div
+            id="resume-tabpanel-source"
+            role="tabpanel"
+            aria-labelledby="resume-tab-source"
+            className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 max-h-[min(72vh,720px)] overflow-y-auto"
+          >
             <pre className="text-sm text-zinc-200 whitespace-pre-wrap font-mono leading-relaxed">
               {effectiveContent}
             </pre>
@@ -325,13 +352,19 @@ export function ResumePreview({
         ) : null}
 
         {tab === "diff" && content && originalText?.trim() ? (
-          <ResumeDiffView
-            original={originalText}
-            tailored={content}
-            rejectedRows={rejectedRows}
-            onRejectedRowsChange={setRejectedRows}
-            onApplyHybrid={(text) => setHybridContent(text)}
-          />
+          <div
+            id="resume-tabpanel-diff"
+            role="tabpanel"
+            aria-labelledby="resume-tab-diff"
+          >
+            <ResumeDiffView
+              original={originalText}
+              tailored={content}
+              rejectedRows={rejectedRows}
+              onRejectedRowsChange={setRejectedRows}
+              onApplyHybrid={(text) => setHybridContent(text)}
+            />
+          </div>
         ) : null}
 
         {!effectiveContent && !pdfIframeSrc ? (

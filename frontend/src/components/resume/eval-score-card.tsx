@@ -56,9 +56,13 @@ function ScoreRing({ score, size = 56, label }: { score: number; size?: number; 
     score >= 75 ? "text-emerald-900/40" : score >= 50 ? "text-amber-900/40" : "text-red-900/40";
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div
+      className="flex flex-col items-center gap-1"
+      role="img"
+      aria-label={`${label} score: ${score} out of 100`}
+    >
       <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
+        <svg width={size} height={size} aria-hidden="true" className="-rotate-90">
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -82,12 +86,13 @@ function ScoreRing({ score, size = 56, label }: { score: number; size?: number; 
           />
         </svg>
         <span
-          className={`absolute inset-0 flex items-center justify-center text-sm font-bold ${color}`}
+          aria-hidden="true"
+          className={`absolute inset-0 flex items-center justify-center text-sm font-bold tabular-nums ${color}`}
         >
           {score}
         </span>
       </div>
-      <span className="text-xs text-zinc-500 uppercase tracking-wide font-medium">{label}</span>
+      <span aria-hidden="true" className="text-xs text-zinc-500 uppercase tracking-wide font-medium">{label}</span>
     </div>
   );
 }
@@ -108,24 +113,29 @@ function Section({
   const [open, setOpen] = useState(false);
   const color =
     score >= 75 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-red-400";
+  const panelId = `eval-section-${title.toLowerCase().replace(/\s+/g, "-")}`;
 
   return (
     <div className="border border-zinc-800 rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-800/50 transition-colors"
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-800/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
       >
-        <span className="text-zinc-400">{icon}</span>
+        <span aria-hidden="true" className="text-zinc-400">{icon}</span>
         <span className="text-sm font-medium text-zinc-200 flex-1 text-left">{title}</span>
-        <span className={`text-sm font-bold ${color}`}>{score}</span>
+        <span aria-label={`Score ${score} out of 100`} className={`text-sm font-bold tabular-nums ${color}`}>
+          {score}
+        </span>
         {open ? (
-          <ChevronUp className="h-3.5 w-3.5 text-zinc-500" />
+          <ChevronUp aria-hidden="true" className="h-3.5 w-3.5 text-zinc-500" />
         ) : (
-          <ChevronDown className="h-3.5 w-3.5 text-zinc-500" />
+          <ChevronDown aria-hidden="true" className="h-3.5 w-3.5 text-zinc-500" />
         )}
       </button>
-      {open && <div className="px-3 pb-3 space-y-2">{children}</div>}
+      {open && <div id={panelId} className="px-3 pb-3 space-y-2">{children}</div>}
     </div>
   );
 }
@@ -168,7 +178,7 @@ export function EvalScoreCard({ eval_result }: { eval_result: EvalResult }) {
     <Card className="bg-zinc-900 border-zinc-800">
       <CardHeader className="pb-3">
         <CardTitle className="text-white text-lg flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-zinc-400" />
+          <ShieldCheck aria-hidden="true" className="h-5 w-5 text-zinc-400" />
           Eval Score
         </CardTitle>
         <p className="text-xs text-zinc-500">
@@ -224,7 +234,7 @@ export function EvalScoreCard({ eval_result }: { eval_result: EvalResult }) {
             ) : (
               <div className="space-y-2">
                 <p className="text-xs text-red-300">
-                  These items appear in the tailored resume but weren't in your original — verify
+                  These items appear in the tailored resume but weren&rsquo;t in your original &mdash; verify
                   before submitting.
                 </p>
                 {hallucination_check.hallucinated_skills.length > 0 && (
