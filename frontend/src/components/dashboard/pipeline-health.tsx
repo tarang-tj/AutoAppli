@@ -9,20 +9,17 @@
  * Mirrors the ActionRadar pattern: useSyncExternalStore for `now` so the
  * render stays pure, useMemo around the snapshot, calm empty state.
  */
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, Gauge } from "lucide-react";
 import { useJobs } from "@/hooks/use-jobs";
+import { useStableNow } from "@/hooks/use-stable-now";
 import {
   computePipelineHealth,
   type HealthCategory,
   type SignalLabel,
   type SignalScore,
 } from "@/lib/dashboard/pipeline-health";
-
-const subscribeNoop = () => () => {};
-const getNowSnapshot = () => Date.now();
-const getNowServerSnapshot = () => 0;
 
 const CATEGORY_TONE: Record<HealthCategory, string> = {
   weak: "text-rose-300",
@@ -115,11 +112,7 @@ function SignalBar({ signal }: { signal: SignalScore }) {
 
 export function PipelineHealth() {
   const { jobs, isLoading } = useJobs();
-  const now = useSyncExternalStore(
-    subscribeNoop,
-    getNowSnapshot,
-    getNowServerSnapshot,
-  );
+  const now = useStableNow();
   const snapshot = useMemo(
     () => computePipelineHealth(jobs, now),
     [jobs, now],
