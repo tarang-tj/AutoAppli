@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from app.config import get_settings
 from app.deps.jobs_auth import get_optional_user_id, jobs_use_supabase
@@ -25,6 +25,7 @@ def _result_payload(r: JobSearchResult) -> dict:
 @limiter.limit("20/minute")
 async def search_jobs(
     request: Request,
+    response: Response,  # required by slowapi to inject rate-limit headers
     req: SearchRequest,
     user_id: str | None = Depends(get_optional_user_id),
 ):
