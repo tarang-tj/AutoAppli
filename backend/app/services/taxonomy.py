@@ -29,7 +29,7 @@ SKILLS: list[CanonicalSkill] = [
     # languages
     CanonicalSkill("javascript", "JavaScript", "language", ("js", "ecmascript", "es6", "es2015")),
     CanonicalSkill("typescript", "TypeScript", "language", ("ts",)),
-    CanonicalSkill("python", "Python", "language", ("py", "python3")),
+    CanonicalSkill("python", "Python", "language", ("py", "python3", "py3")),
     CanonicalSkill("go", "Go", "language", ("golang",)),
     CanonicalSkill("rust", "Rust", "language"),
     CanonicalSkill("java", "Java", "language"),
@@ -77,8 +77,8 @@ SKILLS: list[CanonicalSkill] = [
     CanonicalSkill("sqlite", "SQLite", "database"),
 
     # cloud
-    CanonicalSkill("aws", "AWS", "cloud", ("amazon web services",)),
-    CanonicalSkill("gcp", "Google Cloud", "cloud", ("google cloud", "google cloud platform")),
+    CanonicalSkill("aws", "AWS", "cloud", ("amazon web services", "amazon-web-services")),
+    CanonicalSkill("gcp", "Google Cloud", "cloud", ("google cloud", "google cloud platform", "google-cloud", "google-cloud-platform")),
     CanonicalSkill("azure", "Azure", "cloud", ("microsoft azure",)),
     CanonicalSkill("vercel", "Vercel", "cloud"),
     CanonicalSkill("cloudflare", "Cloudflare", "cloud"),
@@ -102,6 +102,7 @@ SKILLS: list[CanonicalSkill] = [
     CanonicalSkill("airflow", "Airflow", "data", ("apache airflow",)),
     CanonicalSkill("dbt", "dbt", "data"),
     CanonicalSkill("kafka", "Kafka", "data", ("apache kafka",)),
+    CanonicalSkill("machine-learning", "Machine Learning", "ml", ("ml", "machine learning")),
     CanonicalSkill("tensorflow", "TensorFlow", "ml", ("tf",)),
     CanonicalSkill("pytorch", "PyTorch", "ml", ("torch",)),
     CanonicalSkill("scikit-learn", "scikit-learn", "ml", ("sklearn",)),
