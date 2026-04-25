@@ -14,12 +14,14 @@
  * the card never has to re-query Supabase after the save.
  */
 import Link from "next/link";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { Bookmark, BookmarkCheck, ExternalLink, MapPin, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { MatchBadge } from "@/app/discover/_components/match-badge";
+import { WhyThisMatch } from "@/app/discover/_components/why-this-match";
 import { cn } from "@/lib/utils";
-import type { CachedJob } from "@/types";
+import type { CachedJob, MatchScore } from "@/types";
 
 interface DiscoverCardProps {
   job: CachedJob;
@@ -28,6 +30,10 @@ interface DiscoverCardProps {
   /** Disables Save while a network call is in flight. */
   saving?: boolean;
   onSave?: (job: CachedJob) => void;
+  /** Match score for this job, when the user has a primary resume on file. */
+  matchScore?: MatchScore;
+  /** Show a skeleton badge while /match/scores is in flight. */
+  scoreLoading?: boolean;
 }
 
 const REMOTE_LABEL: Record<string, string> = {
@@ -64,13 +70,21 @@ function descriptionSnippet(raw: string | null | undefined, max: number = 220): 
   return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + "…";
 }
 
-export function DiscoverCard({ job, savedJobId, saving, onSave }: DiscoverCardProps) {
+export function DiscoverCard({
+  job,
+  savedJobId,
+  saving,
+  onSave,
+  matchScore,
+  scoreLoading,
+}: DiscoverCardProps) {
   const isSaved = Boolean(savedJobId);
   const snippet = useMemo(() => descriptionSnippet(job.description), [job.description]);
   const topSkills = (job.skills ?? []).slice(0, 6);
   const remoteLabel = job.remote_type ? REMOTE_LABEL[job.remote_type] : null;
   const remoteClass = job.remote_type ? REMOTE_CLASSES[job.remote_type] : "";
   const posted = relativeTime(job.posted_at);
+  const whyId = useId();
 
   return (
     <article
@@ -103,11 +117,14 @@ export function DiscoverCard({ job, savedJobId, saving, onSave }: DiscoverCardPr
           </div>
         </div>
 
-        {remoteLabel && (
-          <Badge variant="outline" className={cn("shrink-0 text-[11px]", remoteClass)}>
-            {remoteLabel}
-          </Badge>
-        )}
+        <div className="flex shrink-0 items-start gap-2">
+          {remoteLabel && (
+            <Badge variant="outline" className={cn("text-[11px]", remoteClass)}>
+              {remoteLabel}
+            </Badge>
+          )}
+          <MatchBadge score={matchScore?.score} loading={scoreLoading && !matchScore} />
+        </div>
       </div>
 
       {/* Body: description snippet */}
@@ -176,6 +193,8 @@ export function DiscoverCard({ job, savedJobId, saving, onSave }: DiscoverCardPr
           <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" /> View posting
         </a>
       </div>
+
+      <WhyThisMatch explanations={matchScore?.explanations} id={whyId} />
     </article>
   );
 }
