@@ -285,17 +285,17 @@ export function DiscoverClient() {
 
   // ── Render ──
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+    <main className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
       {/* Header */}
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="mb-1 inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-blue-400">
-            <Sparkles className="h-3.5 w-3.5" /> Discover
+            <Sparkles aria-hidden="true" className="h-3.5 w-3.5" /> Discover
           </div>
-          <h1 className="text-2xl font-semibold text-white sm:text-3xl">
+          <h1 className="text-2xl font-semibold text-white sm:text-3xl text-balance">
             A curated firehose of open roles
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-zinc-400">
+          <p className="mt-1 max-w-2xl text-sm text-zinc-400 text-pretty">
             Refreshed nightly from public ATS feeds across Greenhouse, Lever,
             Ashby, Workable, SmartRecruiters, and WeWorkRemotely. Save anything
             you want to track to your AutoAppli kanban with one click.
@@ -306,9 +306,10 @@ export function DiscoverClient() {
             variant="outline"
             size="sm"
             onClick={() => mutate()}
+            aria-label="Refresh job listings"
             className="gap-1.5 text-zinc-300"
           >
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
+            <RefreshCw aria-hidden="true" className="h-3.5 w-3.5" /> Refresh
           </Button>
           {sessionChecked && !userId && (
             <Link
@@ -326,7 +327,11 @@ export function DiscoverClient() {
 
       {/* Supabase-not-configured warning */}
       {!configured && (
-        <div className="mb-6 rounded-xl border border-amber-800/50 bg-amber-950/30 p-4 text-sm text-amber-200">
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-6 rounded-xl border border-amber-800/50 bg-amber-950/30 p-4 text-sm text-amber-200"
+        >
           <p className="font-medium">Supabase isn&apos;t configured for this build.</p>
           <p className="mt-1 text-amber-300/80">
             Discover reads directly from the cached_jobs table. Set
@@ -337,7 +342,11 @@ export function DiscoverClient() {
       )}
 
       {error && (
-        <div className="mb-6 rounded-xl border border-red-800/50 bg-red-950/30 p-4 text-sm text-red-200">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="mb-6 rounded-xl border border-red-800/50 bg-red-950/30 p-4 text-sm text-red-200"
+        >
           Couldn&apos;t load jobs: {error instanceof Error ? error.message : String(error)}
         </div>
       )}
@@ -362,12 +371,21 @@ export function DiscoverClient() {
           isLoading={isLoading}
         />
 
-        <section className="min-w-0">
+        <section
+          className="min-w-0"
+          aria-label="Job results"
+          aria-busy={isLoading && rows.length === 0}
+        >
           {isLoading && rows.length === 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div
+              role="status"
+              aria-label="Loading job listings"
+              className="grid gap-3 sm:grid-cols-2"
+            >
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
+                  aria-hidden="true"
                   className="h-44 animate-pulse rounded-xl bg-zinc-900/40"
                   style={{ animationDelay: `${i * 60}ms` }}
                 />
@@ -416,18 +434,20 @@ export function DiscoverClient() {
                       size="sm"
                       disabled={page <= 1}
                       onClick={() => goToPage(page - 1)}
+                      aria-label="Previous page"
                       className="gap-1"
                     >
-                      <ArrowLeft className="h-3.5 w-3.5" /> Prev
+                      <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" /> Prev
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={page >= pageCount}
                       onClick={() => goToPage(page + 1)}
+                      aria-label="Next page"
                       className="gap-1"
                     >
-                      Next <ArrowRight className="h-3.5 w-3.5" />
+                      Next <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </nav>
@@ -436,7 +456,7 @@ export function DiscoverClient() {
           )}
         </section>
       </div>
-    </div>
+    </main>
   );
 }
 

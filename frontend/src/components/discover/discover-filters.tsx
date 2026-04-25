@@ -112,12 +112,15 @@ export function DiscoverFiltersPanel({
     filters.sort !== "recent";
 
   return (
-    <aside className="flex w-full flex-col gap-5 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 lg:sticky lg:top-6 lg:w-72 lg:self-start">
+    <aside
+      aria-label="Discover filters"
+      className="flex w-full flex-col gap-5 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 lg:sticky lg:top-6 lg:w-72 lg:self-start"
+    >
       <header className="flex items-center justify-between gap-2">
         <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-200">
-          <Filter className="h-4 w-4 text-zinc-400" /> Filters
+          <Filter aria-hidden="true" className="h-4 w-4 text-zinc-400" /> Filters
         </h2>
-        <span className="text-xs text-zinc-500">
+        <span className="text-xs text-zinc-500" role="status" aria-live="polite">
           {isLoading
             ? "Loading…"
             : typeof totalCount === "number"
@@ -132,38 +135,52 @@ export function DiscoverFiltersPanel({
           Search title or company
         </Label>
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
+          <Search aria-hidden="true" className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
           <Input
             id="discover-search"
+            name="discover-search"
             value={filters.search}
             onChange={(e) => patch({ search: e.target.value })}
             placeholder="e.g. staff engineer"
+            autoComplete="off"
             className="h-9 pl-8"
           />
         </div>
       </div>
 
       {/* Remote type */}
-      <div className="space-y-1.5">
-        <Label className="text-xs text-zinc-400">Work setting</Label>
+      <fieldset className="space-y-1.5">
+        <legend className="text-xs text-zinc-400">Work setting</legend>
         <div className="grid grid-cols-4 gap-1">
-          {REMOTE_OPTIONS.map((opt) => (
-            <button
-              key={opt.value || "any"}
-              type="button"
-              onClick={() => patch({ remoteType: opt.value })}
-              className={cn(
-                "rounded-md border px-2 py-1 text-[11px] font-medium transition-colors",
-                filters.remoteType === opt.value
-                  ? "border-blue-600/60 bg-blue-600/10 text-blue-300"
-                  : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200",
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
+          {REMOTE_OPTIONS.map((opt) => {
+            const optionId = `discover-remote-${opt.value || "any"}`;
+            const selected = filters.remoteType === opt.value;
+            return (
+              <label
+                key={opt.value || "any"}
+                htmlFor={optionId}
+                className={cn(
+                  "rounded-md border px-2 py-1 text-[11px] font-medium transition-colors text-center cursor-pointer focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-400 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950",
+                  selected
+                    ? "border-blue-600/60 bg-blue-600/10 text-blue-300"
+                    : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200",
+                )}
+              >
+                <input
+                  type="radio"
+                  id={optionId}
+                  name="discover-remote-type"
+                  value={opt.value}
+                  checked={selected}
+                  onChange={() => patch({ remoteType: opt.value })}
+                  className="sr-only"
+                />
+                {opt.label}
+              </label>
+            );
+          })}
         </div>
-      </div>
+      </fieldset>
 
       {/* Skills */}
       <div className="space-y-1.5">
@@ -172,6 +189,7 @@ export function DiscoverFiltersPanel({
         </Label>
         <Input
           id="discover-skill-input"
+          name="discover-skill-input"
           value={skillDraft}
           onChange={(e) => setSkillDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -183,40 +201,48 @@ export function DiscoverFiltersPanel({
             }
           }}
           placeholder="Type and press Enter"
+          autoComplete="off"
+          aria-describedby="discover-skill-hint"
           className="h-9"
         />
+        <p id="discover-skill-hint" className="sr-only">
+          Press Enter or comma to add a skill. Press Backspace on an empty field to remove the last skill.
+        </p>
         {filters.skills.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-1">
+          <ul aria-label="Selected skills" className="flex flex-wrap gap-1 pt-1 list-none p-0">
             {filters.skills.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => removeSkill(s)}
-                className="inline-flex items-center gap-1 rounded-md border border-blue-700/40 bg-blue-600/10 px-2 py-0.5 text-[11px] text-blue-200 hover:bg-blue-600/20"
-              >
-                {s} <X className="h-3 w-3" />
-              </button>
+              <li key={s}>
+                <button
+                  type="button"
+                  onClick={() => removeSkill(s)}
+                  aria-label={`Remove skill ${s}`}
+                  className="inline-flex items-center gap-1 rounded-md border border-blue-700/40 bg-blue-600/10 px-2 py-0.5 text-[11px] text-blue-200 hover:bg-blue-600/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                >
+                  {s} <X aria-hidden="true" className="h-3 w-3" />
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
         {quickPicks.length > 0 && (
           <div className="pt-1">
-            <p className="mb-1 text-[10px] uppercase tracking-wider text-zinc-600">
+            <p id="discover-popular-skills-label" className="mb-1 text-[10px] uppercase tracking-wider text-zinc-600">
               Popular
             </p>
-            <div className="flex flex-wrap gap-1">
+            <ul aria-labelledby="discover-popular-skills-label" className="flex flex-wrap gap-1 list-none p-0">
               {quickPicks.map(({ skill, count }) => (
-                <button
-                  key={skill}
-                  type="button"
-                  onClick={() => addSkill(skill)}
-                  className="rounded-md border border-zinc-800 bg-zinc-900/50 px-2 py-0.5 text-[11px] text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900"
-                  title={`${count} listing${count === 1 ? "" : "s"}`}
-                >
-                  {skill}
-                </button>
+                <li key={skill}>
+                  <button
+                    type="button"
+                    onClick={() => addSkill(skill)}
+                    aria-label={`Add skill ${skill} (${count} listing${count === 1 ? "" : "s"})`}
+                    className="rounded-md border border-zinc-800 bg-zinc-900/50 px-2 py-0.5 text-[11px] text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                  >
+                    {skill}
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
       </div>
@@ -228,10 +254,12 @@ export function DiscoverFiltersPanel({
         </Label>
         <Input
           id="discover-company"
+          name="discover-company"
           value={filters.company}
           onChange={(e) => patch({ company: e.target.value })}
           list="discover-company-options"
           placeholder="Any company"
+          autoComplete="off"
           className="h-9"
         />
         <datalist id="discover-company-options">
@@ -242,49 +270,73 @@ export function DiscoverFiltersPanel({
       </div>
 
       {/* Posted window */}
-      <div className="space-y-1.5">
-        <Label className="text-xs text-zinc-400">Posted</Label>
+      <fieldset className="space-y-1.5">
+        <legend className="text-xs text-zinc-400">Posted</legend>
         <div className="grid grid-cols-2 gap-1">
-          {POSTED_WINDOWS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => patch({ postedWithinDays: opt.value })}
-              className={cn(
-                "rounded-md border px-2 py-1 text-[11px] font-medium transition-colors",
-                filters.postedWithinDays === opt.value
-                  ? "border-blue-600/60 bg-blue-600/10 text-blue-300"
-                  : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200",
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
+          {POSTED_WINDOWS.map((opt) => {
+            const optionId = `discover-posted-${opt.value}`;
+            const selected = filters.postedWithinDays === opt.value;
+            return (
+              <label
+                key={opt.value}
+                htmlFor={optionId}
+                className={cn(
+                  "rounded-md border px-2 py-1 text-[11px] font-medium transition-colors text-center cursor-pointer focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-400 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950",
+                  selected
+                    ? "border-blue-600/60 bg-blue-600/10 text-blue-300"
+                    : "border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:text-zinc-200",
+                )}
+              >
+                <input
+                  type="radio"
+                  id={optionId}
+                  name="discover-posted-within"
+                  value={opt.value}
+                  checked={selected}
+                  onChange={() => patch({ postedWithinDays: opt.value })}
+                  className="sr-only"
+                />
+                {opt.label}
+              </label>
+            );
+          })}
         </div>
-      </div>
+      </fieldset>
 
       {/* Sort */}
-      <div className="space-y-1.5">
-        <Label className="text-xs text-zinc-400">Sort</Label>
+      <fieldset className="space-y-1.5">
+        <legend className="text-xs text-zinc-400">Sort</legend>
         <div className="space-y-1">
-          {SORT_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => patch({ sort: opt.value })}
-              className={cn(
-                "flex w-full items-baseline justify-between rounded-md border px-2.5 py-1.5 text-left transition-colors",
-                filters.sort === opt.value
-                  ? "border-blue-600/60 bg-blue-600/10 text-blue-300"
-                  : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
-              )}
-            >
-              <span className="text-[12px] font-medium">{opt.label}</span>
-              <span className="text-[10px] text-zinc-500">{opt.hint}</span>
-            </button>
-          ))}
+          {SORT_OPTIONS.map((opt) => {
+            const optionId = `discover-sort-${opt.value}`;
+            const selected = filters.sort === opt.value;
+            return (
+              <label
+                key={opt.value}
+                htmlFor={optionId}
+                className={cn(
+                  "flex w-full items-baseline justify-between rounded-md border px-2.5 py-1.5 text-left transition-colors cursor-pointer focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-400 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950",
+                  selected
+                    ? "border-blue-600/60 bg-blue-600/10 text-blue-300"
+                    : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700",
+                )}
+              >
+                <input
+                  type="radio"
+                  id={optionId}
+                  name="discover-sort"
+                  value={opt.value}
+                  checked={selected}
+                  onChange={() => patch({ sort: opt.value })}
+                  className="sr-only"
+                />
+                <span className="text-[12px] font-medium">{opt.label}</span>
+                <span className="text-[10px] text-zinc-500">{opt.hint}</span>
+              </label>
+            );
+          })}
         </div>
-      </div>
+      </fieldset>
 
       {/* Reset */}
       <Button

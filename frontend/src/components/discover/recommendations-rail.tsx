@@ -75,21 +75,23 @@ export function RecommendationsRail({
 
   return (
     <RailFrame heading="Recommended for you" subheading={subheadingFor(recommendations)}>
-      <div
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2"
+      <ul
+        aria-label="Recommended jobs based on your resume"
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 list-none p-0"
         // Hide the native scrollbar on macOS/Linux but keep wheel/swipe.
         style={{ scrollbarWidth: "thin" }}
       >
         {recommendations.map((rec) => (
-          <RecommendationCard
-            key={rec.job.id}
-            rec={rec}
-            savedJobId={savedByUrl.get(rec.job.url) ?? null}
-            saving={savingIds.has(rec.job.id)}
-            onSave={onSave}
-          />
+          <li key={rec.job.id} className="contents">
+            <RecommendationCard
+              rec={rec}
+              savedJobId={savedByUrl.get(rec.job.url) ?? null}
+              saving={savingIds.has(rec.job.id)}
+              onSave={onSave}
+            />
+          </li>
         ))}
-      </div>
+      </ul>
     </RailFrame>
   );
 }
@@ -109,7 +111,7 @@ function RailFrame({
     <section className="mb-6">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 className="inline-flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wider text-zinc-300">
-          <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+          <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-emerald-400" />
           {heading}
         </h2>
         {subheading && (
@@ -157,7 +159,7 @@ function UploadResumeCTA() {
           "no-underline gap-1.5 shrink-0",
         )}
       >
-        <Upload className="h-3.5 w-3.5" /> Upload resume
+        <Upload aria-hidden="true" className="h-3.5 w-3.5" /> Upload resume
       </Link>
     </div>
   );
@@ -200,6 +202,7 @@ function RecommendationCard({
           variant="outline"
           className={cn("shrink-0 text-[10px] tabular-nums", scoreClass)}
           title="Match score"
+          aria-label={`Match score: ${score} percent`}
         >
           {score}%
         </Badge>
@@ -226,22 +229,25 @@ function RecommendationCard({
         {isSaved ? (
           <Link
             href={`/dashboard?highlight=${savedJobId}`}
+            aria-label={`${job.title} at ${job.company} — saved on your board`}
             className={cn(
               buttonVariants({ variant: "outline", size: "xs" }),
               "no-underline gap-1",
             )}
           >
-            <BookmarkCheck className="h-3 w-3" /> Saved
+            <BookmarkCheck aria-hidden="true" className="h-3 w-3" /> Saved
           </Link>
         ) : (
           <Button
             variant="default"
             size="xs"
             disabled={saving}
+            aria-busy={saving}
+            aria-label={`Save ${job.title} at ${job.company} to kanban`}
             onClick={() => onSave(job)}
             className="gap-1"
           >
-            <Bookmark className="h-3 w-3" />
+            <Bookmark aria-hidden="true" className="h-3 w-3" />
             {saving ? "Saving…" : "Save"}
           </Button>
         )}
@@ -249,12 +255,13 @@ function RecommendationCard({
           href={job.url}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label={`Open ${job.title} at ${job.company} posting (opens in new tab)`}
           className={cn(
             buttonVariants({ variant: "ghost", size: "xs" }),
             "no-underline gap-1 text-zinc-400",
           )}
         >
-          <ExternalLink className="h-3 w-3" /> View
+          <ExternalLink aria-hidden="true" className="h-3 w-3" /> View
         </a>
       </div>
     </article>

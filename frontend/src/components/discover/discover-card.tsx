@@ -89,12 +89,12 @@ export function DiscoverCard({ job, savedJobId, saving, onSave }: DiscoverCardPr
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
             {job.location && (
               <span className="inline-flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> {job.location}
+                <MapPin aria-hidden="true" className="h-3 w-3" /> {job.location}
               </span>
             )}
             {posted && (
               <span className="inline-flex items-center gap-1">
-                <Clock className="h-3 w-3" /> {posted}
+                <Clock aria-hidden="true" className="h-3 w-3" /> {posted}
               </span>
             )}
             <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-zinc-600">
@@ -141,22 +141,25 @@ export function DiscoverCard({ job, savedJobId, saving, onSave }: DiscoverCardPr
         {isSaved ? (
           <Link
             href={`/dashboard?highlight=${savedJobId}`}
+            aria-label={`${job.title} at ${job.company} — on your board`}
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
               "gap-1.5 no-underline",
             )}
           >
-            <BookmarkCheck className="h-3.5 w-3.5" /> On your board
+            <BookmarkCheck aria-hidden="true" className="h-3.5 w-3.5" /> On your board
           </Link>
         ) : (
           <Button
             variant="default"
             size="sm"
             disabled={saving}
+            aria-busy={saving}
+            aria-label={`Save ${job.title} at ${job.company} to kanban`}
             onClick={() => onSave?.(job)}
             className="gap-1.5"
           >
-            <Bookmark className="h-3.5 w-3.5" />
+            <Bookmark aria-hidden="true" className="h-3.5 w-3.5" />
             {saving ? "Saving…" : "Save to kanban"}
           </Button>
         )}
@@ -164,12 +167,13 @@ export function DiscoverCard({ job, savedJobId, saving, onSave }: DiscoverCardPr
           href={job.url}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label={`Open ${job.title} at ${job.company} posting on ${job.source} (opens in new tab)`}
           className={cn(
             buttonVariants({ variant: "ghost", size: "sm" }),
             "gap-1.5 text-zinc-400 no-underline",
           )}
         >
-          <ExternalLink className="h-3.5 w-3.5" /> View posting
+          <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" /> View posting
         </a>
       </div>
     </article>
