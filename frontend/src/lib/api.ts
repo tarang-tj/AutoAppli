@@ -286,9 +286,73 @@ const AI_ROUTE_MAP: Record<string, string> = {
   "/cover-letter/generate": "/api/ai/cover-letter",
 };
 
-/** Call a local Next.js AI API route. Throws on any failure. */
+// ── Retry policy for transient failures ───────────────────────────────
+// Only applied when the caller opts in via `{ idempotent: true }` (or to
+// AI routes, which are inherently safe to retry — the backend assigns
+// fresh request IDs and no DB write happens until the call succeeds).
+//
+// Retries on:
+//   - Network errors (TypeError "Failed to fetch", abort, DNS, etc.)
+//   - 5xx responses (server-side hiccup, cold start, 502/503/504)
+//
+// Does NOT retry on:
+//   - 4xx responses (real errors — auth, validation, rate-limit; retrying
+//     wastes user quota and can charge them again)
+//   - Non-idempotent calls (job creation, contact creation, etc. — would
+//     create duplicate rows on a delayed-but-successful first attempt)
+const RETRY_DELAYS_MS = [200, 800] as const;
+
+function isRetriableNetworkError(err: unknown): boolean {
+  // fetch() throws TypeError on network failure ("Failed to fetch", DNS,
+  // connection reset). AbortError is treated as retriable too — caller
+  // can opt out by not passing `idempotent`.
+  if (err instanceof TypeError) return true;
+  if (err instanceof DOMException && err.name === "AbortError") return true;
+  return false;
+}
+
+/**
+ * Wrap fetch() with up to 2 retries and exponential backoff for transient
+ * failures. Resolves with the final Response (or throws if every attempt
+ * fails with a network error). 4xx responses are returned as-is — they
+ * are not transient.
+ */
+async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  let lastErr: unknown;
+  // Initial attempt + RETRY_DELAYS_MS.length retries.
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const res = await fetch(input, init);
+      // Retry on 5xx; 4xx is a real error and should surface immediately.
+      if (res.status >= 500 && attempt < RETRY_DELAYS_MS.length) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      lastErr = err;
+      if (
+        isRetriableNetworkError(err) &&
+        attempt < RETRY_DELAYS_MS.length
+      ) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+        continue;
+      }
+      throw err;
+    }
+  }
+  // All retries exhausted with the same network error.
+  throw lastErr ?? new Error("fetchWithRetry: exhausted retries");
+}
+
+/** Call a local Next.js AI API route. Throws on any failure.
+ *  AI calls are idempotent from the user's perspective (no DB write until
+ *  success), so we always retry transient failures here. */
 async function callLocalAI<T>(route: string, body?: unknown): Promise<T> {
-  const res = await fetch(route, {
+  const res = await fetchWithRetry(route, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
@@ -391,12 +455,17 @@ async function handleResponse(res: Response) {
   return res.json();
 }
 
-async function fetchBackend<T>(path: string, init?: RequestInit): Promise<T> {
+async function fetchBackend<T>(
+  path: string,
+  init?: RequestInit,
+  opts: { retry?: boolean } = {},
+): Promise<T> {
   if (!API_URL) {
     throw new Error(MISSING_API_URL);
   }
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_URL}${path}`, {
+  const fetcher = opts.retry ? fetchWithRetry : fetch;
+  const res = await fetcher(`${API_URL}${path}`, {
     ...init,
     headers: { ...headers, ...init?.headers },
   });
@@ -1292,11 +1361,38 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
   return fetchBackend<T>(path);
 }
 
-export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
+/**
+ * POST options.
+ *
+ * - `idempotent: true` opts in to the network-retry policy
+ *   (`fetchWithRetry` — 2 retries on network errors / 5xx, 200ms+800ms
+ *   backoff). Use only for calls where retrying is safe even if the
+ *   first attempt actually succeeded server-side. Never set for create
+ *   operations that lack server-side dedup (e.g. `POST /jobs`,
+ *   `POST /contacts`, `POST /notifications/reminders`).
+ *
+ *   AI routes (everything in `AI_ROUTE_MAP`) are auto-flagged as
+ *   idempotent — the backend assigns a fresh request ID per call and
+ *   no DB write happens until the call succeeds, so a duplicate retry
+ *   only produces (at most) a duplicate Anthropic call, which is
+ *   already gated by per-route rate limiting in `frontend/src/lib/ai-gate.ts`.
+ */
+export interface ApiPostOptions {
+  idempotent?: boolean;
+}
+
+export async function apiPost<T = unknown>(
+  path: string,
+  body?: unknown,
+  options: ApiPostOptions = {},
+): Promise<T> {
   // ── When there is no FastAPI backend (!API_URL) OR demo mode is active,
   //    route jobs to Supabase, AI to local routes, and everything else to demo mode.
   const demo = isDemoMode();
   const useSupabase = isSupabaseConfigured() && !demo;
+  // AI routes are inherently safe to retry — no DB write until success.
+  // Anything else opts in explicitly via { idempotent: true }.
+  const retry = options.idempotent === true || path in AI_ROUTE_MAP;
   if (!API_URL || demo) {
     // Jobs → Supabase when configured (and not in demo)
     if (useSupabase && path === "/jobs") {
@@ -1364,22 +1460,30 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
   // ── FastAPI backend IS configured ──
 
   if (resumePathUsesBackend(path)) {
-    return fetchBackend<T>(path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    return fetchBackend<T>(
+      path,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+      },
+      { retry },
+    );
   }
 
   if (!isSupabaseConfigured()) {
     return handleDemoPost(path, body) as T;
   }
 
-  return fetchBackend<T>(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  return fetchBackend<T>(
+    path,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    },
+    { retry },
+  );
 }
 
 export async function apiPostFormData<T = unknown>(path: string, formData: FormData): Promise<T> {

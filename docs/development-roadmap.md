@@ -3,7 +3,7 @@
 Living doc. Updated when phase status changes, not on a fixed cadence. Keep this short: if it grows past one page, split by quarter into separate files.
 
 **Last reviewed:** 2026-04-24
-**Current phase:** Q2 2026 — Launch prep
+**Current phase:** Q2 2026 — Launch prep (quality + accessibility hardening complete; turning toward observability + dashboard polish before warming the pipeline)
 
 ## North star
 
@@ -30,12 +30,35 @@ Internship recruiting is seasonal. Product and marketing plans should ride the c
 - [x] Anthropic prompt caching flag (Phase B3)
 - [x] AI route auth + rate limiting (Phase B1 + B2)
 - [x] Landing page rewrite for student wedge + Vercel Analytics (#3, merged 2026-04-24)
-- [x] `CLAUDE.md` + `docs/brand-guidelines.md` docs sync (this PR)
-- [x] Frontend CI (typecheck blocking, lint advisory) (this PR)
-- [ ] Repo hygiene: remove tracked scaffolding scripts and patches at root
-- [ ] Frontend lint sweep: reduce the 20 pre-existing violations so CI can flip lint to blocking
+- [x] `CLAUDE.md` + `docs/brand-guidelines.md` docs sync
+- [x] Frontend CI (typecheck blocking, lint advisory)
+- [x] Repo hygiene: remove tracked scaffolding scripts and patches at root (PR #5)
+- [x] Frontend lint sweep: React 19 lint debt cleared across 10 files (`89241a5`)
+- [x] WCAG-AA accessibility sweep across all 21 routes (~16 commits, 2026-04-24)
+- [x] Per-page SEO metadata across all routes (`7e312c5`)
+- [x] Backend pytest coverage for resume, outreach, auth routers + CI conftest fix (`c84b4ed`, `e489c87`)
+- [x] AI-call retry + structured client-error observability groundwork (this PR)
+- [x] `docs/project-changelog.md` + `CONTRIBUTING.md` (this PR)
 - [ ] First public launch post: r/csMajors (target: end of May, before finals)
 - [ ] Set up basic signup UTM tracking for Reddit/HN inbound
+
+### Likely next focus (entering second half of Q2)
+
+Quality + a11y hardening is done. The remaining Q2 work is split between
+**marketing motion** (the launch post, UTM tracking) and **observability
+polish** before we open the gates. Reasonable bets for the next few weeks:
+
+- Wire the new `autoappli:error` `CustomEvent` to a real error sink
+  (Sentry / PostHog / Logflare — pick one, don't fan out).
+- Turn frontend CI lint from advisory back to blocking now that the React 19
+  debt is gone.
+- Dashboard polish: surface the new `match v2` 7-signal breakdown in a
+  glanceable way on the kanban (currently it's only on the discover page).
+- Observability for the ingestion cron — the `cached_jobs` firehose is the
+  load-bearing dependency for `/discover`, and we have no alerting on it
+  drying up.
+
+These aren't commitments, just where the codebase currently points.
 
 ## Next — Q3 2026 (Jul–Sep): Warm the pipeline before peak
 
