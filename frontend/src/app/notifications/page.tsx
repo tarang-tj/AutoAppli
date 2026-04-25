@@ -39,7 +39,7 @@ function TypeBadge({ type }: { type: string }) {
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.bg} ${cfg.color}`}>
-      <Icon className="h-3 w-3" />
+      <Icon className="h-3 w-3" aria-hidden="true" />
       {cfg.label}
     </span>
   );
@@ -80,8 +80,14 @@ function NewReminderForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => vo
 
   if (!open) {
     return (
-      <Button variant="outline" onClick={() => setOpen(true)} className="gap-1.5">
-        <Plus className="h-4 w-4" /> Add Reminder
+      <Button
+        variant="outline"
+        onClick={() => setOpen(true)}
+        className="gap-1.5"
+        aria-expanded="false"
+        aria-controls="new-reminder-form"
+      >
+        <Plus className="h-4 w-4" aria-hidden="true" /> Add Reminder
       </Button>
     );
   }
@@ -92,22 +98,32 @@ function NewReminderForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => vo
         <CardTitle className="text-base">New Reminder</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form
+          id="new-reminder-form"
+          onSubmit={handleSubmit}
+          className="space-y-3"
+          aria-busy={submitting}
+        >
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Title *</label>
+            <label htmlFor="reminder-title" className="text-xs text-zinc-400 block mb-1">Title *</label>
             <Input
+              id="reminder-title"
+              name="title"
               placeholder="e.g. Follow up with recruiter"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="bg-zinc-800 border-zinc-700"
+              autoComplete="off"
               required
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Related Job</label>
+              <label htmlFor="reminder-job" className="text-xs text-zinc-400 block mb-1">Related Job</label>
               <select
-                className="w-full rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100"
+                id="reminder-job"
+                name="job_id"
+                className="w-full rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 value={jobId}
                 onChange={(e) => setJobId(e.target.value)}
               >
@@ -120,23 +136,29 @@ function NewReminderForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () => vo
               </select>
             </div>
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Due Date</label>
+              <label htmlFor="reminder-due" className="text-xs text-zinc-400 block mb-1">Due Date</label>
               <Input
+                id="reminder-due"
+                name="due_at"
                 type="datetime-local"
                 value={dueAt}
                 onChange={(e) => setDueAt(e.target.value)}
                 className="bg-zinc-800 border-zinc-700"
+                autoComplete="off"
               />
             </div>
           </div>
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Message</label>
+            <label htmlFor="reminder-message" className="text-xs text-zinc-400 block mb-1">Message</label>
             <Textarea
+              id="reminder-message"
+              name="message"
               placeholder="Details about this reminder…"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
               className="bg-zinc-800 border-zinc-700"
+              autoComplete="off"
             />
           </div>
           <div className="flex gap-2">
@@ -200,7 +222,11 @@ function ReminderCard({
               <h3 className="font-medium text-zinc-100 text-sm">{reminder.title}</h3>
               <TypeBadge type={reminder.reminder_type} />
               {!reminder.is_read && (
-                <span className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" title="Unread" />
+                <span
+                  className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"
+                  aria-label="Unread"
+                  role="img"
+                />
               )}
             </div>
             {job && (
@@ -214,7 +240,7 @@ function ReminderCard({
             <div className="flex items-center gap-3 mt-2 text-xs text-zinc-500">
               {dueDate && (
                 <span className={`flex items-center gap-1 ${isOverdue ? "text-red-400" : ""}`}>
-                  <Clock className="h-3 w-3" />
+                  <Clock className="h-3 w-3" aria-hidden="true" />
                   {isOverdue ? "Overdue: " : "Due: "}
                   {dueDate}
                 </span>
@@ -227,28 +253,30 @@ function ReminderCard({
               variant="ghost"
               size="sm"
               onClick={handleMarkRead}
-              className="h-7 px-2"
-              title={reminder.is_read ? "Mark unread" : "Mark read"}
+              aria-label={reminder.is_read ? `Mark "${reminder.title}" as unread` : `Mark "${reminder.title}" as read`}
+              className="h-7 px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
-              {reminder.is_read ? <Bell className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+              {reminder.is_read
+                ? <Bell className="h-3.5 w-3.5" aria-hidden="true" />
+                : <Check className="h-3.5 w-3.5" aria-hidden="true" />}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDismiss}
-              className="h-7 px-2"
-              title="Dismiss"
+              aria-label={`Dismiss reminder "${reminder.title}"`}
+              className="h-7 px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
-              <BellOff className="h-3.5 w-3.5" />
+              <BellOff className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              className="h-7 px-2 text-red-400 hover:text-red-300"
-              title="Delete"
+              aria-label={`Delete reminder "${reminder.title}"`}
+              className="h-7 px-2 text-red-400 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -300,9 +328,9 @@ export default function NotificationsPage() {
       </div>
 
       {/* Unread */}
-      <section>
-        <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-          <Bell className="h-4 w-4" /> Active ({unread.length})
+      <section aria-labelledby="reminders-active-heading">
+        <h2 id="reminders-active-heading" className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+          <Bell className="h-4 w-4" aria-hidden="true" /> Active ({unread.length})
         </h2>
         {unread.length === 0 ? (
           <p className="text-sm text-zinc-500 italic">
@@ -324,9 +352,9 @@ export default function NotificationsPage() {
 
       {/* Read */}
       {read.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <Check className="h-4 w-4" /> Read ({read.length})
+        <section aria-labelledby="reminders-read-heading">
+          <h2 id="reminders-read-heading" className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <Check className="h-4 w-4" aria-hidden="true" /> Read ({read.length})
           </h2>
           <div className="space-y-3">
             {sortReminders(read).map((rem) => (

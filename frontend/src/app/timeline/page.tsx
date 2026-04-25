@@ -54,9 +54,9 @@ function TimelineItem({ event, isManual, onDelete }: { event: TimelineEvent; isM
     <div className="flex gap-3 group">
       <div className="flex flex-col items-center">
         <div className={`h-8 w-8 rounded-full flex items-center justify-center ${cfg.color} bg-zinc-800 border border-zinc-700`}>
-          <Icon className="h-4 w-4" />
+          <Icon className="h-4 w-4" aria-hidden="true" />
         </div>
-        <div className="w-px flex-1 bg-zinc-800 mt-1" />
+        <div className="w-px flex-1 bg-zinc-800 mt-1" aria-hidden="true" />
       </div>
       <div className="pb-6 flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
@@ -69,9 +69,10 @@ function TimelineItem({ event, isManual, onDelete }: { event: TimelineEvent; isM
               variant="ghost"
               size="sm"
               onClick={onDelete}
-              className="h-6 px-1.5 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300"
+              aria-label={`Delete event: ${event.title}`}
+              className="h-6 px-1.5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-red-400 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3 w-3" aria-hidden="true" />
             </Button>
           )}
         </div>
@@ -108,8 +109,15 @@ function AddEventForm({ jobId, onCreated }: { jobId: string; onCreated: () => vo
 
   if (!open) {
     return (
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-1.5">
-        <Plus className="h-3.5 w-3.5" /> Add Note
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setOpen(true)}
+        className="gap-1.5"
+        aria-expanded="false"
+        aria-controls={`add-note-form-${jobId}`}
+      >
+        <Plus className="h-3.5 w-3.5" aria-hidden="true" /> Add Note
       </Button>
     );
   }
@@ -117,9 +125,38 @@ function AddEventForm({ jobId, onCreated }: { jobId: string; onCreated: () => vo
   return (
     <Card className="border-zinc-700 bg-zinc-900">
       <CardContent className="pt-3 pb-3">
-        <form onSubmit={handleSubmit} className="space-y-2">
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Note title…" className="bg-zinc-800 border-zinc-700 text-sm" required />
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details…" rows={2} className="bg-zinc-800 border-zinc-700 text-sm" />
+        <form
+          id={`add-note-form-${jobId}`}
+          onSubmit={handleSubmit}
+          className="space-y-2"
+          aria-busy={submitting}
+        >
+          <div>
+            <label htmlFor={`note-title-${jobId}`} className="sr-only">Note title</label>
+            <Input
+              id={`note-title-${jobId}`}
+              name="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Note title…"
+              className="bg-zinc-800 border-zinc-700 text-sm"
+              autoComplete="off"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor={`note-description-${jobId}`} className="sr-only">Details</label>
+            <Textarea
+              id={`note-description-${jobId}`}
+              name="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Details…"
+              rows={2}
+              className="bg-zinc-800 border-zinc-700 text-sm"
+              autoComplete="off"
+            />
+          </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={submitting || !title.trim()} size="sm">{submitting ? "Saving…" : "Save"}</Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
@@ -166,8 +203,11 @@ export default function TimelinePage() {
 
       {/* Job selector */}
       <div className="flex items-center gap-3">
+        <label htmlFor="timeline-job-selector" className="sr-only">Select job</label>
         <select
-          className="flex-1 rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100"
+          id="timeline-job-selector"
+          name="job_id"
+          className="flex-1 rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           value={effectiveJobId}
           onChange={(e) => setSelectedJobId(e.target.value)}
         >
@@ -202,22 +242,23 @@ export default function TimelinePage() {
 
       {/* Timeline */}
       {effectiveJobId && (
-        <section>
+        <section aria-label="Activity timeline">
           {(timeline || []).length === 0 ? (
             <p className="text-sm text-zinc-500 italic">
               No activity yet for this job. Events will appear here as you track progress.
             </p>
           ) : (
-            <div className="mt-2">
+            <ol className="mt-2" aria-label="Timeline events">
               {(timeline || []).map((evt) => (
-                <TimelineItem
-                  key={evt.id}
-                  event={evt}
-                  isManual={evt.id.startsWith("evt-") && !evt.id.startsWith("evt-auto-")}
-                  onDelete={() => handleDeleteEvent(evt.id)}
-                />
+                <li key={evt.id}>
+                  <TimelineItem
+                    event={evt}
+                    isManual={evt.id.startsWith("evt-") && !evt.id.startsWith("evt-auto-")}
+                    onDelete={() => handleDeleteEvent(evt.id)}
+                  />
+                </li>
               ))}
-            </div>
+            </ol>
           )}
         </section>
       )}

@@ -42,7 +42,7 @@ function ComparisonBanner({ comparison, jobMap }: { comparison: CompensationComp
     <Card className="border-emerald-800/50 bg-emerald-950/30">
       <CardContent className="pt-4 pb-3 px-4">
         <div className="flex items-center gap-2 mb-2">
-          <Award className="h-5 w-5 text-emerald-400" />
+          <Award className="h-5 w-5 text-emerald-400" aria-hidden="true" />
           <h3 className="font-semibold text-emerald-300 text-sm">Offer Comparison</h3>
         </div>
         <div className="grid grid-cols-3 gap-4 text-center">
@@ -115,8 +115,14 @@ function NewCompensationForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () =
 
   if (!open) {
     return (
-      <Button variant="outline" onClick={() => setOpen(true)} className="gap-1.5">
-        <Plus className="h-4 w-4" /> Add Compensation
+      <Button
+        variant="outline"
+        onClick={() => setOpen(true)}
+        className="gap-1.5"
+        aria-expanded="false"
+        aria-controls="new-compensation-form"
+      >
+        <Plus className="h-4 w-4" aria-hidden="true" /> Add Compensation
       </Button>
     );
   }
@@ -127,11 +133,18 @@ function NewCompensationForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () =
         <CardTitle className="text-base">Track Compensation</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form
+          id="new-compensation-form"
+          onSubmit={handleSubmit}
+          className="space-y-3"
+          aria-busy={submitting}
+        >
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Job</label>
+            <label htmlFor="comp-job" className="text-xs text-zinc-400 block mb-1">Job</label>
             <select
-              className="w-full rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100"
+              id="comp-job"
+              name="job_id"
+              className="w-full rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               value={jobId}
               onChange={(e) => setJobId(e.target.value)}
             >
@@ -145,66 +158,89 @@ function NewCompensationForm({ jobs, onCreated }: { jobs: Job[]; onCreated: () =
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Base Salary</label>
+              <label htmlFor="comp-base" className="text-xs text-zinc-400 block mb-1">Base Salary</label>
               <Input
+                id="comp-base"
+                name="base_salary"
                 type="number"
+                inputMode="numeric"
                 placeholder="135000"
                 value={baseSalary}
                 onChange={(e) => setBaseSalary(e.target.value)}
                 className="bg-zinc-800 border-zinc-700"
+                autoComplete="off"
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Annual Bonus</label>
+              <label htmlFor="comp-bonus" className="text-xs text-zinc-400 block mb-1">Annual Bonus</label>
               <Input
+                id="comp-bonus"
+                name="bonus"
                 type="number"
+                inputMode="numeric"
                 placeholder="15000"
                 value={bonus}
                 onChange={(e) => setBonus(e.target.value)}
                 className="bg-zinc-800 border-zinc-700"
+                autoComplete="off"
               />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Equity (annual)</label>
+              <label htmlFor="comp-equity" className="text-xs text-zinc-400 block mb-1">Equity (annual)</label>
               <Input
+                id="comp-equity"
+                name="equity_value"
                 type="number"
+                inputMode="numeric"
                 placeholder="40000"
                 value={equity}
                 onChange={(e) => setEquity(e.target.value)}
                 className="bg-zinc-800 border-zinc-700"
+                autoComplete="off"
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Signing Bonus</label>
+              <label htmlFor="comp-signing" className="text-xs text-zinc-400 block mb-1">Signing Bonus</label>
               <Input
+                id="comp-signing"
+                name="signing_bonus"
                 type="number"
+                inputMode="numeric"
                 placeholder="10000"
                 value={signing}
                 onChange={(e) => setSigning(e.target.value)}
                 className="bg-zinc-800 border-zinc-700"
+                autoComplete="off"
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-400 block mb-1">Benefits Value</label>
+              <label htmlFor="comp-benefits" className="text-xs text-zinc-400 block mb-1">Benefits Value</label>
               <Input
+                id="comp-benefits"
+                name="benefits_value"
                 type="number"
+                inputMode="numeric"
                 placeholder="8000"
                 value={benefits}
                 onChange={(e) => setBenefits(e.target.value)}
                 className="bg-zinc-800 border-zinc-700"
+                autoComplete="off"
               />
             </div>
           </div>
           <div>
-            <label className="text-xs text-zinc-400 block mb-1">Notes</label>
+            <label htmlFor="comp-notes" className="text-xs text-zinc-400 block mb-1">Notes</label>
             <Textarea
+              id="comp-notes"
+              name="notes"
               placeholder="Vesting schedule, negotiation notes…"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               className="bg-zinc-800 border-zinc-700"
+              autoComplete="off"
             />
           </div>
           <div className="flex gap-2">
@@ -235,20 +271,25 @@ function CompBreakdownBar({ entry }: { entry: Compensation }) {
 
   return (
     <div className="mt-3">
-      <div className="flex h-2 rounded-full overflow-hidden bg-zinc-800">
+      <div
+        className="flex h-2 rounded-full overflow-hidden bg-zinc-800"
+        role="img"
+        aria-label={`Compensation breakdown: ${segments.map((s) => `${s.label} ${fmt(s.value, entry.currency)}`).join(", ")}`}
+      >
         {segments.map((seg) => (
           <div
             key={seg.label}
-            className={`${seg.color} transition-all`}
+            className={`${seg.color} transition-[width] duration-150`}
             style={{ width: `${(seg.value / total) * 100}%` }}
             title={`${seg.label}: ${fmt(seg.value, entry.currency)}`}
+            aria-hidden="true"
           />
         ))}
       </div>
       <div className="flex flex-wrap gap-3 mt-2">
         {segments.map((seg) => (
           <span key={seg.label} className="flex items-center gap-1 text-xs text-zinc-400">
-            <span className={`h-2 w-2 rounded-full ${seg.color}`} />
+            <span className={`h-2 w-2 rounded-full ${seg.color}`} aria-hidden="true" />
             {seg.label}: {fmt(seg.value, entry.currency)}
           </span>
         ))}
@@ -271,10 +312,18 @@ function CompensationCard({
   onRefresh: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const breakdownId = `comp-breakdown-${entry.id}`;
+  const compLabel = job ? `${job.title} at ${job.company}` : "Compensation package";
 
   async function handleDelete() {
-    await apiDelete(`/salary/${entry.id}`);
-    onRefresh();
+    setDeleting(true);
+    try {
+      await apiDelete(`/salary/${entry.id}`);
+      onRefresh();
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -292,7 +341,7 @@ function CompensationCard({
               )}
               {isBest && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-400/10 text-emerald-400">
-                  <Award className="h-3 w-3" /> Best
+                  <Award className="h-3 w-3" aria-hidden="true" /> Best
                 </span>
               )}
             </div>
@@ -320,23 +369,30 @@ function CompensationCard({
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              className="h-7 px-2 text-red-400 hover:text-red-300"
-              title="Delete"
+              disabled={deleting}
+              aria-busy={deleting}
+              aria-label={`Delete compensation entry for ${compLabel}`}
+              className="h-7 px-2 text-red-400 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </div>
         </div>
 
         <button
+          type="button"
           onClick={() => setExpanded(!expanded)}
-          className="mt-2 flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          aria-expanded={expanded}
+          aria-controls={breakdownId}
+          className="mt-2 flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
         >
-          <BarChart3 className="h-3 w-3" />
+          <BarChart3 className="h-3 w-3" aria-hidden="true" />
           {expanded ? "Hide" : "Show"} Breakdown
-          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          {expanded
+            ? <ChevronUp className="h-3 w-3" aria-hidden="true" />
+            : <ChevronDown className="h-3 w-3" aria-hidden="true" />}
         </button>
-        {expanded && <CompBreakdownBar entry={entry} />}
+        {expanded && <div id={breakdownId}><CompBreakdownBar entry={entry} /></div>}
       </CardContent>
     </Card>
   );
@@ -381,9 +437,9 @@ export default function SalaryPage() {
 
       {comparison && <ComparisonBanner comparison={comparison} jobMap={jobMap} />}
 
-      <section>
-        <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-          <DollarSign className="h-4 w-4" /> Packages ({sorted.length})
+      <section aria-labelledby="comp-packages-heading">
+        <h2 id="comp-packages-heading" className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+          <DollarSign className="h-4 w-4" aria-hidden="true" /> Packages ({sorted.length})
         </h2>
         {sorted.length === 0 ? (
           <p className="text-sm text-zinc-500 italic">

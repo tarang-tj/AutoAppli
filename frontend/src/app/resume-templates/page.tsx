@@ -106,14 +106,19 @@ function TemplateCard({ template }: { template: ResumeTemplate }) {
     }
   };
 
+  const headingId = `template-heading-${template.id}`;
+
   return (
-    <Card className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-all group">
+    <Card
+      className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors group"
+      aria-labelledby={headingId}
+    >
       <CardContent className="p-5">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            <div className={`${template.accent}`}>{template.icon}</div>
-            <h3 className="text-lg font-semibold text-white">{template.name}</h3>
+            <div className={`${template.accent}`} aria-hidden="true">{template.icon}</div>
+            <h3 id={headingId} className="text-lg font-semibold text-white">{template.name}</h3>
           </div>
           <div className="flex gap-1.5">
             {template.tags.map((tag) => (
@@ -142,34 +147,37 @@ function TemplateCard({ template }: { template: ResumeTemplate }) {
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-2 gap-1.5 mb-4">
+        <ul className="grid grid-cols-2 gap-1.5 mb-4 list-none">
           {template.features.map((f) => (
-            <span
+            <li
               key={f}
               className="text-[11px] text-zinc-500 flex items-start gap-1.5"
             >
-              <span className={`mt-0.5 ${template.accent}`}>&#8226;</span>
+              <span className={`mt-0.5 ${template.accent}`} aria-hidden="true">&#8226;</span>
               {f}
-            </span>
+            </li>
           ))}
-        </div>
+        </ul>
 
         {/* Actions */}
         <div className="flex items-center gap-3">
           <Button
             onClick={handleDownload}
             disabled={downloading}
-            className="bg-blue-600 hover:bg-blue-700 gap-2 flex-1"
+            aria-busy={downloading}
+            aria-label={`Download ${template.name} resume template PDF`}
+            className="bg-blue-600 hover:bg-blue-700 gap-2 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           >
-            <Download className="h-4 w-4" />
-            {downloading ? "Downloading..." : "Download PDF"}
+            <Download className="h-4 w-4" aria-hidden="true" />
+            {downloading ? "Downloading…" : "Download PDF"}
           </Button>
           <Button
             variant="outline"
-            className="border-zinc-700 text-zinc-300 hover:text-white gap-2"
+            className="border-zinc-700 text-zinc-300 hover:text-white gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             onClick={() => window.open(template.file, "_blank")}
+            aria-label={`Preview ${template.name} resume template (opens in new tab)`}
           >
-            <FileText className="h-4 w-4" />
+            <FileText className="h-4 w-4" aria-hidden="true" />
             Preview
           </Button>
         </div>
@@ -184,7 +192,7 @@ export default function ResumeTemplatesPage() {
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <FileText className="h-8 w-8 text-blue-400" />
+            <FileText className="h-8 w-8 text-blue-400" aria-hidden="true" />
             Resume Templates
           </h1>
           <p className="text-zinc-400 mt-2 max-w-2xl leading-relaxed">
