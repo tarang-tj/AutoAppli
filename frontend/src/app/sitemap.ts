@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/site";
+import { getAllPosts } from "@/lib/blog";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = getSiteUrl();
   const baseEntries: MetadataRoute.Sitemap = [
     "/",
@@ -23,6 +24,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/vs/lazyapply",
     "/vs/simplify",
     "/vs/huntr",
+    "/vs/wonsulting",
+    "/vs/teal",
   ].map((path) => ({
     url: `${base}${path}`,
     lastModified: new Date(),
@@ -30,5 +33,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...baseEntries, ...vsEntries];
+  // Blog index + individual posts.
+  const posts = await getAllPosts();
+  const blogIndexEntry: MetadataRoute.Sitemap = [
+    {
+      url: `${base}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    },
+  ];
+  const blogPostEntries: MetadataRoute.Sitemap = posts.map((p) => ({
+    url: `${base}/blog/${p.slug}`,
+    lastModified: new Date(`${p.publishedAt}T12:00:00Z`),
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  return [
+    ...baseEntries,
+    ...vsEntries,
+    ...blogIndexEntry,
+    ...blogPostEntries,
+  ];
 }
