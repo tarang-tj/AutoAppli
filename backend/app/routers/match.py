@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 
 from app.config import Settings, get_settings
 from app.deps.jobs_auth import get_jobs_user_id, jobs_use_supabase
@@ -85,6 +85,7 @@ def _build_candidate_profile(resume_text: str, profile: dict) -> CandidateProfil
 @limiter.limit("60/minute")
 async def get_match_scores(
     request: Request,
+    response: Response,  # required by slowapi to inject rate-limit headers
     body: dict,
     user_id: str | None = Depends(get_jobs_user_id),
     settings: Settings = Depends(get_settings),
