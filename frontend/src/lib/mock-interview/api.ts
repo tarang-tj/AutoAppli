@@ -57,6 +57,14 @@ export interface SessionState {
   scorecard: EndResponse | null;
 }
 
+export interface SessionListItem {
+  session_id: string;
+  role: string;
+  complete: boolean;
+  overall_score: number | null;
+  created_at: string;
+}
+
 // ── Internal helpers ───────────────────────────────────────────────────────
 
 function resolveApiBase(): string {
@@ -132,4 +140,8 @@ export async function endSession(sessionId: string): Promise<EndResponse> {
 
 export async function getSession(sessionId: string): Promise<SessionState> {
   return request<SessionState>(`/mock-interview/sessions/${sessionId}`);
+}
+
+export async function listSessions(): Promise<SessionListItem[]> {
+  return request<SessionListItem[]>("/mock-interview/sessions");
 }
