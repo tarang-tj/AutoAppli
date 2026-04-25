@@ -19,6 +19,7 @@ import { test, expect } from "@playwright/test";
  */
 
 const DEMO_FLAG_KEY = "autoappli_demo_mode";
+const ONBOARDING_SEEN_KEY = "autoappli_onboarding_seen";
 const COMPANY = "Playwright Labs";
 const TITLE = "E2E QA Engineer";
 const URL = "https://playwrightlabs.example.com/jobs/qa";
@@ -29,10 +30,17 @@ test("can add a job through the dialog and see it on the kanban", async ({
   // Activate demo mode before navigation so the dashboard reads it on first
   // paint. localStorage is host-scoped, so we have to be on the origin to
   // set it — visit a tiny page first, set the flag, then navigate.
+  // Also mark the onboarding tour as already-seen — otherwise the modal
+  // mounts on /dashboard and intercepts pointer events on every other
+  // dashboard control (CI failure observed in run #30).
   await page.goto("/");
-  await page.evaluate((key) => {
-    window.localStorage.setItem(key, "1");
-  }, DEMO_FLAG_KEY);
+  await page.evaluate(
+    ([demoKey, onboardingKey]) => {
+      window.localStorage.setItem(demoKey, "1");
+      window.localStorage.setItem(onboardingKey, "1");
+    },
+    [DEMO_FLAG_KEY, ONBOARDING_SEEN_KEY],
+  );
 
   await page.goto("/dashboard");
 
