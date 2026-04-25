@@ -5,6 +5,7 @@ import { StoryCard } from "@/components/stories/story-card";
 import { StoryForm } from "@/components/stories/story-form";
 import { Masthead } from "@/app/stories/_components/masthead";
 import { EmptyState } from "@/app/stories/_components/empty-state";
+import { CloudSyncBanner } from "@/app/stories/_components/cloud-sync-banner";
 import {
   deleteStory,
   getStoriesServerSnapshot,
@@ -79,6 +80,7 @@ export default function StoriesPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <Masthead count={total} onAdd={openAdd} />
+      <CloudSyncBanner />
 
       {total === 0 ? (
         <EmptyState onAdd={openAdd} />
