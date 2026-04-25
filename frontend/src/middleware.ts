@@ -11,9 +11,16 @@ const PUBLIC_PATH_PREFIXES = [
   "/api",       // API routes must never be auth-gated
 ] as const;
 
+// Matches Google Search Console site-verification files at the root,
+// e.g. /googlebbf6fa95789b3f0a.html. These MUST be served as the literal
+// static file (not redirected to /login) or Google's crawler can't verify
+// ownership.
+const GOOGLE_VERIFY_RE = /^\/google[a-f0-9]+\.html$/i;
+
 function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true;
   if (pathname === "/robots.txt" || pathname === "/sitemap.xml") return true;
+  if (GOOGLE_VERIFY_RE.test(pathname)) return true;
   return PUBLIC_PATH_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
@@ -53,6 +60,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon.svg|login|signup|forgot-password|auth|privacy|terms|robots.txt|sitemap.xml|api).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg|google[a-f0-9]+\\.html|login|signup|forgot-password|auth|privacy|terms|robots.txt|sitemap.xml|api).*)",
   ],
 };
