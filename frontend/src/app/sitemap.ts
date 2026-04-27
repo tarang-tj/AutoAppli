@@ -83,6 +83,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
+    {
+      url: `${base}/tools/salary-negotiation-templates`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    },
+  ];
+
+  // Interview practice hub.
+  const practiceEntries: MetadataRoute.Sitemap = [
+    {
+      url: `${base}/interview-practice`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    },
   ];
 
   // Interview practice hub.
