@@ -95,6 +95,12 @@ function MarketingHeader({ demoMode }: { demoMode: boolean }) {
         >
           Tools
         </Link>
+        <Link
+          href="/interview-practice"
+          className={`rounded-md hover:text-white transition-colors ${FOCUS_RING}`}
+        >
+          Practice
+        </Link>
         <a
           href="#how-it-works"
           className={`rounded-md hover:text-white transition-colors ${FOCUS_RING}`}
