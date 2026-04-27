@@ -101,16 +101,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Interview practice hub.
-  const practiceEntries: MetadataRoute.Sitemap = [
-    {
-      url: `${base}/interview-practice`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    },
-  ];
-
   // Blog index + individual posts.
   const posts = await getAllPosts();
   const blogIndexEntry: MetadataRoute.Sitemap = [
