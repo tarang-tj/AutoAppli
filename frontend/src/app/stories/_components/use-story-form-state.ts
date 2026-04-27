@@ -16,6 +16,10 @@ import {
  * `initial` seeds via lazy initializers — callers should still rely on
  * the `key={initial?.id ?? "new"}` pattern on the form body to remount
  * between stories rather than syncing with effects.
+ *
+ * `initialValues` is an optional override for new stories only (e.g. prefill
+ * from a ?import= URL param). It takes precedence over blank defaults but
+ * yields to `initial` (edit mode).
  */
 
 export const MAX_TITLE_LEN = 80;
@@ -31,13 +35,22 @@ export interface StoryFormErrors {
   result: string | null;
 }
 
-export function useStoryFormState(initial: Story | null) {
-  const [title, setTitle] = useState(() => initial?.title ?? "");
-  const [tags, setTags] = useState<StoryTag[]>(() => initial?.tags ?? []);
-  const [situation, setSituation] = useState(() => initial?.situation ?? "");
-  const [task, setTask] = useState(() => initial?.task ?? "");
-  const [action, setAction] = useState(() => initial?.action ?? "");
-  const [result, setResult] = useState(() => initial?.result ?? "");
+export interface StoryPrefill {
+  title?: string;
+  situation?: string;
+  task?: string;
+  action?: string;
+  result?: string;
+  tags?: StoryTag[];
+}
+
+export function useStoryFormState(initial: Story | null, initialValues?: StoryPrefill) {
+  const [title, setTitle] = useState(() => initial?.title ?? initialValues?.title ?? "");
+  const [tags, setTags] = useState<StoryTag[]>(() => initial?.tags ?? initialValues?.tags ?? []);
+  const [situation, setSituation] = useState(() => initial?.situation ?? initialValues?.situation ?? "");
+  const [task, setTask] = useState(() => initial?.task ?? initialValues?.task ?? "");
+  const [action, setAction] = useState(() => initial?.action ?? initialValues?.action ?? "");
+  const [result, setResult] = useState(() => initial?.result ?? initialValues?.result ?? "");
   const [submitted, setSubmitted] = useState(false);
 
   const toggleTag = useCallback((tag: StoryTag) => {
