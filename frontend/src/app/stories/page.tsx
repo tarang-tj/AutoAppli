@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useSearchParams } from "next/navigation";
 import { StoryCard } from "@/components/stories/story-card";
 import { StoryForm } from "@/components/stories/story-form";
 import { Masthead } from "@/app/stories/_components/masthead";
 import { EmptyState } from "@/app/stories/_components/empty-state";
+import { CloudSyncBanner } from "@/app/stories/_components/cloud-sync-banner";
 import {
   deleteStory,
   getStoriesServerSnapshot,
@@ -12,6 +14,8 @@ import {
   subscribeStories,
   type Story,
 } from "@/lib/stories/storage";
+import { decodeImportPayload } from "@/lib/mock-interview/star-split";
+import type { StoryPrefill } from "@/app/stories/_components/use-story-form-state";
 
 /**
  * /stories — Story Library page (editorial archive treatment).
@@ -23,6 +27,10 @@ import {
  * Page-level keyboard affordances:
  *   - "n" with no modifier opens "Add a story" (skipped when typing in
  *     a field, or when a modal is already open).
+ *
+ * ?import=<base64> — when present and parseable, opens the form prefilled
+ *   with a StarPayload decoded from the URL param. Failure silently no-ops.
+ *   Sourced from the Mock Interview scorecard "Save as story" CTA.
  */
 
 function isTypingTarget(el: Element | null): boolean {
@@ -41,14 +49,38 @@ export default function StoriesPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Story | null>(null);
+  const [importPrefill, setImportPrefill] = useState<StoryPrefill | undefined>(undefined);
+
+  const searchParams = useSearchParams();
+
+  // Handle ?import= param: decode payload and open form prefilled.
+  // Silently no-ops on any parse error — no toast spam.
+  useEffect(() => {
+    const encoded = searchParams.get("import");
+    if (!encoded) return;
+    const payload = decodeImportPayload(encoded);
+    if (!payload) return;
+    const prefill: StoryPrefill = {
+      title: payload.title,
+      situation: payload.situation,
+      task: payload.task,
+      action: payload.action,
+      result: payload.result,
+    };
+    setImportPrefill(prefill);
+    setEditing(null);
+    setFormOpen(true);
+  }, [searchParams]);
 
   const openAdd = useCallback(() => {
     setEditing(null);
+    setImportPrefill(undefined);
     setFormOpen(true);
   }, []);
 
   const openEdit = useCallback((story: Story) => {
     setEditing(story);
+    setImportPrefill(undefined);
     setFormOpen(true);
   }, []);
 
@@ -56,6 +88,11 @@ export default function StoriesPage() {
     const ok = window.confirm(`Delete "${story.title}"? Can't undo this.`);
     if (!ok) return;
     deleteStory(story.id);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setFormOpen(false);
+    setImportPrefill(undefined);
   }, []);
 
   // "n" hotkey — single-key, no modifiers, ignored while typing or while
@@ -79,6 +116,7 @@ export default function StoriesPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <Masthead count={total} onAdd={openAdd} />
+      <CloudSyncBanner />
 
       {total === 0 ? (
         <EmptyState onAdd={openAdd} />
@@ -109,7 +147,8 @@ export default function StoriesPage() {
       <StoryForm
         open={formOpen}
         initial={editing}
-        onClose={() => setFormOpen(false)}
+        initialValues={importPrefill}
+        onClose={handleClose}
         onSaved={() => {
           /* useSyncExternalStore re-renders the list automatically. */
         }}

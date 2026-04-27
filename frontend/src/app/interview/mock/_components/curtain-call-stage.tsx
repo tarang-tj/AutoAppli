@@ -9,13 +9,20 @@
  *
  * Score primitives (Stars, DimensionRow, ReviewCard) live in
  * scorecard-primitives.tsx so this file stays focused on layout.
+ *
+ * Per-turn "Save as story" CTAs: each answered turn (answer.length >= 50)
+ * shows a button that deep-links to /stories?import=<base64-payload>.
+ * The payload is a StarPayload (STAR heuristic split). See star-split.ts
+ * for the decomposition algorithm.
  */
 
 "use client";
 
 import Link from "next/link";
-import { RotateCcw, ArrowUpRight } from "lucide-react";
+import { RotateCcw, ArrowUpRight, BookMarked } from "lucide-react";
 import type { EndResponse } from "@/lib/mock-interview/api";
+import type { DialogueLine } from "./dialogue-line";
+import { starSplit, encodeImportPayload } from "@/lib/mock-interview/star-split";
 import {
   Stars,
   DimensionRow,
@@ -29,18 +36,72 @@ const DIMENSION_LABELS: Record<string, string> = {
   relevance: "Relevance",
 };
 
+/** Min answer length to show the "Save as story" CTA. */
+const MIN_ANSWER_LEN = 50;
+
 interface CurtainCallStageProps {
   card: EndResponse;
   onReset: () => void;
+  /** Full dialogue history from SpotlightStage. Used to render per-turn CTAs. */
+  messages?: DialogueLine[];
 }
 
-export function CurtainCallStage({ card, onReset }: CurtainCallStageProps) {
+/**
+ * Reconstruct Q/A/feedback triplets from a flat DialogueLine array.
+ * Pattern: [ai=question, user=answer, ai=feedback, ai=question, ...].
+ * Any incomplete trailing triplet is silently dropped.
+ */
+interface TurnSlice {
+  question: string;
+  answer: string;
+}
+
+function extractTurns(messages: DialogueLine[]): TurnSlice[] {
+  const turns: TurnSlice[] = [];
+  let i = 0;
+  while (i + 1 < messages.length) {
+    const q = messages[i];
+    const a = messages[i + 1];
+    if (q.role === "ai" && a.role === "user") {
+      turns.push({ question: q.text, answer: a.text });
+      i += 3; // skip the feedback line too
+    } else {
+      i++;
+    }
+  }
+  return turns;
+}
+
+function SaveAsStoryButton({ question, answer }: TurnSlice) {
+  const payload = starSplit(question, answer);
+  const encoded = encodeImportPayload(payload);
+  if (!encoded) return null;
+
+  return (
+    <Link
+      href={`/stories?import=${encoded}`}
+      className="group/story mt-3 inline-flex items-center gap-1.5 rounded-sm border border-[color:color-mix(in_oklch,var(--stage-ember)_30%,transparent)] px-3 py-1.5 font-[family-name:var(--font-mock-mono)] text-[0.65rem] uppercase tracking-[0.18em] text-[color:var(--stage-ember)] transition-all hover:border-[color:color-mix(in_oklch,var(--stage-ember)_60%,transparent)] hover:bg-[color:color-mix(in_oklch,var(--stage-ember)_8%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--stage-ember)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--stage-ink)]"
+      aria-label={`Save answer to "${question.slice(0, 60)}" as a story`}
+    >
+      <BookMarked
+        aria-hidden
+        className="h-3 w-3 flex-shrink-0 transition-transform group-hover/story:scale-110"
+      />
+      <span>Save as story</span>
+    </Link>
+  );
+}
+
+export function CurtainCallStage({ card, onReset, messages = [] }: CurtainCallStageProps) {
   const verdict =
     card.overall >= 80
       ? "Standing ovation. Polish the small details and you're ready."
       : card.overall >= 60
         ? "Solid performance. A few more rehearsals and the specifics will land."
         : "Good first read. Tighten the STAR structure and concrete examples.";
+
+  const turns = extractTurns(messages);
+  const saveable = turns.filter((t) => t.answer.length >= MIN_ANSWER_LEN);
 
   return (
     <main
@@ -154,6 +215,34 @@ export function CurtainCallStage({ card, onReset }: CurtainCallStageProps) {
           items={card.top_improvements}
         />
       </div>
+
+      {/* Per-turn Story CTAs — only shown when turns are available */}
+      {saveable.length > 0 && (
+        <section
+          aria-labelledby="save-stories-heading"
+          className="mt-8 rounded-sm border border-[color:var(--stage-rule)] bg-[color:color-mix(in_oklch,var(--stage-ink)_88%,transparent)] p-6 sm:p-8"
+        >
+          <h3
+            id="save-stories-heading"
+            className="mb-5 font-[family-name:var(--font-mock-mono)] text-[0.7rem] uppercase tracking-[0.28em] text-[color:var(--stage-bone-dim)]"
+          >
+            Bank your answers as stories
+          </h3>
+          <ol className="space-y-5">
+            {saveable.map((turn, idx) => (
+              <li key={idx} className="border-t border-[color:var(--stage-rule)] pt-5 first:border-none first:pt-0">
+                <p className="font-[family-name:var(--font-mock-display)] text-[0.9rem] italic leading-snug text-[color:var(--stage-bone-dim)]">
+                  {turn.question}
+                </p>
+                <p className="mt-1 line-clamp-2 font-[family-name:var(--font-mock-mono)] text-[0.75rem] text-[color:color-mix(in_oklch,var(--stage-bone)_55%,transparent)]">
+                  {turn.answer.slice(0, 140)}{turn.answer.length > 140 ? "…" : ""}
+                </p>
+                <SaveAsStoryButton question={turn.question} answer={turn.answer} />
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {/* Actions */}
       <div className="mt-10 flex flex-wrap gap-4">

@@ -65,6 +65,18 @@ export interface SessionListItem {
   created_at: string;
 }
 
+export interface ResumeResponse {
+  session_id: string;
+  role: string;
+  job_description: string;
+  num_questions: number;
+  question_index: number;
+  complete: boolean;
+  turns: TurnRecord[];
+  remaining_questions: string[];
+  scorecard: EndResponse | null;
+}
+
 // ── Internal helpers ───────────────────────────────────────────────────────
 
 function resolveApiBase(): string {
@@ -144,4 +156,8 @@ export async function getSession(sessionId: string): Promise<SessionState> {
 
 export async function listSessions(): Promise<SessionListItem[]> {
   return request<SessionListItem[]>("/mock-interview/sessions");
+}
+
+export async function resumeSession(sessionId: string): Promise<ResumeResponse> {
+  return request<ResumeResponse>(`/mock-interview/sessions/${sessionId}/resume`);
 }

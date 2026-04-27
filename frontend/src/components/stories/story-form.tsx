@@ -13,6 +13,7 @@ import {
 import {
   MAX_TITLE_LEN,
   useStoryFormState,
+  type StoryPrefill,
 } from "@/app/stories/_components/use-story-form-state";
 import type { Story } from "@/lib/stories/storage";
 
@@ -37,9 +38,11 @@ interface StoryFormProps {
   initial: Story | null;
   onClose: () => void;
   onSaved: (story: Story) => void;
+  /** Optional prefill values for new stories (e.g. from ?import= URL param). */
+  initialValues?: StoryPrefill;
 }
 
-export function StoryForm({ open, initial, onClose, onSaved }: StoryFormProps) {
+export function StoryForm({ open, initial, onClose, onSaved, initialValues }: StoryFormProps) {
   if (!open) return null;
   return (
     <StoryFormBody
@@ -47,6 +50,7 @@ export function StoryForm({ open, initial, onClose, onSaved }: StoryFormProps) {
       initial={initial}
       onClose={onClose}
       onSaved={onSaved}
+      initialValues={initialValues}
     />
   );
 }
@@ -55,15 +59,16 @@ interface StoryFormBodyProps {
   initial: Story | null;
   onClose: () => void;
   onSaved: (story: Story) => void;
+  initialValues?: StoryPrefill;
 }
 
-function StoryFormBody({ initial, onClose, onSaved }: StoryFormBodyProps) {
+function StoryFormBody({ initial, onClose, onSaved, initialValues }: StoryFormBodyProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const titleId = useId();
 
-  const s = useStoryFormState(initial);
+  const s = useStoryFormState(initial, initialValues);
 
   useFocusTrap(true, dialogRef);
 

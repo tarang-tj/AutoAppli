@@ -474,6 +474,28 @@ export function getStoriesServerSnapshot(): Story[] {
   return EMPTY;
 }
 
+// ─── Migration status helpers ────────────────────────────────────────────────
+
+/**
+ * Returns true when localStorage has stories that have NOT yet been migrated
+ * to the cloud (i.e. the migration flag is absent). Safe to call on the
+ * client; always returns false during SSR.
+ */
+export function hasUnmigratedLocalStories(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const alreadyMigrated =
+      window.localStorage.getItem(MIGRATION_FLAG_KEY) === "true";
+    if (alreadyMigrated) return false;
+    const raw = window.localStorage.getItem(STORIES_KEY);
+    if (!raw) return false;
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Cloud migration helper ───────────────────────────────────────────────────
 
 /**

@@ -15,7 +15,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   endSession,
   startSession,
@@ -23,6 +23,7 @@ import {
   type EndResponse,
   type SessionStartResponse,
 } from "@/lib/mock-interview/api";
+import { useSessionResume } from "./use-session-resume";
 import { StageBackdrop } from "./_components/stage-atmosphere";
 import { CallSheetStage } from "./_components/call-sheet-stage";
 import { SpotlightStage, type DialogueLine } from "./_components/spotlight-stage";
@@ -46,6 +47,8 @@ const NUM_Q_OPTIONS = [3, 5, 7];
 // ── Component ─────────────────────────────────────────────────────────────
 
 export function MockInterviewUI() {
+  const resumeState = useSessionResume();
+
   const [stage, setStage] = useState<Stage>("setup");
 
   // Setup form
@@ -64,6 +67,42 @@ export function MockInterviewUI() {
 
   // Final scorecard
   const [scorecard, setScorecard] = useState<EndResponse | null>(null);
+
+  // Hydrate from resume endpoint when ?session=<id> is present
+  useEffect(() => {
+    if (resumeState.status !== "ready") return;
+    const data = resumeState.data;
+
+    // Completed sessions — jump straight to curtain call if scorecard exists
+    if (data.complete && data.scorecard) {
+      setScorecard(data.scorecard);
+      setStage("complete");
+      return;
+    }
+
+    // Rebuild dialogue history from answered turns
+    const rebuilt: DialogueLine[] = [];
+    for (const turn of data.turns) {
+      rebuilt.push({ role: "ai", text: turn.question });
+      rebuilt.push({ role: "user", text: turn.answer });
+      rebuilt.push({ role: "ai", text: turn.feedback });
+    }
+
+    // Add the next question as the latest AI message (first remaining question)
+    const nextQuestion = data.remaining_questions[0] ?? null;
+    if (nextQuestion) {
+      rebuilt.push({ role: "ai", text: nextQuestion });
+    }
+
+    setSessionId(data.session_id);
+    setTotalQuestions(data.num_questions);
+    setQuestionIndex(data.question_index);
+    setMessages(rebuilt);
+    setJd(data.job_description);
+    setRole(data.role);
+    setNumQuestions(data.num_questions);
+    setStage("active");
+  }, [resumeState]);
 
   async function handleStart() {
     if (jd.trim().length < 10) {
@@ -138,8 +177,29 @@ export function MockInterviewUI() {
     setNumQuestions(5);
   }
 
+  // Show a cinematic loading state while fetching resume data
+  if (resumeState.status === "loading") {
+    return (
+      <StageBackdrop spotlightHot={false}>
+        <div className="flex flex-col items-center gap-3 text-[0.7rem] uppercase tracking-[0.32em] text-[color:oklch(0.84_0.018_78)]">
+          <span
+            className="inline-block h-1.5 w-1.5 animate-pulse rounded-full"
+            style={{ background: "oklch(0.78 0.16 65)" }}
+          />
+          <span>Resuming session…</span>
+        </div>
+      </StageBackdrop>
+    );
+  }
+
   return (
     <StageBackdrop spotlightHot={stage === "active"}>
+      {resumeState.status === "error" && stage === "setup" && (
+        <p className="mb-4 rounded-lg border border-red-800/40 bg-red-950/20 px-4 py-2 text-sm text-red-400">
+          {resumeState.message}
+        </p>
+      )}
+
       {stage === "setup" && (
         <CallSheetStage
           jd={jd}
@@ -170,7 +230,7 @@ export function MockInterviewUI() {
       )}
 
       {stage === "complete" && scorecard && (
-        <CurtainCallStage card={scorecard} onReset={handleReset} />
+        <CurtainCallStage card={scorecard} onReset={handleReset} messages={messages} />
       )}
     </StageBackdrop>
   );

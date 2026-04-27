@@ -5,13 +5,18 @@
  * server file can stay static/metadata-only.
  *
  * URL-as-state contract:
- *   ?q=…        — title/company search
- *   ?skills=…   — comma-joined list (lowercased)
- *   ?remote=…   — remote | hybrid | onsite
+ *   ?q=…          — title/company search
+ *   ?skills=…     — comma-joined list (lowercased)
+ *   ?remote=…     — remote | hybrid | onsite  (DiscoverFiltersPanel — server-side)
  *   ?company=…
- *   ?days=…     — 1 | 7 | 30 (0/missing = any)
- *   ?sort=…     — recent | posted | newest
- *   ?page=…     — 1-indexed for humans, converted to 0-indexed offset
+ *   ?days=…       — 1 | 7 | 30 (0/missing = any)
+ *   ?sort=…       — recent | posted | newest
+ *   ?page=…       — 1-indexed for humans, converted to 0-indexed offset
+ *
+ *   ?f_remote=…   — any | remote | hybrid | onsite  (FilterRail — client-side facet)
+ *   ?f_levels=…   — comma-joined LevelFacet values
+ *   ?f_sources=…  — comma-joined SourceFacet values
+ *   ?f_salary=…   — integer minimum salary (0 = any)
  *
  * Every mutation of the filter shape updates the URL via router.replace so
  * pagination + filters survive refresh + share. We deliberately avoid
@@ -32,6 +37,7 @@ import {
   DISCOVER_DEFAULT_FILTERS,
   type DiscoverFilters,
 } from "@/components/discover/discover-filters";
+import { FilterRail } from "@/app/discover/_components/filter-rail";
 import { RecommendationsRail } from "@/components/discover/recommendations-rail";
 import {
   useCachedJobs,
@@ -41,6 +47,15 @@ import {
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { createJob } from "@/lib/supabase/jobs";
 import { cn } from "@/lib/utils";
+import {
+  filterResults,
+  DEFAULT_FACETS,
+  type DiscoverFacets,
+} from "@/lib/discover/filter-results";
+import {
+  facetsFromSearchParams,
+  mergeFacetsIntoQueryString,
+} from "@/lib/discover/filter-url";
 import type { CachedJob, Job } from "@/types";
 
 const PAGE_SIZE = 24;
@@ -103,10 +118,20 @@ export function DiscoverClient() {
   const [filters, setFilters] = useState<DiscoverFilters>(initial.filters);
   const [page, setPage] = useState<number>(initial.page);
 
-  // Sync the URL whenever the filter or page changes.
+  // Client-side facet state — initialized from URL params on mount.
+  const [facets, setFacets] = useState<DiscoverFacets>(() =>
+    facetsFromSearchParams(new URLSearchParams(searchParams.toString())),
+  );
+
+  // Sync the URL whenever the filter, facets, or page changes.
+  // We merge facet params into the existing filter QS so both sets coexist.
   const urlStringFromState = useMemo(
-    () => searchParamsFromFilters(filters, page),
-    [filters, page],
+    () =>
+      mergeFacetsIntoQueryString(
+        searchParamsFromFilters(filters, page),
+        facets,
+      ),
+    [filters, page, facets],
   );
   const lastPushedRef = useRef<string>(urlStringFromState);
   useEffect(() => {
@@ -153,6 +178,13 @@ export function DiscoverClient() {
 
   const { skills: topSkills } = useTopCachedJobSkills(30);
   const { companies } = useCachedJobCompanies();
+
+  // Apply client-side facet filters over the server-fetched page. Pure,
+  // synchronous — no re-fetch needed. Empty facets = identity (no-op).
+  const displayedRows = useMemo(
+    () => filterResults(rows, facets),
+    [rows, facets],
+  );
 
   // Match scores against the user's primary resume. Returns empty when no
   // resume on file — DiscoverCard renders no badge in that case, so the
@@ -368,14 +400,24 @@ export function DiscoverClient() {
 
       {/* Filters + results */}
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-        <DiscoverFiltersPanel
-          filters={filters}
-          onChange={setFilters}
-          topSkills={topSkills}
-          companies={companies}
-          totalCount={configured ? total : undefined}
-          isLoading={isLoading}
-        />
+        {/* Left sidebar — server-side filters + client-side facet rail */}
+        <div className="flex flex-col gap-4">
+          <DiscoverFiltersPanel
+            filters={filters}
+            onChange={setFilters}
+            topSkills={topSkills}
+            companies={companies}
+            totalCount={configured ? total : undefined}
+            isLoading={isLoading}
+          />
+          <FilterRail
+            facets={facets}
+            onChange={setFacets}
+            allJobs={rows}
+            filteredCount={displayedRows.length}
+            totalCount={rows.length}
+          />
+        </div>
 
         <section
           className="min-w-0"
@@ -397,7 +439,7 @@ export function DiscoverClient() {
                 />
               ))}
             </div>
-          ) : rows.length === 0 ? (
+          ) : displayedRows.length === 0 ? (
             <EmptyState
               reason={
                 !configured
@@ -406,12 +448,15 @@ export function DiscoverClient() {
                     ? "no-matches"
                     : "empty-firehose"
               }
-              onReset={() => setFilters(DISCOVER_DEFAULT_FILTERS)}
+              onReset={() => {
+                setFilters(DISCOVER_DEFAULT_FILTERS);
+                setFacets(DEFAULT_FACETS);
+              }}
             />
           ) : (
             <>
               <div className="grid gap-3 sm:grid-cols-2">
-                {rows.map((job) => (
+                {displayedRows.map((job) => (
                   <DiscoverCard
                     key={job.id}
                     job={job}
