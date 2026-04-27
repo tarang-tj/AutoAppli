@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { Suspense, useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { StoryCard } from "@/components/stories/story-card";
 import { StoryForm } from "@/components/stories/story-form";
@@ -41,6 +41,17 @@ function isTypingTarget(el: Element | null): boolean {
 }
 
 export default function StoriesPage() {
+  // useSearchParams (consumed by StoriesPageInner) requires a Suspense
+  // boundary for static prerender — Next.js will render the fallback at
+  // build time and hydrate the inner tree on the client.
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-4xl" />}>
+      <StoriesPageInner />
+    </Suspense>
+  );
+}
+
+function StoriesPageInner() {
   const stories = useSyncExternalStore(
     subscribeStories,
     getStoriesSnapshot,
