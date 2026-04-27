@@ -230,7 +230,7 @@ export function MockInterviewUI() {
       )}
 
       {stage === "complete" && scorecard && (
-        <CurtainCallStage card={scorecard} onReset={handleReset} />
+        <CurtainCallStage card={scorecard} onReset={handleReset} messages={messages} />
       )}
     </StageBackdrop>
   );
