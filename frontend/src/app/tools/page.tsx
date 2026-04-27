@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Mail, FileSearch, ScanLine, Send, MessageSquare } from "lucide-react";
+import { ArrowRight, Mail, FileSearch, ScanLine, Send, MessageSquare, DollarSign } from "lucide-react";
 
 /**
  * /tools — index page for free, no-signup interactive tools.
@@ -92,6 +92,13 @@ const TOOLS: ToolCard[] = [
       "Pick your situation — just applied, just interviewed, or ghosted for two weeks. Get a ready-to-send follow-up under 120 words. Browser-only, no AI.",
     icon: <MessageSquare className="h-5 w-5" aria-hidden="true" />,
   },
+  {
+    href: "/tools/salary-negotiation-templates",
+    title: "Salary negotiation templates",
+    blurb:
+      "Three honest negotiation patterns — counter an offer, leverage a competing offer, or ask for more time. Fill in your numbers, copy the email. Browser-only, no AI.",
+    icon: <DollarSign className="h-5 w-5" aria-hidden="true" />,
+  },
 ];
 
 const FOCUS_RING =
@@ -117,11 +124,11 @@ export default function ToolsIndexPage() {
           Free tools for the internship grind
         </h1>
         <p className="mt-5 text-lg text-zinc-400 max-w-2xl leading-relaxed text-pretty">
-          No signup. No paywall. Nothing leaves your browser. Five small
+          No signup. No paywall. Nothing leaves your browser. Six small
           utilities for the internship grind — generate cold email templates,
-          follow up with recruiters, score a subject line before you send it,
-          pull the keywords from a JD, and see what an ATS actually extracts
-          from your resume.
+          follow up with recruiters, negotiate your offer, score a subject
+          line before you send it, pull the keywords from a JD, and see what
+          an ATS actually extracts from your resume.
         </p>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
