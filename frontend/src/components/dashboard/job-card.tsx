@@ -41,7 +41,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { WhyThisMatch } from "@/app/discover/_components/why-this-match";
 import {
   storeOutreachHandoffFromJob,
   storeResumeHandoffFromJob,
@@ -163,6 +164,7 @@ export function JobCard({
   const [closeOutAlsoArchive, setCloseOutAlsoArchive] = useState(true);
   const [closingOut, setClosingOut] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const whyMatchId = useId();
 
   // Re-sync the picker when the dialog opens, so it reflects the current row.
   useEffect(() => {
@@ -547,6 +549,15 @@ export function JobCard({
                   {job.notes}
                 </p>
               ) : null}
+
+              {/* ── Match v2 7-signal breakdown (graceful no-op when missing) ── */}
+              {matchScore?.explanations ? (
+                <WhyThisMatch
+                  explanations={matchScore.explanations}
+                  id={whyMatchId}
+                />
+              ) : null}
+
               <div className="flex items-center justify-between mt-2 gap-2">
                 <div className="flex items-center gap-1.5">
                   <Badge
