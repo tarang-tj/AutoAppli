@@ -34,7 +34,9 @@
         "https://boards.greenhouse.io/*",
         "https://jobs.lever.co/*",
         "https://jobs.ashbyhq.com/*",
-        "https://www.indeed.com/*"
+        "https://www.indeed.com/*",
+        "https://*.workday.com/*",
+        "https://*.myworkdayjobs.com/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"

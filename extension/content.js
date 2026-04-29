@@ -20,6 +20,7 @@
     { name: "greenhouse", canParse: canParseGreenhouse, parse: parseGreenhouse },
     { name: "lever", canParse: canParseLever, parse: parseLever },
     { name: "indeed", canParse: canParseIndeed, parse: parseIndeed },
+    { name: "workday", canParse: canParseWorkday, parse: parseWorkday },
     { name: "generic", canParse: () => true, parse: parseGeneric },
   ];
 
@@ -220,6 +221,83 @@
       title, company, location, description, salary,
       url: url.href.split("&")[0], source: "indeed",
     };
+  }
+
+  // ── Workday ──────────────────────────────────────────────────────────
+
+  function canParseWorkday(url) {
+    // Covers: *.workday.com, *.myworkdayjobs.com, *.wd1/wd5.myworkdayjobs.com
+    return (
+      url.hostname.endsWith(".workday.com") ||
+      url.hostname.endsWith(".myworkdayjobs.com")
+    );
+  }
+
+  function parseWorkday(url) {
+    // Title: primary automation-id, then common h2 fallback
+    const title =
+      getText('[data-automation-id="jobPostingHeader"]') ||
+      getText('h2[data-automation-id="jobPostingHeader"]') ||
+      getText("h1") ||
+      null;
+
+    // Company: Workday pages are tenant-hosted; derive from subdomain or page title
+    const company = extractWorkdayCompany(url);
+
+    // Location: Workday renders location inside a details section
+    const location =
+      getText('[data-automation-id="locations"] dd') ||
+      getText('[data-automation-id="job-posting-details"] [data-automation-id="locations"]') ||
+      getText('[data-automation-id="location"]') ||
+      null;
+
+    // Description: main content block
+    const descEl =
+      document.querySelector('[data-automation-id="jobPostingDescription"]') ||
+      document.querySelector('[data-automation-id="job-posting-description"]');
+    const description = descEl ? descEl.innerText.trim() || null : null;
+
+    // Salary: Workday occasionally surfaces this in a compensation field
+    const salary =
+      getText('[data-automation-id="compensation"] dd') ||
+      getText('[data-automation-id="pay"] dd') ||
+      null;
+
+    // Extra metadata (stored but not part of core shape)
+    const postedOn =
+      getText('[data-automation-id="postedOn"] dd') || null;
+    const jobId =
+      getText('[data-automation-id="requisitionId"] dd') || null;
+
+    return {
+      title,
+      company,
+      location,
+      description,
+      salary,
+      url: url.href.split("?")[0],
+      source: "workday",
+      postedOn,
+      jobId,
+    };
+  }
+
+  function extractWorkdayCompany(url) {
+    // e.g. "amazon.wd5.myworkdayjobs.com" → "Amazon"
+    //      "company.workday.com"           → "Company"
+    const parts = url.hostname.split(".");
+    // First segment is typically the tenant slug
+    const slug = parts[0];
+    if (slug && slug !== "www") {
+      return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+    // Fallback: page title often contains "Company Name - Job Title"
+    const pageTitle = document.title || "";
+    const dashIdx = pageTitle.indexOf(" - ");
+    if (dashIdx !== -1) {
+      return pageTitle.substring(dashIdx + 3).trim() || null;
+    }
+    return null;
   }
 
   // ── Generic (fallback) ───────────────────────────────────────────────
