@@ -271,6 +271,36 @@ def _upsert_sightings_batch(
         )
 
 
+def _touch_heartbeat(supabase_url: str, key: str) -> None:
+    """Upsert the singleton row in ingestion_heartbeat to now().
+
+    Uses the same raw-HTTP pattern as the rest of this script so we don't
+    need supabase-py at cron runtime. Failure is logged but does NOT abort
+    the run — the heartbeat is observability infrastructure, not critical path.
+    """
+    now_iso = _dt.datetime.now(_dt.timezone.utc).isoformat()
+    endpoint = (
+        f"{supabase_url}/rest/v1/ingestion_heartbeat?on_conflict=id"
+    )
+    payload = json.dumps({"id": "singleton", "last_run_at": now_iso}).encode("utf-8")
+    req = urllib.request.Request(
+        endpoint,
+        data=payload,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {key}",
+            "apikey": key,
+            "Prefer": "resolution=merge-duplicates,return=minimal",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            resp.read()
+    except Exception as exc:  # noqa: BLE001
+        print(f"[heartbeat] WARNING: failed to update ingestion_heartbeat: {exc}", file=sys.stderr)
+
+
 def _sweep_inactive(supabase_url: str, key: str, run_started: _dt.datetime) -> int:
     """Mark all rows untouched this run as inactive. Returns the count."""
     iso = run_started.isoformat()
@@ -552,6 +582,11 @@ def main() -> int:
         except RuntimeError as e:
             print(f"Sweep failed: {e}", file=sys.stderr)
             # Don't fail the whole run — sweep can be re-run on the next tick.
+
+    # Update the heartbeat AFTER the sweep so last_run_at reflects a
+    # fully-completed run, not just the start. Skip on --dry-run.
+    if not args.dry_run and supabase_url and key:
+        _touch_heartbeat(supabase_url, key)
 
     _print_summary(run_started, results, deactivated)
 
